@@ -3,40 +3,72 @@ package httpserver
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
+	. "github.com/rstefan1/bimodal-multicast/src/internal"
 	"github.com/rstefan1/bimodal-multicast/src/options"
 )
 
-var httpHandler = func(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "POST":
-		// Call ParseForm() to parse the raw query
-		// and update r.PostForm and r.Form.
-		if err := r.ParseForm(); err != nil {
-			fmt.Fprintf(w, "ParseForm() err: %v", err)
-			return
+var (
+	nodeBuffer *[]Node
+	msgBuffer  *[]Message
+)
+
+var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "Error at parse form: %v", err)
+		return
+	}
+
+	u, err := url.Parse(r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+
+	msgDigest := Digest(*msgBuffer)
+	gossipDigest := u.Query()["msg_id[]"]
+	missingDigest := GetMissingDigest(msgDigest, gossipDigest)
+
+	if len(missingDigest) > 0 {
+		path := fmt.Sprintf("%s/solicitation", r.Host)
+		v := url.Values{}
+		for _, m := range missingDigest {
+			v.Add("msg_id", m)
 		}
 
-		msgType := r.FormValue("value")
-		switch msgType {
-		case "gossip":
-			rcvGossipMsg(r)
-		case "retransmit":
-			rcvSolicitRetransmition(r)
-		default:
-			// TODO
-			// return
-			// error
-			return
+		_, err := http.PostForm(path, v)
+		if err != nil {
+			panic(err)
 		}
-	default:
-		fmt.Fprintf(w, "Sorry, only POST methods are supported.")
 	}
 }
 
-func Start() {
+var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
+
+}
+
+var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func Start(nodeBuf *[]Node, msgBuf *[]Message) {
+	nodeBuffer = nodeBuf
+	msgBuffer = msgBuf
+
 	go func() {
-		http.HandleFunc("/", httpHandler)
+		http.HandleFunc("/gossip", gossipHandler)
+		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
+			panic(err)
+		}
+	}()
+	go func() {
+		http.HandleFunc("/solicitation", solicitationHandler)
+		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
+			panic(err)
+		}
+	}()
+	go func() {
+		http.HandleFunc("/synchronization", synchronizationHandler)
 		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
 			panic(err)
 		}

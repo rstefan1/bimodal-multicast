@@ -2,7 +2,7 @@ package internal
 
 type Message struct {
 	msg         string
-	timestamp   string
+	id          string
 	GossipCount int
 }
 
@@ -11,6 +11,6 @@ type Node struct {
 }
 
 type GossipMessage struct {
-	roundNumber int
-	msg         []Message
+	RoundNumber int
+	Digest      []string
 }

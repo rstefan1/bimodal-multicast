@@ -1,8 +1,10 @@
 package send
 
-import "github.com/rstefan1/bimodal-multicast/src/internal"
+import (
+	. "github.com/rstefan1/bimodal-multicast/src/internal"
+)
 
-// func GossipMessage(dest internal.Node, msg internal.GossipMsg) {
-func GossipMessage(dest internal.Node, msg internal.GossipMsg) {
+// Gossip sends a gossip message to a destination
+func Gossip(dest Node, msg GossipMessage) {
 
 }
