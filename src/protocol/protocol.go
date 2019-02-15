@@ -6,11 +6,12 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/src/httpserver/send"
 	. "github.com/rstefan1/bimodal-multicast/src/internal"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
 )
 
 var (
 	// buffer with addresses of nodes in system
-	nodeBuffer *[]Node
+	peerBuffer *[]Peer
 	// buffer with gossip messages
 	msgBuffer *[]Message
 	// round numer
