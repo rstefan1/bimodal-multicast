@@ -66,3 +66,25 @@ func Digest(buffer []Message) []string {
 	}
 	return digest
 }
+
+func contains(slice []string, elem string) bool {
+	for _, e := range slice {
+		if e == elem {
+			return true
+		}
+	}
+	return false
+}
+
+// GetMissingMessages returns missing messages from given digest
+func GetMissingMessages(buffer []Message, missingDigest []string) []Message {
+	var missingMsg []Message
+
+	for _, msg := range buffer {
+		if contains(missingDigest, msg.id) {
+			missingMsg = append(missingMsg, msg)
+		}
+	}
+
+	return missingMsg
+}

@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +24,7 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	u, err := url.Parse(r.URL.Path)
 	if err != nil {
 		panic(err)
+		return
 	}
 
 	msgDigest := Digest(*msgBuffer)
@@ -39,12 +41,42 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 		_, err := http.PostForm(path, v)
 		if err != nil {
 			panic(err)
+			return
 		}
 	}
 }
 
 var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "Error at parse form: %v", err)
+		return
+	}
 
+	u, err := url.Parse(r.URL.Path)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	missingDigest := u.Query()["msg_id[]"]
+
+	missingMsg := GetMissingMessages(*msgBuffer, missingDigest)
+	path := fmt.Sprintf("%s/synchronization", r.Host)
+	v := url.Values{}
+	for _, msg := range missingMsg {
+		m, err := json.Marshal(msg)
+		if err != nil {
+			panic(err)
+			return
+		}
+		v.Add("msg_id", string(m))
+	}
+
+	_, err = http.PostForm(path, v)
+	if err != nil {
+		panic(err)
+		return
+	}
 }
 
 var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
