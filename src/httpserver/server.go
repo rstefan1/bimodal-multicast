@@ -1,18 +1,18 @@
 package httpserver
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 
-	. "github.com/rstefan1/bimodal-multicast/src/internal"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/src/options"
 )
 
 var (
-	nodeBuffer *[]Node
-	msgBuffer  *[]Message
+	peerBuffer *[]Peer
+	msgBuffer  *MessageBuffer
 )
 
 var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
@@ -24,24 +24,22 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	u, err := url.Parse(r.URL.Path)
 	if err != nil {
 		panic(err)
-		return
 	}
 
-	msgDigest := Digest(*msgBuffer)
-	gossipDigest := u.Query()["msg_id[]"]
-	missingDigest := GetMissingDigest(msgDigest, gossipDigest)
+	gossipDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
+	msgDigestBuffer := (*msgBuffer).DigestBuffer()
+	missingDigestBuffer := msgDigestBuffer.GetMissingDigest(gossipDigestBuffer)
 
-	if len(missingDigest) > 0 {
+	if missingDigestBuffer.Length() > 0 {
 		path := fmt.Sprintf("%s/solicitation", r.Host)
 		v := url.Values{}
-		for _, m := range missingDigest {
+		for _, m := range missingDigestBuffer.UnwrapDigestBuffer() {
 			v.Add("msg_id", m)
 		}
 
 		_, err := http.PostForm(path, v)
 		if err != nil {
 			panic(err)
-			return
 		}
 	}
 }
@@ -55,36 +53,30 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 	u, err := url.Parse(r.URL.Path)
 	if err != nil {
 		panic(err)
-		return
 	}
 
-	missingDigest := u.Query()["msg_id[]"]
+	missingDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
+	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
+	missingMsgList := missingMsgBuffer.UnwrapMessageBuffer()
+	// TODO serialize only missingMsgList
 
-	missingMsg := GetMissingMessages(*msgBuffer, missingDigest)
-	path := fmt.Sprintf("%s/synchronization", r.Host)
-	v := url.Values{}
-	for _, msg := range missingMsg {
-		m, err := json.Marshal(msg)
-		if err != nil {
-			panic(err)
-			return
-		}
-		v.Add("msg_id", string(m))
-	}
+	// path := fmt.Sprintf("%s/synchronization", r.Host)
+	// for _, msg := range missingMsgList {
+	// _, err = http.Post(path, msg.Marhsal())
+	// }
 
-	_, err = http.PostForm(path, v)
-	if err != nil {
-		panic(err)
-		return
-	}
+	// _, err = http.PostForm(path, v)
+	// if err != nil {
+	// panic(err)
+	// }
 }
 
 var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Start(nodeBuf *[]Node, msgBuf *[]Message) {
-	nodeBuffer = nodeBuf
+func Start(peerBuf *[]Peer, msgBuf *MessageBuffer) {
+	peerBuffer = peerBuf
 	msgBuffer = msgBuf
 
 	go func() {
