@@ -4,7 +4,7 @@ BINDIR ?= $(CURDIR)/bin
 test: generate 
 	ginkgo \
 		--randomizeAllSpecs --randomizeSuites --failOnPending \
-		--cover --coverprofile cover.out --trace --race \
+		--cover --coverprofile cover.out --trace --race -v \
 		./src/...
 
 # Run go fmt against code

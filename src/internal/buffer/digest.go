@@ -1,6 +1,9 @@
 package buffer
 
-import "sort"
+import (
+	"sort"
+	"sync"
+)
 
 type Digest struct {
 	id string
@@ -32,10 +35,8 @@ func compareFn(digest []Digest) func(int, int) bool {
 	}
 }
 
-// HasSameDigest returns true if given digest are same
-func (a DigestBuffer) HasSameDigest(b DigestBuffer) bool {
-	// TODO write unit tests for this func
-
+// HasSameDigests returns true if given digest are same
+func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
 	if len(a.listDigests) != len(b.listDigests) {
 		return false
 	}
@@ -52,33 +53,32 @@ func (a DigestBuffer) HasSameDigest(b DigestBuffer) bool {
 	return true
 }
 
-// GetMissingDigest returns the disjunction between the digest buffers
-func (a DigestBuffer) GetMissingDigest(b DigestBuffer) DigestBuffer {
-	// TODO write unit tests for this func
-
-	var missingDigestBuffer DigestBuffer
-	var i = 0
-	var j = 0
+// GetMissingDigests returns the disjunction between the digest buffers
+// digestBufferA - digestBufferB
+func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
+	missingDigestBuffer := DigestBuffer{
+		listDigests: []Digest{},
+	}
 
 	sort.Slice(a.listDigests, compareFn(a.listDigests))
 	sort.Slice(b.listDigests, compareFn(b.listDigests))
 
-	for ; i < len(a.listDigests) && j < len(b.listDigests); i++ {
-		if a.listDigests[i].id == b.listDigests[j].id {
-			j++
-			continue
-		}
-		missingDigestBuffer.listDigests = append(missingDigestBuffer.listDigests, a.listDigests[i])
+	mapB := make(map[string]bool)
+	for i := range b.listDigests {
+		mapB[b.listDigests[i].id] = true
 	}
-	missingDigestBuffer.listDigests = append(a.listDigests[i:], missingDigestBuffer.listDigests...)
+
+	for i := range a.listDigests {
+		if _, e := mapB[a.listDigests[i].id]; !e {
+			missingDigestBuffer.listDigests = append(missingDigestBuffer.listDigests, a.listDigests[i])
+		}
+	}
 
 	return missingDigestBuffer
 }
 
 // ContainsDigest check if digest buffer contains the given digest
 func (digestBuffer DigestBuffer) ContainsDigest(digest Digest) bool {
-	// TODO write unit tests for this func
-
 	for _, d := range digestBuffer.listDigests {
 		if d.id == digest.id {
 			return true
@@ -94,9 +94,9 @@ func (digestBuffer DigestBuffer) Length() int {
 
 // GetMissingMessageBuffer returns messages buffer from given digest buffer
 func (digestBuffer DigestBuffer) GetMissingMessageBuffer(msgBuffer MessageBuffer) MessageBuffer {
-	// TODO write unit tests for this func
-
-	var missingMsgBuffer MessageBuffer
+	missingMsgBuffer := MessageBuffer{
+		mux: &sync.Mutex{},
+	}
 
 	msgBuffer.mux.Lock()
 	for _, msg := range msgBuffer.listMessages {
@@ -106,5 +106,6 @@ func (digestBuffer DigestBuffer) GetMissingMessageBuffer(msgBuffer MessageBuffer
 	}
 	msgBuffer.mux.Unlock()
 
+	// TODO what happens if the buffer does not have digests anymore
 	return missingMsgBuffer
 }
