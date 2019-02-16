@@ -28,7 +28,7 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 
 	gossipDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
 	msgDigestBuffer := (*msgBuffer).DigestBuffer()
-	missingDigestBuffer := msgDigestBuffer.GetMissingDigest(gossipDigestBuffer)
+	missingDigestBuffer := msgDigestBuffer.GetMissingDigests(gossipDigestBuffer)
 
 	if missingDigestBuffer.Length() > 0 {
 		path := fmt.Sprintf("%s/solicitation", r.Host)
@@ -50,14 +50,14 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := url.Parse(r.URL.Path)
-	if err != nil {
-		panic(err)
-	}
+	// 	u, err := url.Parse(r.URL.Path)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-	missingDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
-	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
-	missingMsgList := missingMsgBuffer.UnwrapMessageBuffer()
+	// missingDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
+	// missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
+	// missingMsgList := missingMsgBuffer.UnwrapMessageBuffer()
 	// TODO serialize only missingMsgList
 
 	// path := fmt.Sprintf("%s/synchronization", r.Host)
