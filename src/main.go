@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	msgBuffer.AddMutex(&sync.Mutex{})
+	msgBuffer = msgBuffer.AddMutex(&sync.Mutex{})
 	httpserver.Start(&peerBuffer, &msgBuffer)
 	protocol.Start(&peerBuffer, &msgBuffer)
 }

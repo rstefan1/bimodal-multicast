@@ -1,6 +1,8 @@
 package buffer
 
-import "sync"
+import (
+	"sync"
+)
 
 type Message struct {
 	id          string
@@ -13,8 +15,9 @@ type MessageBuffer struct {
 	mux          *sync.Mutex
 }
 
-func (msgBuffer MessageBuffer) AddMutex(mx *sync.Mutex) {
+func (msgBuffer MessageBuffer) AddMutex(mx *sync.Mutex) MessageBuffer {
 	msgBuffer.mux = mx
+	return msgBuffer
 }
 
 func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
@@ -23,8 +26,6 @@ func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
 
 // Digest returns a slice with id of messages from given buffer
 func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
-	// TODO write unit tests for this func
-
 	var digestBuffer DigestBuffer
 
 	msgBuffer.mux.Lock()
@@ -46,10 +47,11 @@ func (msgBuffer MessageBuffer) AddMessage(msg Message) MessageBuffer {
 
 // IncrementGossipCount increments gossip countfor each message from message
 // buffer
-func (msgBuffer MessageBuffer) IncrementGossipCount() {
+func (msgBuffer MessageBuffer) IncrementGossipCount() MessageBuffer {
 	msgBuffer.mux.Lock()
-	for _, m := range msgBuffer.listMessages {
-		m.GossipCount++
+	for i := range msgBuffer.listMessages {
+		msgBuffer.listMessages[i].GossipCount++
 	}
 	msgBuffer.mux.Unlock()
+	return msgBuffer
 }
