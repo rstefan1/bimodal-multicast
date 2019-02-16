@@ -10,9 +10,12 @@ type Message struct {
 
 type MessageBuffer struct {
 	listMessages []Message
+	mux          *sync.Mutex
 }
 
-var mux = &sync.Mutex{}
+func (msgBuffer MessageBuffer) AddMutex(mx *sync.Mutex) {
+	msgBuffer.mux = mx
+}
 
 func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
 	return msgBuffer.listMessages
@@ -24,19 +27,29 @@ func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 
 	var digestBuffer DigestBuffer
 
-	mux.Lock()
+	msgBuffer.mux.Lock()
 	for _, b := range msgBuffer.listMessages {
 		digestBuffer.listDigests = append(digestBuffer.listDigests, Digest{id: b.id})
 	}
-	mux.Unlock()
+	msgBuffer.mux.Unlock()
 
 	return digestBuffer
 }
 
 // AddMessage adds message in message buffer
 func (msgBuffer MessageBuffer) AddMessage(msg Message) MessageBuffer {
-	mux.Lock()
+	msgBuffer.mux.Lock()
 	msgBuffer.listMessages = append(msgBuffer.listMessages, msg)
-	mux.Unlock()
+	msgBuffer.mux.Unlock()
 	return msgBuffer
+}
+
+// IncrementGossipCount increments gossip countfor each message from message
+// buffer
+func (msgBuffer MessageBuffer) IncrementGossipCount() {
+	msgBuffer.mux.Lock()
+	for _, m := range msgBuffer.listMessages {
+		m.GossipCount++
+	}
+	msgBuffer.mux.Unlock()
 }

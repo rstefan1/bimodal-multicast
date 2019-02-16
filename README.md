@@ -13,13 +13,13 @@ called `solicitation`.
 
 ### Sequence diagram
 
-![alt text](diagrams/sequence-diagram.png)
+![alt text](docs/diagrams/sequence-diagram.png)
 
 ### Round goroutine vs. HTTP Server goroutine
 
-![alt text](diagrams/threads-diagram.png)
+![alt text](docs/diagrams/threads-diagram.png)
 
 ### Receiving a gossip message
 
-![alt text](diagrams/threads-diagram-2.png)
+![alt text](docs/diagrams/threads-diagram-2.png)
 

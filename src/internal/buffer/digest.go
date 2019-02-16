@@ -98,13 +98,13 @@ func (digestBuffer DigestBuffer) GetMissingMessageBuffer(msgBuffer MessageBuffer
 
 	var missingMsgBuffer MessageBuffer
 
-	mux.Lock()
+	msgBuffer.mux.Lock()
 	for _, msg := range msgBuffer.listMessages {
 		if digestBuffer.ContainsDigest(Digest{id: msg.id}) {
 			missingMsgBuffer.listMessages = append(missingMsgBuffer.listMessages, msg)
 		}
 	}
-	mux.Unlock()
+	msgBuffer.mux.Unlock()
 
 	return missingMsgBuffer
 }

@@ -1,7 +1,7 @@
 package send
 
 import (
-	. "github.com/rstefan1/bimodal-multicast/src/internal"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/gossip"
 	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
 )
 

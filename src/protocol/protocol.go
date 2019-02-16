@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/src/httpserver/send"
-	. "github.com/rstefan1/bimodal-multicast/src/internal"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+	. "github.com/rstefan1/bimodal-multicast/src/internal/gossip"
 	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
 )
 
@@ -13,7 +14,7 @@ var (
 	// buffer with addresses of nodes in system
 	peerBuffer *[]Peer
 	// buffer with gossip messages
-	msgBuffer *[]Message
+	msgBuffer *MessageBuffer
 	// round numer
 	roundNumber = 1
 	// beta is the expected fanout for gossip
@@ -22,9 +23,10 @@ var (
 
 // TODO implement a func that read a yml file with all node (addr & port)
 
-func randomlySelectedNumber() int {
+func randomlySelectedPeer() Peer {
 	// TODO check if node wasn't selected before
-	return rand.Intn(len(*nodeBuffer))
+	r := rand.Intn(len(*peerBuffer))
+	return (*peerBuffer)[r]
 }
 
 // GossipRound is the gossip round that runs every 100ms in out implementation
@@ -35,18 +37,16 @@ func gossipRound() {
 
 		gMsg := GossipMessage{
 			RoundNumber: roundNumber,
-			Digest:      Digest(*msgBuffer),
+			Digest:      (*msgBuffer).DigestBuffer(),
 		}
 
-		length := int(beta * float64(len(*nodeBuffer)) / float64(roundNumber))
+		length := int(beta * float64(len(*peerBuffer)) / float64(roundNumber))
 		for i := 0; i < length; i++ {
-			dest := *nodeBuffer[randomlySelectedNumber()]
+			dest := randomlySelectedPeer()
 			send.Gossip(dest, gMsg)
 		}
 
-		for _, m := range *msgBuffer {
-			m.GossipCount++
-		}
+		(*msgBuffer).IncrementGossipCount()
 
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -55,8 +55,8 @@ func gossipRound() {
 	// exceeds G, the garbage-collection limit
 }
 
-func Start(nodeBuf *[]Node, msgBuf *[]Message) {
-	nodeBuffer = nodeBuf
+func Start(peerBuf *[]Peer, msgBuf *MessageBuffer) {
+	peerBuffer = peerBuf
 	msgBuffer = msgBuf
 	gossipRound()
 }
