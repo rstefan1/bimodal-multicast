@@ -5,53 +5,53 @@ import (
 )
 
 type Message struct {
-	id          string
-	msg         string
-	GossipCount int
+	ID          string `json:"message_ID"`
+	Msg         string `json:"message_msg"`
+	GossipCount int    `json:"message_gossip_count"`
 }
 
 type MessageBuffer struct {
-	listMessages []Message
-	mux          *sync.Mutex
+	Messages []Message   `json:"message_buffer_list"`
+	Mux      *sync.Mutex `json:"message_buffer_Mux"`
 }
 
 func (msgBuffer MessageBuffer) AddMutex(mx *sync.Mutex) MessageBuffer {
-	msgBuffer.mux = mx
+	msgBuffer.Mux = mx
 	return msgBuffer
 }
 
 func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
-	return msgBuffer.listMessages
+	return msgBuffer.Messages
 }
 
-// Digest returns a slice with id of messages from given buffer
+// Digest returns a slice with ID of messages from given buffer
 func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 	var digestBuffer DigestBuffer
 
-	msgBuffer.mux.Lock()
-	for _, b := range msgBuffer.listMessages {
-		digestBuffer.listDigests = append(digestBuffer.listDigests, Digest{id: b.id})
+	msgBuffer.Mux.Lock()
+	for _, b := range msgBuffer.Messages {
+		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: b.ID})
 	}
-	msgBuffer.mux.Unlock()
+	msgBuffer.Mux.Unlock()
 
 	return digestBuffer
 }
 
 // AddMessage adds message in message buffer
 func (msgBuffer MessageBuffer) AddMessage(msg Message) MessageBuffer {
-	msgBuffer.mux.Lock()
-	msgBuffer.listMessages = append(msgBuffer.listMessages, msg)
-	msgBuffer.mux.Unlock()
+	msgBuffer.Mux.Lock()
+	msgBuffer.Messages = append(msgBuffer.Messages, msg)
+	msgBuffer.Mux.Unlock()
 	return msgBuffer
 }
 
 // IncrementGossipCount increments gossip countfor each message from message
 // buffer
 func (msgBuffer MessageBuffer) IncrementGossipCount() MessageBuffer {
-	msgBuffer.mux.Lock()
-	for i := range msgBuffer.listMessages {
-		msgBuffer.listMessages[i].GossipCount++
+	msgBuffer.Mux.Lock()
+	for i := range msgBuffer.Messages {
+		msgBuffer.Messages[i].GossipCount++
 	}
-	msgBuffer.mux.Unlock()
+	msgBuffer.Mux.Unlock()
 	return msgBuffer
 }

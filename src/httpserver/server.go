@@ -1,13 +1,18 @@
-package httpserver
+package server
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-	"net/url"
+	"strings"
 
 	. "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/src/internal/config"
+	"github.com/rstefan1/bimodal-multicast/src/internal/httpmessage"
 	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
-	"github.com/rstefan1/bimodal-multicast/src/options"
 )
 
 var (
@@ -15,29 +20,48 @@ var (
 	msgBuffer  *MessageBuffer
 )
 
+var handler = func(w http.ResponseWriter, r *http.Request) {
+	switch path := r.URL.Path; path {
+	case "/gossip":
+		gossipHandler(w, r)
+	case "/solicitation":
+		solicitationHandler(w, r)
+	case "/synchronization":
+		synchronizationHandler(w, r)
+	}
+}
+
 var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		fmt.Fprintf(w, "Error at parse form: %v", err)
 		return
 	}
 
-	u, err := url.Parse(r.URL.Path)
+	decoder := json.NewDecoder(r.Body)
+	var t httpmessage.HTTPGossip
+	err := decoder.Decode(&t)
 	if err != nil {
 		panic(err)
 	}
 
-	gossipDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
-	msgDigestBuffer := (*msgBuffer).DigestBuffer()
-	missingDigestBuffer := msgDigestBuffer.GetMissingDigests(gossipDigestBuffer)
+	gossipDigestBuffer := t.Digests
+	msgDigestBuffer := msgBuffer.DigestBuffer()
+	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
 
+	host := strings.Split(r.Host, ":")
+	hostAddr := host[0]
+	hostPort := host[1]
 	if missingDigestBuffer.Length() > 0 {
-		path := fmt.Sprintf("%s/solicitation", r.Host)
-		v := url.Values{}
-		for _, m := range missingDigestBuffer.UnwrapDigestBuffer() {
-			v.Add("msg_id", m)
+		// send solicitation request
+		solicitation := httpmessage.HTTPSolicitation{
+			Addr:        hostAddr,
+			Port:        hostPort,
+			RoundNumber: t.RoundNumber,
+			Digests:     missingDigestBuffer,
 		}
-
-		_, err := http.PostForm(path, v)
+		jsonSolicitation, err := json.Marshal(solicitation)
+		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
+		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
 			panic(err)
 		}
@@ -75,26 +99,40 @@ var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Start(peerBuf *[]Peer, msgBuf *MessageBuffer) {
+func startHTTPServer(s *http.Server) error {
+	log.Print("HTTP Server listening at ", s.Addr)
+	if err := s.ListenAndServe(); err != http.ErrServerClosed {
+		return err
+	}
+	return nil
+}
+
+func gracefullShutdown(s *http.Server) {
+	if err := s.Shutdown(context.TODO()); err != nil {
+		log.Fatal(err, "unable to shutdown HTTP server properly")
+	}
+}
+
+func Start(peerBuf *[]Peer, msgBuf *MessageBuffer, stop <-chan struct{}, cfg config.Config) error {
 	peerBuffer = peerBuf
 	msgBuffer = msgBuf
+	errChan := make(chan error)
+
+	s := &http.Server{
+		Addr:    cfg.HTTPAddr,
+		Handler: http.HandlerFunc(handler),
+	}
 
 	go func() {
-		http.HandleFunc("/gossip", gossipHandler)
-		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
-			panic(err)
-		}
+		err := startHTTPServer(s)
+		errChan <- err
 	}()
+
 	go func() {
-		http.HandleFunc("/solicitation", solicitationHandler)
-		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
-			panic(err)
-		}
+		<-stop
+		gracefullShutdown(s)
 	}()
-	go func() {
-		http.HandleFunc("/synchronization", synchronizationHandler)
-		if err := http.ListenAndServe(options.HTTPAddr, nil); err != nil {
-			panic(err)
-		}
-	}()
+
+	// return <-errChan
+	return nil
 }
