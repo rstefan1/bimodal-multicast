@@ -1,4 +1,4 @@
-package buffer
+package server
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestBuffers(t *testing.T) {
+func TestHTTPServer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Buffer Suite")
+	RunSpecs(t, "HTTP Server Suite")
 }

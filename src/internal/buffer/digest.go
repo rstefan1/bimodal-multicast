@@ -5,47 +5,49 @@ import (
 	"sync"
 )
 
+//easyjson:json
 type Digest struct {
-	id string
+	ID string `json:"digest_id"`
 }
 
+//easyjson:json
 type DigestBuffer struct {
-	listDigests []Digest
+	Digests []Digest `json:"digest_buffer_list"`
 }
 
 func WrapDigestBuffer(digestSlice []string) DigestBuffer {
 	var digestBuffer DigestBuffer
 	for _, d := range digestSlice {
-		digestBuffer.listDigests = append(digestBuffer.listDigests, Digest{id: d})
+		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: d})
 	}
 	return digestBuffer
 }
 
 func (digestBuffer DigestBuffer) UnwrapDigestBuffer() []string {
 	var digestSlice []string
-	for _, d := range digestBuffer.listDigests {
-		digestSlice = append(digestSlice, d.id)
+	for _, d := range digestBuffer.Digests {
+		digestSlice = append(digestSlice, d.ID)
 	}
 	return digestSlice
 }
 
 func compareFn(digest []Digest) func(int, int) bool {
 	return func(i, j int) bool {
-		return digest[i].id <= digest[j].id
+		return digest[i].ID <= digest[j].ID
 	}
 }
 
 // HasSameDigests returns true if given digest are same
 func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
-	if len(a.listDigests) != len(b.listDigests) {
+	if len(a.Digests) != len(b.Digests) {
 		return false
 	}
 
-	sort.Slice(a.listDigests, compareFn(a.listDigests))
-	sort.Slice(b.listDigests, compareFn(b.listDigests))
+	sort.Slice(a.Digests, compareFn(a.Digests))
+	sort.Slice(b.Digests, compareFn(b.Digests))
 
-	for i := range a.listDigests {
-		if a.listDigests[i].id != b.listDigests[i].id {
+	for i := range a.Digests {
+		if a.Digests[i].ID != b.Digests[i].ID {
 			return false
 		}
 	}
@@ -57,20 +59,20 @@ func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
 // digestBufferA - digestBufferB
 func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
 	missingDigestBuffer := DigestBuffer{
-		listDigests: []Digest{},
+		Digests: []Digest{},
 	}
 
-	sort.Slice(a.listDigests, compareFn(a.listDigests))
-	sort.Slice(b.listDigests, compareFn(b.listDigests))
+	sort.Slice(a.Digests, compareFn(a.Digests))
+	sort.Slice(b.Digests, compareFn(b.Digests))
 
 	mapB := make(map[string]bool)
-	for i := range b.listDigests {
-		mapB[b.listDigests[i].id] = true
+	for i := range b.Digests {
+		mapB[b.Digests[i].ID] = true
 	}
 
-	for i := range a.listDigests {
-		if _, e := mapB[a.listDigests[i].id]; !e {
-			missingDigestBuffer.listDigests = append(missingDigestBuffer.listDigests, a.listDigests[i])
+	for i := range a.Digests {
+		if _, e := mapB[a.Digests[i].ID]; !e {
+			missingDigestBuffer.Digests = append(missingDigestBuffer.Digests, a.Digests[i])
 		}
 	}
 
@@ -79,8 +81,8 @@ func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
 
 // ContainsDigest check if digest buffer contains the given digest
 func (digestBuffer DigestBuffer) ContainsDigest(digest Digest) bool {
-	for _, d := range digestBuffer.listDigests {
-		if d.id == digest.id {
+	for _, d := range digestBuffer.Digests {
+		if d.ID == digest.ID {
 			return true
 		}
 	}
@@ -89,22 +91,22 @@ func (digestBuffer DigestBuffer) ContainsDigest(digest Digest) bool {
 
 // Length returns the length of digest buffer
 func (digestBuffer DigestBuffer) Length() int {
-	return len(digestBuffer.listDigests)
+	return len(digestBuffer.Digests)
 }
 
 // GetMissingMessageBuffer returns messages buffer from given digest buffer
 func (digestBuffer DigestBuffer) GetMissingMessageBuffer(msgBuffer MessageBuffer) MessageBuffer {
 	missingMsgBuffer := MessageBuffer{
-		mux: &sync.Mutex{},
+		Mux: &sync.Mutex{},
 	}
 
-	msgBuffer.mux.Lock()
-	for _, msg := range msgBuffer.listMessages {
-		if digestBuffer.ContainsDigest(Digest{id: msg.id}) {
-			missingMsgBuffer.listMessages = append(missingMsgBuffer.listMessages, msg)
+	msgBuffer.Mux.Lock()
+	for _, msg := range msgBuffer.Messages {
+		if digestBuffer.ContainsDigest(Digest{ID: msg.ID}) {
+			missingMsgBuffer.Messages = append(missingMsgBuffer.Messages, msg)
 		}
 	}
-	msgBuffer.mux.Unlock()
+	msgBuffer.Mux.Unlock()
 
 	// TODO what happens if the buffer does not have digests anymore
 	return missingMsgBuffer
