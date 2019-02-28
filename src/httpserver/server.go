@@ -19,12 +19,8 @@ var (
 	peerBuffer *[]peer.Peer
 	msgBuffer  *buffer.MessageBuffer
 )
-var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(w, "Error at parse form: %v", err)
-		return
-	}
 
+var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
@@ -61,13 +57,8 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(w, "Error at parse form: %v", err)
-		return
-	}
-
 	decoder := json.NewDecoder(r.Body)
-	var t httpmessage.HTTPGossip
+	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
 	if err != nil {
 		panic(err)
@@ -99,7 +90,20 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
-	// TODO implement this handler
+	decoder := json.NewDecoder(r.Body)
+	var t httpmessage.HTTPSynchronization
+	err := decoder.Decode(&t)
+	if err != nil {
+		panic(err)
+	}
+
+	rcvMsgBuf := t.Messages
+	for _, m := range rcvMsgBuf.Messages {
+		*msgBuffer = msgBuffer.AddMessage(m)
+	}
+	// missingDigestBuffer := t.Digests
+	// missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
+
 }
 
 var handler = func(w http.ResponseWriter, r *http.Request) {
