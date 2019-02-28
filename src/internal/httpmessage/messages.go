@@ -15,3 +15,9 @@ type HTTPSolicitation struct {
 	RoundNumber int                 `json:"http_solicitation_round_number"`
 	Digests     buffer.DigestBuffer `json:"http_solicitation_digests"`
 }
+
+type HTTPSynchronization struct {
+	Addr     string               `json:"http_synchronization_addr"`
+	Port     string               `json:"http_synchronization_port"`
+	Messages buffer.MessageBuffer `json:"http_synchronization_digests"`
+}

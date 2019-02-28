@@ -9,28 +9,16 @@ import (
 	"net/http"
 	"strings"
 
-	. "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/src/internal/config"
 	"github.com/rstefan1/bimodal-multicast/src/internal/httpmessage"
-	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
 )
 
 var (
-	peerBuffer *[]Peer
-	msgBuffer  *MessageBuffer
+	peerBuffer *[]peer.Peer
+	msgBuffer  *buffer.MessageBuffer
 )
-
-var handler = func(w http.ResponseWriter, r *http.Request) {
-	switch path := r.URL.Path; path {
-	case "/gossip":
-		gossipHandler(w, r)
-	case "/solicitation":
-		solicitationHandler(w, r)
-	case "/synchronization":
-		synchronizationHandler(w, r)
-	}
-}
-
 var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		fmt.Fprintf(w, "Error at parse form: %v", err)
@@ -51,6 +39,7 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
 	hostPort := host[1]
+
 	if missingDigestBuffer.Length() > 0 {
 		// send solicitation request
 		solicitation := httpmessage.HTTPSolicitation{
@@ -60,6 +49,9 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 			Digests:     missingDigestBuffer,
 		}
 		jsonSolicitation, err := json.Marshal(solicitation)
+		if err != nil {
+			panic(err)
+		}
 		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
 		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
@@ -74,29 +66,51 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 	u, err := url.Parse(r.URL.Path)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+	decoder := json.NewDecoder(r.Body)
+	var t httpmessage.HTTPGossip
+	err := decoder.Decode(&t)
+	if err != nil {
+		panic(err)
+	}
 
-	// missingDigestBuffer := WrapDigestBuffer(u.Query()["msg_id[]"])
-	// missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
-	// missingMsgList := missingMsgBuffer.UnwrapMessageBuffer()
-	// TODO serialize only missingMsgList
+	missingDigestBuffer := t.Digests
+	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
 
-	// path := fmt.Sprintf("%s/synchronization", r.Host)
-	// for _, msg := range missingMsgList {
-	// _, err = http.Post(path, msg.Marhsal())
-	// }
+	host := strings.Split(r.Host, ":")
+	hostAddr := host[0]
+	hostPort := host[1]
 
-	// _, err = http.PostForm(path, v)
-	// if err != nil {
-	// panic(err)
-	// }
+	// send synchronization message
+	synchronization := httpmessage.HTTPSynchronization{
+		Addr:     hostAddr,
+		Port:     hostPort,
+		Messages: missingMsgBuffer,
+	}
+
+	jsonSynchronization, err := json.Marshal(synchronization)
+	if err != nil {
+		panic(err)
+	}
+	path := fmt.Sprintf("http://%s:%s/synchronization", t.Addr, t.Port)
+	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
+	if err != nil {
+		panic(err)
+	}
 }
 
 var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
+	// TODO implement this handler
+}
 
+var handler = func(w http.ResponseWriter, r *http.Request) {
+	switch path := r.URL.Path; path {
+	case "/gossip":
+		gossipHandler(w, r)
+	case "/solicitation":
+		solicitationHandler(w, r)
+	case "/synchronization":
+		synchronizationHandler(w, r)
+	}
 }
 
 func startHTTPServer(s *http.Server) error {
@@ -113,7 +127,7 @@ func gracefullShutdown(s *http.Server) {
 	}
 }
 
-func Start(peerBuf *[]Peer, msgBuf *MessageBuffer, stop <-chan struct{}, cfg config.Config) error {
+func Start(peerBuf *[]peer.Peer, msgBuf *buffer.MessageBuffer, stop <-chan struct{}, cfg config.Config) error {
 	peerBuffer = peerBuf
 	msgBuffer = msgBuf
 	errChan := make(chan error)
