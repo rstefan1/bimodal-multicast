@@ -46,9 +46,11 @@ var _ = Describe("HTTP Server", func() {
 		httpServerStop      chan struct{}
 		rcvMsg              receivedMessages
 		mockServer          *http.Server
+		requestPath         string
 	)
 
 	BeforeEach(func() {
+		// TODO set random ports for servers
 		httpServerPort = "19999"
 		mockServerPort = "29999"
 
@@ -74,7 +76,9 @@ var _ = Describe("HTTP Server", func() {
 
 	AfterEach(func() {
 		close(httpServerStop)
-		gracefullShutdown(mockServer)
+
+		// TODO set random ports for servers to remove the following sleep
+		time.Sleep(time.Millisecond * 200)
 	})
 
 	Describe("at gossip request", func() {
@@ -100,6 +104,12 @@ var _ = Describe("HTTP Server", func() {
 			go func() {
 				startHTTPServer(mockServer)
 			}()
+
+			requestPath = fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
+		})
+
+		AfterEach(func() {
+			gracefullShutdown(mockServer)
 		})
 
 		It("responds with solicitation request when nodes have different digests", func() {
@@ -119,8 +129,7 @@ var _ = Describe("HTTP Server", func() {
 			Expect(err).To(Succeed())
 
 			// send gossip request
-			path := fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
-			_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
+			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonGossip))
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
@@ -144,8 +153,7 @@ var _ = Describe("HTTP Server", func() {
 			Expect(err).To(Succeed())
 
 			// send gossip request
-			path := fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
-			_, err = http.Post(path, "json", bytes.NewBuffer(jsonDigest))
+			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonDigest))
 			Expect(err).To(Succeed())
 
 			// wait 1 second for solicitation message
@@ -178,9 +186,15 @@ var _ = Describe("HTTP Server", func() {
 			go func() {
 				startHTTPServer(mockServer)
 			}()
+
+			requestPath = fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
 		})
 
-		It("responds with solicitation request", func() {
+		AfterEach(func() {
+			gracefullShutdown(mockServer)
+		})
+
+		It("responds with synchronization message", func() {
 			messageID := fmt.Sprintf("%d", rand.Int31())
 
 			// populate buffer with a message
@@ -190,30 +204,59 @@ var _ = Describe("HTTP Server", func() {
 				GossipCount: rand.Int(),
 			})
 
-			// create synchronization request
-			synchronizationDigest := buffer.DigestBuffer{
+			// create solicitation request
+			solicitationDigest := buffer.DigestBuffer{
 				Digests: []buffer.Digest{
 					{ID: messageID},
 				},
 			}
-			synchronizationMessage := httpmessage.HTTPGossip{
+			solicitationMessage := httpmessage.HTTPSolicitation{
 				Addr:        "localhost",
 				Port:        mockServerPort,
 				RoundNumber: rand.Int(),
-				Digests:     synchronizationDigest,
+				Digests:     solicitationDigest,
 			}
-			jsonSynchronization, err := json.Marshal(synchronizationMessage)
+			jsonSolicitation, err := json.Marshal(solicitationMessage)
 			Expect(err).To(Succeed())
 
-			// send gossip request
-			path := fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
-			_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
+			// send solicitation request
+			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonSolicitation))
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			fmt.Println("~~~~~", msg)
 			Expect(msg.(httpmessage.HTTPSynchronization).Messages).To(Equal(httpServerMsgBuffer))
+		})
+	})
+
+	Describe("at synchronization request", func() {
+		BeforeEach(func() {
+			requestPath = fmt.Sprintf("http://localhost:%s/synchronization", httpServerPort)
+		})
+		It("updates the message buffer", func() {
+			syncMsgBuffer := buffer.MessageBuffer{}
+			syncMsgBuffer = syncMsgBuffer.AddMutex(&sync.Mutex{})
+			syncMsgBuffer = syncMsgBuffer.AddMessage(buffer.Message{
+				ID:          fmt.Sprintf("%d", rand.Int31()),
+				Msg:         fmt.Sprintf("%d", rand.Int31()),
+				GossipCount: rand.Int(),
+			})
+
+			// create synchronization request
+			syncMessage := httpmessage.HTTPSynchronization{
+				Addr:     "localhost",
+				Port:     mockServerPort,
+				Messages: syncMsgBuffer,
+			}
+			jsonSync, err := json.Marshal(syncMessage)
+			Expect(err).To(Succeed())
+
+			// send synchronization request to http server
+			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonSync))
+			Expect(err).To(Succeed())
+
+			// wait for synchronization of shared message buffer
+			Expect(httpServerMsgBuffer.Messages).To(Equal(syncMsgBuffer.Messages))
 		})
 	})
 })
