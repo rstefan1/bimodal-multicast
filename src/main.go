@@ -3,18 +3,17 @@ package bimodal
 import (
 	"sync"
 
-	"github.com/rstefan1/bimodal-multicast/src/httpserver"
-	. "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/src/internal/config"
-	. "github.com/rstefan1/bimodal-multicast/src/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/src/protocol"
 )
 
 var (
 	// shared buffer for peers
-	peerBuffer = []Peer{}
+	peerBuffer = []peer.Peer{}
 	// shared buffer for messages
-	msgBuffer = MessageBuffer{}
+	msgBuffer = buffer.MessageBuffer{}
 )
 
 func BMC() error {
