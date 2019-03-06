@@ -9,5 +9,5 @@ import (
 
 func TestBuffers(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Buffer Suite")
+	RunSpecs(t, "Buffer Suite Test")
 }

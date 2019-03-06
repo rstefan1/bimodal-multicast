@@ -3,7 +3,6 @@ package buffer
 import (
 	"fmt"
 	"math/rand"
-	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -186,7 +185,7 @@ var _ = Describe("DigestBuffer interface", func() {
 			msgMsg = fmt.Sprintf("%d", rand.Int31())
 			msgGossipCount = int(rand.Int31())
 
-			msgBuffer = MessageBuffer{Mux: &sync.Mutex{}}
+			msgBuffer = NewMessageBuffer()
 			for i := 0; i < digestCount; i++ {
 				_id := fmt.Sprintf("%s-%02d", digestID, i)
 				_msgMsg := fmt.Sprintf("%s-%02d", msgMsg, i)
@@ -218,7 +217,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns an empty message buffer if the given message buffer does not have digests anymore", func() {
-			msgBuffer := MessageBuffer{Mux: &sync.Mutex{}}
+			msgBuffer := NewMessageBuffer()
 			newMsgBuffer := digestBuffer.GetMissingMessageBuffer(msgBuffer)
 			mux1 := fmt.Sprintf("%p", newMsgBuffer.Mux)
 			mux2 := fmt.Sprintf("%p", msgBuffer.Mux)

@@ -3,7 +3,6 @@ package buffer
 import (
 	"fmt"
 	"math/rand"
-	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,9 +24,7 @@ var _ = Describe("MessageBuffer interface", func() {
 	)
 
 	BeforeEach(func() {
-		msgBuffer = MessageBuffer{
-			Mux: &sync.Mutex{},
-		}
+		msgBuffer = NewMessageBuffer()
 
 		msgID = fmt.Sprintf("%d", rand.Int31())
 		msgMsg = fmt.Sprintf("%d", rand.Int31())
@@ -51,9 +48,7 @@ var _ = Describe("MessageBuffer interface", func() {
 				Msg:         msgMsg,
 				GossipCount: msgGossipCount,
 			}
-			msgBuffer := MessageBuffer{
-				Mux: &sync.Mutex{},
-			}
+			msgBuffer := NewMessageBuffer()
 
 			msgBuffer = msgBuffer.AddMessage(msg)
 			Expect(msgBuffer.Messages).To(HaveLen(1))

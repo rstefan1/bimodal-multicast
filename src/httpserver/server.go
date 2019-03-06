@@ -101,9 +101,6 @@ var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
 	for _, m := range rcvMsgBuf.Messages {
 		*msgBuffer = msgBuffer.AddMessage(m)
 	}
-	// missingDigestBuffer := t.Digests
-	// missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
-
 }
 
 var handler = func(w http.ResponseWriter, r *http.Request) {
