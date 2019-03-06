@@ -99,7 +99,7 @@ var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
 
 	rcvMsgBuf := t.Messages
 	for _, m := range rcvMsgBuf.Messages {
-		*msgBuffer = msgBuffer.AddMessage(m)
+		msgBuffer.AddMessage(m)
 	}
 }
 

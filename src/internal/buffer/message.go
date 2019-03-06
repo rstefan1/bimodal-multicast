@@ -22,6 +22,7 @@ func NewMessageBuffer() MessageBuffer {
 	}
 }
 
+// UnwrapMessageBuffer unwraps MessageBuffer into []Message
 func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
 	return msgBuffer.Messages
 }
@@ -40,20 +41,18 @@ func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 }
 
 // AddMessage adds message in message buffer
-func (msgBuffer MessageBuffer) AddMessage(msg Message) MessageBuffer {
+func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
 	msgBuffer.Mux.Lock()
 	msgBuffer.Messages = append(msgBuffer.Messages, msg)
 	msgBuffer.Mux.Unlock()
-	return msgBuffer
 }
 
 // IncrementGossipCount increments gossip countfor each message from message
 // buffer
-func (msgBuffer MessageBuffer) IncrementGossipCount() MessageBuffer {
+func (msgBuffer *MessageBuffer) IncrementGossipCount() {
 	msgBuffer.Mux.Lock()
 	for i := range msgBuffer.Messages {
 		msgBuffer.Messages[i].GossipCount++
 	}
 	msgBuffer.Mux.Unlock()
-	return msgBuffer
 }

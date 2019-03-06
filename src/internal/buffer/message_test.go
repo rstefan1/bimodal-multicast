@@ -33,7 +33,7 @@ var _ = Describe("MessageBuffer interface", func() {
 		for i := 0; i < msgCount; i++ {
 			_msgID := fmt.Sprintf("%s-%02d", msgID, i)
 			_msgMsg := fmt.Sprintf("%s-%02d", msgMsg, i)
-			msgBuffer = msgBuffer.AddMessage(Message{
+			msgBuffer.AddMessage(Message{
 				ID:          _msgID,
 				Msg:         _msgMsg,
 				GossipCount: msgGossipCount,
@@ -50,7 +50,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			}
 			msgBuffer := NewMessageBuffer()
 
-			msgBuffer = msgBuffer.AddMessage(msg)
+			msgBuffer.AddMessage(msg)
 			Expect(msgBuffer.Messages).To(HaveLen(1))
 			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
 		})
@@ -85,7 +85,7 @@ var _ = Describe("MessageBuffer interface", func() {
 
 	Describe("at IncrementGossipCount function call", func() {
 		It("increment gossip count for each message from message buffer", func() {
-			msgBuffer = msgBuffer.IncrementGossipCount()
+			msgBuffer.IncrementGossipCount()
 			newGossipCount := msgGossipCount + 1
 			for i := 0; i < msgCount; i++ {
 				_msgID := fmt.Sprintf("%s-%02d", msgID, i)

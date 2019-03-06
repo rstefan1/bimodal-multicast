@@ -13,6 +13,7 @@ type DigestBuffer struct {
 	Digests []Digest `json:"digest_buffer_list"`
 }
 
+// WrapDigestBuffer wraps []string into DigestBuffer
 func WrapDigestBuffer(digestSlice []string) DigestBuffer {
 	var digestBuffer DigestBuffer
 	for _, d := range digestSlice {
@@ -21,6 +22,7 @@ func WrapDigestBuffer(digestSlice []string) DigestBuffer {
 	return digestBuffer
 }
 
+// UnwrapDigestBuffer unwraps DigestBuffer into []string
 func (digestBuffer DigestBuffer) UnwrapDigestBuffer() []string {
 	var digestSlice []string
 	for _, d := range digestBuffer.Digests {
@@ -35,7 +37,7 @@ func compareFn(digest []Digest) func(int, int) bool {
 	}
 }
 
-// HasSameDigests returns true if given digest are same
+// SameDigests returns true if given digest are same
 func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
 	if len(a.Digests) != len(b.Digests) {
 		return false

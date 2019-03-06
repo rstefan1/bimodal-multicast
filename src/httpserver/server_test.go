@@ -138,7 +138,7 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
-			httpServerMsgBuffer = httpServerMsgBuffer.AddMessage(buffer.Message{
+			httpServerMsgBuffer.AddMessage(buffer.Message{
 				ID:          fmt.Sprintf("%d", rand.Int31()),
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
 				GossipCount: rand.Int(),
@@ -199,7 +199,7 @@ var _ = Describe("HTTP Server", func() {
 			messageID := fmt.Sprintf("%d", rand.Int31())
 
 			// populate buffer with a message
-			httpServerMsgBuffer = httpServerMsgBuffer.AddMessage(buffer.Message{
+			httpServerMsgBuffer.AddMessage(buffer.Message{
 				ID:          messageID,
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
 				GossipCount: rand.Int(),
@@ -236,7 +236,7 @@ var _ = Describe("HTTP Server", func() {
 		})
 		It("updates the message buffer", func() {
 			syncMsgBuffer := buffer.NewMessageBuffer()
-			syncMsgBuffer = syncMsgBuffer.AddMessage(buffer.Message{
+			syncMsgBuffer.AddMessage(buffer.Message{
 				ID:          fmt.Sprintf("%d", rand.Int31()),
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
 				GossipCount: rand.Int(),
