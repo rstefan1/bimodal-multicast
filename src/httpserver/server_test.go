@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -36,6 +38,20 @@ func (r *receivedMessages) GetMessage() interface{} {
 	return m
 }
 
+func getPort() int {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		panic(err)
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port
+}
+
 var _ = Describe("HTTP Server", func() {
 	var (
 		httpServerPort      string
@@ -50,9 +66,8 @@ var _ = Describe("HTTP Server", func() {
 	)
 
 	BeforeEach(func() {
-		// TODO set random ports for servers
-		httpServerPort = "19999"
-		mockServerPort = "29999"
+		httpServerPort = strconv.Itoa(getPort())
+		mockServerPort = strconv.Itoa(getPort())
 
 		httpServerCfg = config.Config{
 			HTTPAddr: fmt.Sprintf(":%s", httpServerPort),
@@ -75,9 +90,6 @@ var _ = Describe("HTTP Server", func() {
 
 	AfterEach(func() {
 		close(httpServerStop)
-
-		// TODO set random ports for servers to remove the following sleep
-		time.Sleep(time.Millisecond * 200)
 	})
 
 	Describe("at gossip request", func() {
