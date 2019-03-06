@@ -15,9 +15,11 @@ type MessageBuffer struct {
 	Mux      *sync.Mutex `json:"message_buffer_Mux"`
 }
 
-func (msgBuffer MessageBuffer) AddMutex(mx *sync.Mutex) MessageBuffer {
-	msgBuffer.Mux = mx
-	return msgBuffer
+// NewMessageBuffer creates new MessageBuffer
+func NewMessageBuffer() MessageBuffer {
+	return MessageBuffer{
+		Mux: &sync.Mutex{},
+	}
 }
 
 func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {

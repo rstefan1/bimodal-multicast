@@ -60,8 +60,7 @@ var _ = Describe("HTTP Server", func() {
 
 		peerBuffer = []peer.Peer{}
 
-		httpServerMsgBuffer = buffer.MessageBuffer{}
-		httpServerMsgBuffer = httpServerMsgBuffer.AddMutex(&sync.Mutex{})
+		httpServerMsgBuffer = buffer.NewMessageBuffer()
 
 		httpServerStop = make(chan struct{})
 
@@ -102,7 +101,8 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				startHTTPServer(mockServer)
+				err := startHTTPServer(mockServer)
+				Expect(err).To(Succeed())
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
@@ -184,7 +184,8 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				startHTTPServer(mockServer)
+				err := startHTTPServer(mockServer)
+				Expect(err).To(Succeed())
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
@@ -234,8 +235,7 @@ var _ = Describe("HTTP Server", func() {
 			requestPath = fmt.Sprintf("http://localhost:%s/synchronization", httpServerPort)
 		})
 		It("updates the message buffer", func() {
-			syncMsgBuffer := buffer.MessageBuffer{}
-			syncMsgBuffer = syncMsgBuffer.AddMutex(&sync.Mutex{})
+			syncMsgBuffer := buffer.NewMessageBuffer()
 			syncMsgBuffer = syncMsgBuffer.AddMessage(buffer.Message{
 				ID:          fmt.Sprintf("%d", rand.Int31()),
 				Msg:         fmt.Sprintf("%d", rand.Int31()),

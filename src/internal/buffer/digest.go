@@ -5,12 +5,10 @@ import (
 	"sync"
 )
 
-//easyjson:json
 type Digest struct {
 	ID string `json:"digest_id"`
 }
 
-//easyjson:json
 type DigestBuffer struct {
 	Digests []Digest `json:"digest_buffer_list"`
 }
