@@ -134,7 +134,7 @@ var _ = Describe("HTTP Server", func() {
 			gossipMessage := httpmessage.HTTPGossip{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int(),
+				RoundNumber: rand.Int63(),
 				Digests:     gossipDigest,
 			}
 			jsonGossip, err := json.Marshal(gossipMessage)
@@ -158,7 +158,7 @@ var _ = Describe("HTTP Server", func() {
 			gossipMessage := httpmessage.HTTPGossip{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int(),
+				RoundNumber: rand.Int63(),
 				Digests:     httpServerMsgBuffer.DigestBuffer(),
 			}
 			jsonDigest, err := json.Marshal(gossipMessage)
@@ -226,7 +226,7 @@ var _ = Describe("HTTP Server", func() {
 			solicitationMessage := httpmessage.HTTPSolicitation{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int(),
+				RoundNumber: rand.Int63(),
 				Digests:     solicitationDigest,
 			}
 			jsonSolicitation, err := json.Marshal(solicitationMessage)
