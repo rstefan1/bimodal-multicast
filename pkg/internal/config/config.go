@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 // HTTPConfig has configs for http server
