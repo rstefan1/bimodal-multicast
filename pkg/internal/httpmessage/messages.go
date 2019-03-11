@@ -1,6 +1,6 @@
 package httpmessage
 
-import "github.com/rstefan1/bimodal-multicast/src/internal/buffer"
+import "github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 
 // HTTPGossip is gossip message for http server
 type HTTPGossip struct {

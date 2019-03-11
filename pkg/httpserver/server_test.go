@@ -14,10 +14,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/src/internal/config"
-	"github.com/rstefan1/bimodal-multicast/src/internal/httpmessage"
-	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 type receivedMessages struct {
