@@ -32,10 +32,11 @@ func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 	var digestBuffer DigestBuffer
 
 	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
 	for _, b := range msgBuffer.Messages {
 		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: b.ID})
 	}
-	msgBuffer.Mux.Unlock()
 
 	return digestBuffer
 }
@@ -43,16 +44,18 @@ func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 // AddMessage adds message in message buffer
 func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
 	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
 	msgBuffer.Messages = append(msgBuffer.Messages, msg)
-	msgBuffer.Mux.Unlock()
 }
 
-// IncrementGossipCount increments gossip countfor each message from message
+// IncrementGossipCount increments gossip count for each message from message
 // buffer
 func (msgBuffer *MessageBuffer) IncrementGossipCount() {
 	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
 	for i := range msgBuffer.Messages {
 		msgBuffer.Messages[i].GossipCount++
 	}
-	msgBuffer.Mux.Unlock()
 }
