@@ -122,7 +122,7 @@ func startHTTPServer(s *http.Server) error {
 	return nil
 }
 
-func gracefullShutdown(s *http.Server) {
+func gracefullyShutdown(s *http.Server) {
 	if err := s.Shutdown(context.TODO()); err != nil {
 		log.Fatal(err, "unable to shutdown HTTP server properly")
 	}
@@ -145,7 +145,7 @@ func Start(cfg config.HTTPConfig, stop <-chan struct{}) error {
 
 	go func() {
 		<-stop
-		gracefullShutdown(s)
+		gracefullyShutdown(s)
 	}()
 
 	// return <-errChan

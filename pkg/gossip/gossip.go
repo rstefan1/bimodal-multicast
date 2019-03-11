@@ -52,51 +52,57 @@ func (g Gossip) resetSelectedPeers() {
 }
 
 // gossipRound is the gossip round that runs every 100ms
-func (g Gossip) gossipRound() {
+func (g Gossip) gossipRound(stop <-chan struct{}) {
 	var (
 		dest peer.Peer
 		path string
 	)
 	for {
-		// increment round number
-		g.roundNumber++
+		select {
+		case <-stop:
+			log.Print("End of gossip round")
+			break
+		default:
+			// increment round number
+			g.roundNumber++
 
-		gossipMsg := httpmessage.HTTPGossip{
-			Addr:        g.gossipAddr,
-			Port:        g.gossipPort,
-			RoundNumber: g.roundNumber,
-			Digests:     (*g.msgBuffer).DigestBuffer(),
-		}
-
-		// gossipLen is number of nodes which will receive gossip message
-		gossipLen := int(g.beta * float64(len(*g.peerBuffer)) / float64(g.roundNumber))
-
-		// send gossip messages
-		for i := 0; i < gossipLen; i++ {
-			dest = g.randomlySelectPeer()
-			path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
-			jsonGossip, err := json.Marshal(gossipMsg)
-			if err != nil {
-				log.Fatal(err)
-				continue
+			gossipMsg := httpmessage.HTTPGossip{
+				Addr:        g.gossipAddr,
+				Port:        g.gossipPort,
+				RoundNumber: g.roundNumber,
+				Digests:     (*g.msgBuffer).DigestBuffer(),
 			}
 
-			// send the gossip message
-			_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
-			if err != nil {
-				log.Fatal(err)
+			// gossipLen is number of nodes which will receive gossip message
+			gossipLen := int(g.beta * float64(len(*g.peerBuffer)) / float64(g.roundNumber))
+
+			// send gossip messages
+			for i := 0; i < gossipLen; i++ {
+				dest = g.randomlySelectPeer()
+				path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
+				jsonGossip, err := json.Marshal(gossipMsg)
+				if err != nil {
+					log.Fatal(err)
+					continue
+				}
+
+				// send the gossip message
+				_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
+
+			(*g.msgBuffer).IncrementGossipCount()
+			g.resetSelectedPeers()
+
+			time.Sleep(100 * time.Millisecond)
 		}
-
-		(*g.msgBuffer).IncrementGossipCount()
-		g.resetSelectedPeers()
-
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func (g Gossip) Start() {
-	g.gossipRound()
+func (g Gossip) Start(stop <-chan struct{}) {
+	g.gossipRound(stop)
 }
 
 func (g Gossip) New(cfg config.GossipConfig) Gossip {

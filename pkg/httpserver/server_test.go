@@ -124,7 +124,7 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		AfterEach(func() {
-			gracefullShutdown(mockServer)
+			gracefullyShutdown(mockServer)
 		})
 
 		It("responds with solicitation request when nodes have different digests", func() {
@@ -207,7 +207,7 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		AfterEach(func() {
-			gracefullShutdown(mockServer)
+			gracefullyShutdown(mockServer)
 		})
 
 		It("responds with synchronization message", func() {
