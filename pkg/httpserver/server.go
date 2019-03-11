@@ -115,7 +115,7 @@ var handler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 func startHTTPServer(s *http.Server) error {
-	log.Print("HTTP Server listening at ", s.Addr)
+	log.Printf("HTTP Server listening at %s", s.Addr)
 	if err := s.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
@@ -128,13 +128,13 @@ func gracefullShutdown(s *http.Server) {
 	}
 }
 
-func Start(peerBuf *[]peer.Peer, msgBuf *buffer.MessageBuffer, stop <-chan struct{}, cfg config.HTTPConfig) error {
-	peerBuffer = peerBuf
-	msgBuffer = msgBuf
+func Start(cfg config.HTTPConfig, stop <-chan struct{}) error {
+	peerBuffer = cfg.PeerBuf
+	msgBuffer = cfg.MsgBuf
 	errChan := make(chan error)
 
 	s := &http.Server{
-		Addr:    cfg.HTTPAddr,
+		Addr:    fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
 		Handler: http.HandlerFunc(handler),
 	}
 

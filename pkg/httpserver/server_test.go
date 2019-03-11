@@ -70,7 +70,10 @@ var _ = Describe("HTTP Server", func() {
 		mockServerPort = strconv.Itoa(getPort())
 
 		httpServerCfg = config.HTTPConfig{
-			HTTPAddr: fmt.Sprintf(":%s", httpServerPort),
+			Addr:    "",
+			Port:    httpServerPort,
+			PeerBuf: &peerBuffer,
+			MsgBuf:  &httpServerMsgBuffer,
 		}
 
 		peerBuffer = []peer.Peer{}
@@ -84,7 +87,7 @@ var _ = Describe("HTTP Server", func() {
 		}
 
 		// start http server
-		err := Start(&peerBuffer, &httpServerMsgBuffer, httpServerStop, httpServerCfg)
+		err := Start(httpServerCfg, httpServerStop)
 		Expect(err).To(Succeed())
 	})
 
