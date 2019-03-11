@@ -128,7 +128,7 @@ func gracefullShutdown(s *http.Server) {
 	}
 }
 
-func Start(peerBuf *[]peer.Peer, msgBuf *buffer.MessageBuffer, stop <-chan struct{}, cfg config.Config) error {
+func Start(peerBuf *[]peer.Peer, msgBuf *buffer.MessageBuffer, stop <-chan struct{}, cfg config.HTTPConfig) error {
 	peerBuffer = peerBuf
 	msgBuffer = msgBuf
 	errChan := make(chan error)

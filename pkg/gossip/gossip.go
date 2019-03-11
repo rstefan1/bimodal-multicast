@@ -1,4 +1,4 @@
-package protocol
+package gossip
 
 import (
 	"bytes"
@@ -9,12 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/src/internal/httpmessage"
-	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
-type Protocol struct {
+type Gossip struct {
 	// buffer with addresses of nodes in system
 	peerBuffer *[]peer.Peer
 	// buffer with gossip messages
@@ -32,47 +33,47 @@ type Protocol struct {
 }
 
 // randomlySelectPeer is a helper func that returns a random peer
-func (p Protocol) randomlySelectPeer() peer.Peer {
+func (g Gossip) randomlySelectPeer() peer.Peer {
 	for {
-		r := rand.Intn(len(*p.peerBuffer))
-		if p.selectedPeers[r] {
+		r := rand.Intn(len(*g.peerBuffer))
+		if g.selectedPeers[r] {
 			continue
 		}
-		p.selectedPeers[r] = true
-		return (*p.peerBuffer)[r]
+		g.selectedPeers[r] = true
+		return (*g.peerBuffer)[r]
 	}
 }
 
 // resetSelectedPeers is a helper func that clear slice with selected peers in gossip round
-func (p Protocol) resetSelectedPeers() {
-	for i := range p.selectedPeers {
-		p.selectedPeers[i] = false
+func (g Gossip) resetSelectedPeers() {
+	for i := range g.selectedPeers {
+		g.selectedPeers[i] = false
 	}
 }
 
 // gossipRound is the gossip round that runs every 100ms
-func (p Protocol) gossipRound() {
+func (g Gossip) gossipRound() {
 	var (
 		dest peer.Peer
 		path string
 	)
 	for {
 		// increment round number
-		p.roundNumber++
+		g.roundNumber++
 
 		gossipMsg := httpmessage.HTTPGossip{
-			Addr:        p.gossipAddr,
-			Port:        p.gossipPort,
-			RoundNumber: p.roundNumber,
-			Digests:     (*p.msgBuffer).DigestBuffer(),
+			Addr:        g.gossipAddr,
+			Port:        g.gossipPort,
+			RoundNumber: g.roundNumber,
+			Digests:     (*g.msgBuffer).DigestBuffer(),
 		}
 
 		// gossipLen is number of nodes which will receive gossip message
-		gossipLen := int(p.beta * float64(len(*p.peerBuffer)) / float64(p.roundNumber))
+		gossipLen := int(g.beta * float64(len(*g.peerBuffer)) / float64(g.roundNumber))
 
 		// send gossip messages
 		for i := 0; i < gossipLen; i++ {
-			dest = p.randomlySelectPeer()
+			dest = g.randomlySelectPeer()
 			path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
 			jsonGossip, err := json.Marshal(gossipMsg)
 			if err != nil {
@@ -87,24 +88,24 @@ func (p Protocol) gossipRound() {
 			}
 		}
 
-		(*p.msgBuffer).IncrementGossipCount()
-		p.resetSelectedPeers()
+		(*g.msgBuffer).IncrementGossipCount()
+		g.resetSelectedPeers()
 
 		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func (p Protocol) Start() {
-	p.gossipRound()
+func (g Gossip) Start() {
+	g.gossipRound()
 }
 
-func (p Protocol) NewProtocol(peerBuf *[]peer.Peer, msgBuf *buffer.MessageBuffer, addr, port string) Protocol {
-	return Protocol{
-		peerBuffer:    peerBuf,
-		msgBuffer:     msgBuf,
-		gossipAddr:    addr,
-		gossipPort:    port,
-		selectedPeers: make([]bool, len(*peerBuf)),
+func (g Gossip) New(cfg config.GossipConfig) Gossip {
+	return Gossip{
+		peerBuffer:    cfg.PeerBuf,
+		msgBuffer:     cfg.MsgBuf,
+		gossipAddr:    cfg.Addr,
+		gossipPort:    cfg.Port,
+		selectedPeers: make([]bool, len(*cfg.PeerBuf)),
 		roundNumber:   1,
 	}
 }
