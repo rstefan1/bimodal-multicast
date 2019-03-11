@@ -7,8 +7,14 @@ import (
 
 // HTTPConfig has configs for http server
 type HTTPConfig struct {
-	// HTTPAddr is http server address
-	HTTPAddr string
+	// Addr is http server address
+	Addr string
+	// Port is http server port
+	Port string
+	// PeerBuf is the list of peers
+	PeerBuf *[]peer.Peer
+	// MsgBuf is the list of messages
+	MsgBuf *buffer.MessageBuffer
 }
 
 // GossipConfig has configs for gossip object
