@@ -6,7 +6,7 @@ package bimodal
 //	"github.com/rstefan1/bimodal-multicast/src/internal/buffer"
 //	"github.com/rstefan1/bimodal-multicast/src/internal/config"
 //	"github.com/rstefan1/bimodal-multicast/src/internal/peer"
-//	"github.com/rstefan1/bimodal-multicast/src/protocol"
+//	"github.com/rstefan1/bimodal-multicast/src/gossipgossip"
 //)
 //
 //var (
@@ -23,7 +23,7 @@ package bimodal
 //	if err := httpserver.Start(&peerBuffer, &msgBuffer, stop, cfg); err != nil {
 //		return err
 //	}
-//	protocol.Start(&peerBuffer, &msgBuffer)
+//	gossipgossip.Start(&peerBuffer, &msgBuffer)
 //
 //	return nil
 //}

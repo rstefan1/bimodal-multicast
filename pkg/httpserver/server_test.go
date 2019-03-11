@@ -56,7 +56,7 @@ var _ = Describe("HTTP Server", func() {
 	var (
 		httpServerPort      string
 		mockServerPort      string
-		httpServerCfg       config.Config
+		httpServerCfg       config.HTTPConfig
 		peerBuffer          []peer.Peer
 		httpServerMsgBuffer buffer.MessageBuffer
 		httpServerStop      chan struct{}
@@ -69,7 +69,7 @@ var _ = Describe("HTTP Server", func() {
 		httpServerPort = strconv.Itoa(getPort())
 		mockServerPort = strconv.Itoa(getPort())
 
-		httpServerCfg = config.Config{
+		httpServerCfg = config.HTTPConfig{
 			HTTPAddr: fmt.Sprintf(":%s", httpServerPort),
 		}
 
