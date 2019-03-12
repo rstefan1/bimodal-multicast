@@ -17,7 +17,7 @@ import (
 
 type Gossip struct {
 	// buffer with addresses of nodes in system
-	peerBuffer *[]peer.Peer
+	peerBuffer []peer.Peer
 	// buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// gossipAddr is the gossip server address
@@ -35,12 +35,12 @@ type Gossip struct {
 // randomlySelectPeer is a helper func that returns a random peer
 func (g Gossip) randomlySelectPeer() peer.Peer {
 	for {
-		r := rand.Intn(len(*g.peerBuffer))
+		r := rand.Intn(len(g.peerBuffer))
 		if g.selectedPeers[r] {
 			continue
 		}
 		g.selectedPeers[r] = true
-		return (*g.peerBuffer)[r]
+		return (g.peerBuffer)[r]
 	}
 }
 
@@ -63,6 +63,9 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 			log.Print("End of gossip round")
 			break
 		default:
+			// TODO remove this log
+			log.Print("New gossip round")
+
 			// increment round number
 			g.roundNumber++
 
@@ -70,11 +73,11 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 				Addr:        g.gossipAddr,
 				Port:        g.gossipPort,
 				RoundNumber: g.roundNumber,
-				Digests:     (*g.msgBuffer).DigestBuffer(),
+				Digests:     (g.msgBuffer).DigestBuffer(),
 			}
 
 			// gossipLen is number of nodes which will receive gossip message
-			gossipLen := int(g.beta * float64(len(*g.peerBuffer)) / float64(g.roundNumber))
+			gossipLen := int(g.beta * float64(len(g.peerBuffer)) / float64(g.roundNumber)) + 1
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
@@ -96,7 +99,7 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 			(*g.msgBuffer).IncrementGossipCount()
 			g.resetSelectedPeers()
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 }
@@ -105,13 +108,13 @@ func (g Gossip) Start(stop <-chan struct{}) {
 	g.gossipRound(stop)
 }
 
-func (g Gossip) New(cfg config.GossipConfig) Gossip {
+func New(cfg config.GossipConfig) Gossip {
 	return Gossip{
 		peerBuffer:    cfg.PeerBuf,
 		msgBuffer:     cfg.MsgBuf,
 		gossipAddr:    cfg.Addr,
 		gossipPort:    cfg.Port,
-		selectedPeers: make([]bool, len(*cfg.PeerBuf)),
+		selectedPeers: make([]bool, len(cfg.PeerBuf)),
 		roundNumber:   1,
 	}
 }

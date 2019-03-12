@@ -16,11 +16,13 @@ import (
 )
 
 var (
-	peerBuffer *[]peer.Peer
+	peerBuffer []peer.Peer
 	msgBuffer  *buffer.MessageBuffer
 )
 
 var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
+	// TODO delete this log
+	log.Print("Gossip event")
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
@@ -57,6 +59,8 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
+	// TODO delete this log
+	log.Print("Solicitation event")
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
@@ -90,6 +94,8 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
+	// TODO delete this log
+	log.Print("Synchronization event")
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)

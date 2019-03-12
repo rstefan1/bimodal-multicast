@@ -12,7 +12,7 @@ type HTTPConfig struct {
 	// Port is http server port
 	Port string
 	// PeerBuf is the list of peers
-	PeerBuf *[]peer.Peer
+	PeerBuf []peer.Peer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
 }
@@ -24,7 +24,7 @@ type GossipConfig struct {
 	// Port is HTTP port for node which runs gossip round
 	Port string
 	// PeerBuf is the list of peers
-	PeerBuf *[]peer.Peer
+	PeerBuf []peer.Peer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
 }
