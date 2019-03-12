@@ -38,7 +38,7 @@ func (r *receivedMessages) GetMessage() interface{} {
 	return m
 }
 
-func getPort() int {
+func suggestPort() int {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
 		panic(err)
@@ -66,13 +66,13 @@ var _ = Describe("HTTP Server", func() {
 	)
 
 	BeforeEach(func() {
-		httpServerPort = strconv.Itoa(getPort())
-		mockServerPort = strconv.Itoa(getPort())
+		httpServerPort = strconv.Itoa(suggestPort())
+		mockServerPort = strconv.Itoa(suggestPort())
 
 		httpServerCfg = config.HTTPConfig{
 			Addr:    "",
 			Port:    httpServerPort,
-			PeerBuf: &peerBuffer,
+			PeerBuf: peerBuffer,
 			MsgBuf:  &httpServerMsgBuffer,
 		}
 
