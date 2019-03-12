@@ -22,11 +22,6 @@ func NewMessageBuffer() MessageBuffer {
 	}
 }
 
-// UnwrapMessageBuffer unwraps MessageBuffer into []Message
-func (msgBuffer MessageBuffer) UnwrapMessageBuffer() []Message {
-	return msgBuffer.Messages
-}
-
 // Digest returns a slice with ID of messages from given buffer
 func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
 	var digestBuffer DigestBuffer

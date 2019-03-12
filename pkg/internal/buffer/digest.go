@@ -22,15 +22,6 @@ func WrapDigestBuffer(digestSlice []string) DigestBuffer {
 	return digestBuffer
 }
 
-// UnwrapDigestBuffer unwraps DigestBuffer into []string
-func (digestBuffer DigestBuffer) UnwrapDigestBuffer() []string {
-	var digestSlice []string
-	for _, d := range digestBuffer.Digests {
-		digestSlice = append(digestSlice, d.ID)
-	}
-	return digestSlice
-}
-
 func compareFn(digest []Digest) func(int, int) bool {
 	return func(i, j int) bool {
 		return digest[i].ID <= digest[j].ID
