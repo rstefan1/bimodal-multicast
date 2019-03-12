@@ -5,24 +5,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	"strings"
-
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"log"
+	"net/http"
+	"strings"
 )
 
-var (
+type HTTP struct {
+	server *http.Server
 	peerBuffer []peer.Peer
 	msgBuffer  *buffer.MessageBuffer
-)
+}
 
-var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
-	// TODO delete this log
-	log.Print("Gossip event")
+func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
@@ -58,9 +56,7 @@ var gossipHandler = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
-	// TODO delete this log
-	log.Print("Solicitation event")
+func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
@@ -93,9 +89,8 @@ var solicitationHandler = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
-	// TODO delete this log
-	log.Print("Synchronization event")
+
+func getSynchronizationHandler (w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
@@ -109,20 +104,11 @@ var synchronizationHandler = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var handler = func(w http.ResponseWriter, r *http.Request) {
-	switch path := r.URL.Path; path {
-	case "/gossip":
-		gossipHandler(w, r)
-	case "/solicitation":
-		solicitationHandler(w, r)
-	case "/synchronization":
-		synchronizationHandler(w, r)
-	}
-}
 
 func startHTTPServer(s *http.Server) error {
 	log.Printf("HTTP Server listening at %s", s.Addr)
 	if err := s.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatal(err, "unable to start HTTP server")
 		return err
 	}
 	return nil
@@ -134,24 +120,38 @@ func gracefullyShutdown(s *http.Server) {
 	}
 }
 
-func Start(cfg config.HTTPConfig, stop <-chan struct{}) error {
-	peerBuffer = cfg.PeerBuf
-	msgBuffer = cfg.MsgBuf
+func New (cfg config.HTTPConfig) *HTTP {
+	return &HTTP {
+		server: &http.Server{
+			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
+			//Handler:getSynchronizationHandler(cfg.MsgBuf),
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+				switch path := r.URL.Path; path {
+				case "/gossip":
+					getGossipHandler(w, r, cfg.MsgBuf)
+				case "/solicitation":
+					getSolicitationHandler(w, r, cfg.MsgBuf)
+				case "/synchronization":
+					getSynchronizationHandler(w, r, cfg.MsgBuf)
+				}
+			}),
+		},
+		peerBuffer:cfg.PeerBuf,
+		msgBuffer:cfg.MsgBuf,
+	}
+}
+
+func (h *HTTP) Start(stop <-chan struct{}) error {
 	errChan := make(chan error)
 
-	s := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
-		Handler: http.HandlerFunc(handler),
-	}
-
 	go func() {
-		err := startHTTPServer(s)
+		err := startHTTPServer(h.server)
 		errChan <- err
 	}()
 
 	go func() {
 		<-stop
-		gracefullyShutdown(s)
+		gracefullyShutdown(h.server)
 	}()
 
 	// return <-errChan

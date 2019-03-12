@@ -61,7 +61,7 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 		select {
 		case <-stop:
 			log.Print("End of gossip round")
-			break
+			return
 		default:
 			// TODO remove this log
 			log.Print("New gossip round")
@@ -99,12 +99,13 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 			(*g.msgBuffer).IncrementGossipCount()
 			g.resetSelectedPeers()
 
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
 
 func (g Gossip) Start(stop <-chan struct{}) {
+	log.Println("Starting Gossip server")
 	g.gossipRound(stop)
 }
 
