@@ -87,7 +87,8 @@ var _ = Describe("HTTP Server", func() {
 		}
 
 		// start http server
-		err := Start(httpServerCfg, httpServerStop)
+		srv := New(httpServerCfg)
+		err := srv.Start(httpServerStop)
 		Expect(err).To(Succeed())
 	})
 

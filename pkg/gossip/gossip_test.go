@@ -2,18 +2,18 @@ package gossip
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo"
-	"github.com/rstefan1/bimodal-multicast/pkg/httpserver"
 	"math/rand"
 	"net"
 	"strconv"
 	"time"
 
+	. "github.com/onsi/ginkgo"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/httpserver"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
-
 
 func suggestPort() int {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
@@ -96,19 +96,27 @@ var _ = Describe("Gossip Server", func() {
 		fmt.Println("\n\nBEFORE\n", mockMsgBuf.Messages)
 
 		go func() {
-			server.Start(mockCfg, mockStop)
+			mockHTTPServer := server.New(mockCfg)
+			mockHTTPServer.Start(mockStop)
 		}()
 
 		go func() {
-			server.Start(httpCfg, httpStop)
+			gossipHTTPServer := server.New(httpCfg)
+			gossipHTTPServer.Start(httpStop)
 		}()
+
+		// wait for starting http servers
+		time.Sleep(time.Second)
 
 		go func() {
 			gossip.Start(gossipStop)
 		}()
 
-		time.Sleep(time.Second * 10)
-		fmt.Println("\n\nAFTER\n", mockMsgBuf.Messages)
+		time.Sleep(time.Second)
 
+
+		mockMsgBuf.Mux.Lock()
+		fmt.Println("\n\nAFTER\n", mockMsgBuf.Messages)
+		mockMsgBuf.Mux.Unlock()
 	})
 })
