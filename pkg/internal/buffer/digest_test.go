@@ -47,13 +47,6 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 	})
 
-	Describe("at UnwrapDigestBuffer function call", func() {
-		It("unwraps digest buffer", func() {
-			unwrappedDigest := digestBuffer.UnwrapDigestBuffer()
-			Expect(unwrappedDigest).To(Equal(digestSlice))
-		})
-	})
-
 	Describe("at SameDigests function call", func() {
 		var (
 			digestBuffer1 DigestBuffer

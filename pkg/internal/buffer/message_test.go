@@ -55,22 +55,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
 		})
 	})
-
-	Describe("at UnwrapMessageBuffer function call", func() {
-		It("unwrap message buffer", func() {
-			var expectedUnwrap []Message
-			for i := 0; i < msgCount; i++ {
-				msg := Message{
-					ID:          fmt.Sprintf("%s-%02d", msgID, i),
-					Msg:         fmt.Sprintf("%s-%02d", msgMsg, i),
-					GossipCount: msgGossipCount,
-				}
-				expectedUnwrap = append(expectedUnwrap, msg)
-			}
-			Expect(msgBuffer.UnwrapMessageBuffer()).To(Equal(expectedUnwrap))
-		})
-	})
-
+	
 	Describe("at DigestBuffer fuction call", func() {
 		It("transform message buffer into digest buffer", func() {
 			var expectedDigestBuffer DigestBuffer
