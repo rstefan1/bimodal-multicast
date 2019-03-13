@@ -15,7 +15,7 @@ import (
 )
 
 type HTTP struct {
-	server *http.Server
+	server     *http.Server
 	peerBuffer []peer.Peer
 	msgBuffer  *buffer.MessageBuffer
 }
@@ -89,8 +89,7 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	}
 }
 
-
-func getSynchronizationHandler (w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
+func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
@@ -103,7 +102,6 @@ func getSynchronizationHandler (w http.ResponseWriter, r *http.Request, msgBuffe
 		msgBuffer.AddMessage(m)
 	}
 }
-
 
 func startHTTPServer(s *http.Server) error {
 	log.Printf("HTTP Server listening at %s", s.Addr)
@@ -120,12 +118,12 @@ func gracefullyShutdown(s *http.Server) {
 	}
 }
 
-func New (cfg config.HTTPConfig) *HTTP {
-	return &HTTP {
+func New(cfg config.HTTPConfig) *HTTP {
+	return &HTTP{
 		server: &http.Server{
 			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
 			//Handler:getSynchronizationHandler(cfg.MsgBuf),
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
 					getGossipHandler(w, r, cfg.MsgBuf)
@@ -136,8 +134,8 @@ func New (cfg config.HTTPConfig) *HTTP {
 				}
 			}),
 		},
-		peerBuffer:cfg.PeerBuf,
-		msgBuffer:cfg.MsgBuf,
+		peerBuffer: cfg.PeerBuf,
+		msgBuffer:  cfg.MsgBuf,
 	}
 }
 

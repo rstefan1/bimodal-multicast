@@ -22,7 +22,7 @@ func WrapDigestBuffer(digestSlice []string) DigestBuffer {
 	return digestBuffer
 }
 
-func compareFn(digest []Digest) func(int, int) bool {
+func compareDigestsFn(digest []Digest) func(int, int) bool {
 	return func(i, j int) bool {
 		return digest[i].ID <= digest[j].ID
 	}
@@ -34,8 +34,8 @@ func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
 		return false
 	}
 
-	sort.Slice(a.Digests, compareFn(a.Digests))
-	sort.Slice(b.Digests, compareFn(b.Digests))
+	sort.Slice(a.Digests, compareDigestsFn(a.Digests))
+	sort.Slice(b.Digests, compareDigestsFn(b.Digests))
 
 	for i := range a.Digests {
 		if a.Digests[i].ID != b.Digests[i].ID {
@@ -53,8 +53,8 @@ func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
 		Digests: []Digest{},
 	}
 
-	sort.Slice(a.Digests, compareFn(a.Digests))
-	sort.Slice(b.Digests, compareFn(b.Digests))
+	sort.Slice(a.Digests, compareDigestsFn(a.Digests))
+	sort.Slice(b.Digests, compareDigestsFn(b.Digests))
 
 	mapB := make(map[string]bool)
 	for i := range b.Digests {
