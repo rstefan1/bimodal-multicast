@@ -8,11 +8,16 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/httpserver"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+)
+
+const (
+	timeout = time.Second
 )
 
 func suggestPort() int {
@@ -93,16 +98,16 @@ var _ = Describe("Gossip Server", func() {
 	})
 
 	It("first unit test", func() {
-		fmt.Println("\n\nBEFORE\n", mockMsgBuf.Messages)
-
 		go func() {
 			mockHTTPServer := server.New(mockCfg)
-			mockHTTPServer.Start(mockStop)
+			err := mockHTTPServer.Start(mockStop)
+			Expect(err).To(Succeed())
 		}()
 
 		go func() {
 			gossipHTTPServer := server.New(httpCfg)
-			gossipHTTPServer.Start(httpStop)
+			err := gossipHTTPServer.Start(httpStop)
+			Expect(err).To(Succeed())
 		}()
 
 		// wait for starting http servers
@@ -112,10 +117,8 @@ var _ = Describe("Gossip Server", func() {
 			gossip.Start(gossipStop)
 		}()
 
-		time.Sleep(time.Second)
-
-		mockMsgBuf.Mux.Lock()
-		fmt.Println("\n\nAFTER\n", mockMsgBuf.Messages)
-		mockMsgBuf.Mux.Unlock()
+		Eventually(func() bool {
+			return gossipMsgBuf.SameMessages(&mockMsgBuf)
+		}, timeout).Should(Equal(true))
 	})
 })
