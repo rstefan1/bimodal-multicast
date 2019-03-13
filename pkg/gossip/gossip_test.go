@@ -31,53 +31,53 @@ func suggestPort() int {
 
 var _ = Describe("Gossip Server", func() {
 	var (
-		gossip Gossip
-		gossipPort string
-		mockPort string
-		gossipPeers []peer.Peer
-		mockPeers []peer.Peer
+		gossip       Gossip
+		gossipPort   string
+		mockPort     string
+		gossipPeers  []peer.Peer
+		mockPeers    []peer.Peer
 		gossipMsgBuf buffer.MessageBuffer
-		mockMsgBuf buffer.MessageBuffer
-		gossipCfg config.GossipConfig
-		httpCfg config.HTTPConfig
-		mockCfg config.HTTPConfig
-		gossipStop chan struct{}
-		httpStop chan struct{}
-		mockStop chan struct{}
+		mockMsgBuf   buffer.MessageBuffer
+		gossipCfg    config.GossipConfig
+		httpCfg      config.HTTPConfig
+		mockCfg      config.HTTPConfig
+		gossipStop   chan struct{}
+		httpStop     chan struct{}
+		mockStop     chan struct{}
 	)
 
 	BeforeEach(func() {
 		gossipPort = strconv.Itoa(suggestPort())
-		mockPort  = strconv.Itoa(suggestPort())
+		mockPort = strconv.Itoa(suggestPort())
 
-		gossipPeers = append(gossipPeers, peer.Peer{Addr:"localhost", Port:mockPort})
-		mockPeers = append(mockPeers, peer.Peer{Addr:"localhost", Port:gossipPort})
+		gossipPeers = append(gossipPeers, peer.Peer{Addr: "localhost", Port: mockPort})
+		mockPeers = append(mockPeers, peer.Peer{Addr: "localhost", Port: gossipPort})
 
 		gossipMsgBuf = buffer.NewMessageBuffer()
 		gossipMsgBuf.AddMessage(buffer.Message{
-			ID: fmt.Sprintf("%d", rand.Int31()),
-			Msg:fmt.Sprintf("%d", rand.Int31()),
+			ID:          fmt.Sprintf("%d", rand.Int31()),
+			Msg:         fmt.Sprintf("%d", rand.Int31()),
 			GossipCount: rand.Int(),
 		})
 		mockMsgBuf = buffer.NewMessageBuffer()
 
 		gossipCfg = config.GossipConfig{
-			Addr:"localhost",
-			Port:gossipPort,
-			PeerBuf:gossipPeers,
-			MsgBuf:&gossipMsgBuf,
+			Addr:    "localhost",
+			Port:    gossipPort,
+			PeerBuf: gossipPeers,
+			MsgBuf:  &gossipMsgBuf,
 		}
 		httpCfg = config.HTTPConfig{
-			Addr:"localhost",
-			Port: gossipPort,
-			PeerBuf:gossipPeers,
-			MsgBuf:&gossipMsgBuf,
+			Addr:    "localhost",
+			Port:    gossipPort,
+			PeerBuf: gossipPeers,
+			MsgBuf:  &gossipMsgBuf,
 		}
 		mockCfg = config.HTTPConfig{
-			Addr:"localhost",
-			Port:mockPort,
-			PeerBuf:mockPeers,
-			MsgBuf:&mockMsgBuf,
+			Addr:    "localhost",
+			Port:    mockPort,
+			PeerBuf: mockPeers,
+			MsgBuf:  &mockMsgBuf,
 		}
 
 		gossipStop = make(chan struct{})
@@ -113,7 +113,6 @@ var _ = Describe("Gossip Server", func() {
 		}()
 
 		time.Sleep(time.Second)
-
 
 		mockMsgBuf.Mux.Lock()
 		fmt.Println("\n\nAFTER\n", mockMsgBuf.Messages)

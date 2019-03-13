@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"sort"
 	"sync"
 )
 
@@ -53,4 +54,32 @@ func (msgBuffer *MessageBuffer) IncrementGossipCount() {
 	for i := range msgBuffer.Messages {
 		msgBuffer.Messages[i].GossipCount++
 	}
+}
+
+func compareMessagesFn(msg []Message) func(int, int) bool {
+	return func(i, j int) bool {
+		return msg[i].ID <= msg[j].ID
+	}
+}
+
+func (a *MessageBuffer) SameMessages(b *MessageBuffer) bool {
+	a.Mux.Lock()
+	b.Mux.Lock()
+	defer a.Mux.Unlock()
+	defer b.Mux.Unlock()
+
+	if len(a.Messages) != len(b.Messages) {
+		return false
+	}
+
+	sort.Slice(a.Messages, compareMessagesFn(a.Messages))
+	sort.Slice(b.Messages, compareMessagesFn(b.Messages))
+
+	for i := range a.Messages {
+		if a.Messages[i].ID != b.Messages[i].ID {
+			return false
+		}
+	}
+
+	return true
 }

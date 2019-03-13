@@ -55,6 +55,7 @@ var _ = Describe("DigestBuffer interface", func() {
 
 		BeforeEach(func() {
 			_, digestBuffer1 = createDigest(digestID, digestCount)
+			extraDigest = Digest{ID: "extra"}
 		})
 
 		It("returns false when a digest has an extra digest at the beginning of buffer", func() {
@@ -87,7 +88,6 @@ var _ = Describe("DigestBuffer interface", func() {
 			_, digestBuffer2 := createDigest(digestID, digestCount)
 			Expect(digestBuffer1.SameDigests(digestBuffer2)).To(Equal(true))
 		})
-
 	})
 
 	Describe("at GetMissignDigests function call", func() {
@@ -126,7 +126,7 @@ var _ = Describe("DigestBuffer interface", func() {
 				DigestBuffer{Digests: []Digest{extraDigest}}))
 		})
 
-		It("returns extra digest when a buffer  has an extra digest in the mIDdle of  buffer", func() {
+		It("returns extra digest when a buffer  has an extra digest in the middle of  buffer", func() {
 			_, digestBuffer2 := createDigest(digestID, digestCount/2)
 			digestBuffer2.Digests = append(digestBuffer2.Digests, Digest{ID: digestID})
 			digestBuffer2 = createDigestFromInitialBuffer(digestID, digestCount/2, digestCount, digestBuffer2)

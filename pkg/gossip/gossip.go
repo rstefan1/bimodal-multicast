@@ -77,7 +77,7 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 			}
 
 			// gossipLen is number of nodes which will receive gossip message
-			gossipLen := int(g.beta * float64(len(g.peerBuffer)) / float64(g.roundNumber)) + 1
+			gossipLen := int(g.beta*float64(len(g.peerBuffer))/float64(g.roundNumber)) + 1
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
