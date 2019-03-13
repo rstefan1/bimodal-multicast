@@ -57,15 +57,13 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 		dest peer.Peer
 		path string
 	)
+
 	for {
 		select {
 		case <-stop:
-			log.Print("End of gossip round")
+			log.Printf("End of gossip round from %s:%s", g.gossipAddr, g.gossipPort)
 			return
 		default:
-			// TODO remove this log
-			log.Print("New gossip round")
-
 			// increment round number
 			g.roundNumber++
 
@@ -105,7 +103,7 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 }
 
 func (g Gossip) Start(stop <-chan struct{}) {
-	log.Println("Starting Gossip server")
+	log.Printf("Starting Gossip server on %s:%s", g.gossipAddr, g.gossipPort)
 	g.gossipRound(stop)
 }
 
