@@ -71,7 +71,7 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 				Addr:        g.gossipAddr,
 				Port:        g.gossipPort,
 				RoundNumber: g.roundNumber,
-				Digests:     (g.msgBuffer).DigestBuffer(),
+				Digests:     *(g.msgBuffer).DigestBuffer(),
 			}
 
 			// gossipLen is number of nodes which will receive gossip message

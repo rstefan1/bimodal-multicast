@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
+
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-	"log"
-	"net/http"
-	"strings"
 )
 
 type HTTP struct {
@@ -25,6 +26,7 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
 	if err != nil {
+		log.Fatal("Error at decoding HTTPGossip message: ", err)
 		panic(err)
 	}
 
@@ -42,15 +44,17 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 			Addr:        hostAddr,
 			Port:        hostPort,
 			RoundNumber: t.RoundNumber,
-			Digests:     missingDigestBuffer,
+			Digests:     *missingDigestBuffer,
 		}
 		jsonSolicitation, err := json.Marshal(solicitation)
 		if err != nil {
+			log.Fatal("Error at marshal HTTPSolicitation: ", err)
 			panic(err)
 		}
 		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
 		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
+			log.Fatal("Error at sending HTTPSoliccitation message: ", err)
 			panic(err)
 		}
 	}
@@ -61,11 +65,12 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
 	if err != nil {
+		log.Fatal("Error at decoding HTTPSolicitation message: ", err)
 		panic(err)
 	}
 
 	missingDigestBuffer := t.Digests
-	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(*msgBuffer)
+	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(msgBuffer)
 
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
@@ -75,16 +80,18 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	synchronization := httpmessage.HTTPSynchronization{
 		Addr:     hostAddr,
 		Port:     hostPort,
-		Messages: missingMsgBuffer,
+		Messages: *missingMsgBuffer,
 	}
 
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
+		log.Fatal("Error at marshal HTTPSynchronization message: ", err)
 		panic(err)
 	}
 	path := fmt.Sprintf("http://%s:%s/synchronization", t.Addr, t.Port)
 	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
+		log.Fatal("Error at sending HTTPSynchronization message: ", err)
 		panic(err)
 	}
 }
@@ -94,6 +101,7 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
 	if err != nil {
+		log.Fatal("Error at decoding HTTPSynchronization message: ", err)
 		panic(err)
 	}
 

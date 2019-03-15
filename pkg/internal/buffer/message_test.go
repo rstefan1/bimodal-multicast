@@ -2,10 +2,9 @@ package buffer
 
 import (
 	"fmt"
-	"math/rand"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"math/rand"
 )
 
 func expectProperMessage(msg Message, msgID, msgMsg string, msgGossipCount int) {
@@ -14,7 +13,7 @@ func expectProperMessage(msg Message, msgID, msgMsg string, msgGossipCount int) 
 	Expect(msg.GossipCount).To(Equal(msgGossipCount))
 }
 
-func createMessageFromInitialBuffer(ID, msg string, gossipCount int, beginIndex, endIndex int, messageBuffer MessageBuffer) MessageBuffer {
+func createMessageFromInitialBuffer(ID, msg string, gossipCount int, beginIndex, endIndex int, messageBuffer *MessageBuffer) *MessageBuffer {
 	for i := beginIndex; i < endIndex; i++ {
 		_ID := fmt.Sprintf("%s-%02d", ID, i)
 		messageBuffer.Messages = append(messageBuffer.Messages, Message{
@@ -26,7 +25,7 @@ func createMessageFromInitialBuffer(ID, msg string, gossipCount int, beginIndex,
 	return messageBuffer
 }
 
-func createMessage(ID, msg string, gossipCount, cnt int) ([]Message, MessageBuffer) {
+func createMessage(ID, msg string, gossipCount, cnt int) ([]Message, *MessageBuffer) {
 	var messageSlice []Message
 	messageBuffer := NewMessageBuffer()
 
@@ -45,7 +44,7 @@ func createMessage(ID, msg string, gossipCount, cnt int) ([]Message, MessageBuff
 
 var _ = Describe("MessageBuffer interface", func() {
 	var (
-		msgBuffer      MessageBuffer
+		msgBuffer      *MessageBuffer
 		msgCount       = 3
 		msgID          string
 		msgMsg         string
@@ -87,12 +86,14 @@ var _ = Describe("MessageBuffer interface", func() {
 
 	Describe("at DigestBuffer fuction call", func() {
 		It("transform message buffer into digest buffer", func() {
-			var expectedDigestBuffer DigestBuffer
+			expectedDigestBuffer := &DigestBuffer{}
+
 			for i := 0; i < msgCount; i++ {
 				_ID := fmt.Sprintf("%s-%02d", msgID, i)
 				expectedDigestBuffer.Digests = append(expectedDigestBuffer.Digests, Digest{ID: _ID})
 			}
 			digestBuffer := msgBuffer.DigestBuffer()
+
 			Expect(digestBuffer).To(Equal(expectedDigestBuffer))
 		})
 	})
@@ -101,6 +102,7 @@ var _ = Describe("MessageBuffer interface", func() {
 		It("increment gossip count for each message from message buffer", func() {
 			msgBuffer.IncrementGossipCount()
 			newGossipCount := msgGossipCount + 1
+
 			for i := 0; i < msgCount; i++ {
 				_msgID := fmt.Sprintf("%s-%02d", msgID, i)
 				_msgMsg := fmt.Sprintf("%s-%02d", msgMsg, i)
@@ -111,7 +113,7 @@ var _ = Describe("MessageBuffer interface", func() {
 
 	Describe("at SameMessages function call", func() {
 		var (
-			messageBuffer1     MessageBuffer
+			messageBuffer1     *MessageBuffer
 			extraMessage       Message
 			messageID          string
 			messageMsg         string
@@ -140,16 +142,16 @@ var _ = Describe("MessageBuffer interface", func() {
 			messageBuffer2.Messages = append(messageBuffer2.Messages, extraMessage)
 			messageBuffer2 = createMessageFromInitialBuffer(messageID, msgMsg, msgGossipCount, 0, messageCount, messageBuffer2)
 
-			Expect(messageBuffer1.SameMessages(&messageBuffer2)).To(Equal(false))
-			Expect(messageBuffer2.SameMessages(&messageBuffer1)).To(Equal(false))
+			Expect(messageBuffer1.SameMessages(messageBuffer2)).To(Equal(false))
+			Expect(messageBuffer2.SameMessages(messageBuffer1)).To(Equal(false))
 		})
 
 		It("returns false when the message buffer has an extra message at the end of buffer", func() {
 			_, messageBuffer2 := createMessage(messageID, messageMsg, messageGossipCount, messageCount)
 			messageBuffer2.Messages = append(messageBuffer2.Messages, extraMessage)
 
-			Expect(messageBuffer1.SameMessages(&messageBuffer2)).To(Equal(false))
-			Expect(messageBuffer2.SameMessages(&messageBuffer1)).To(Equal(false))
+			Expect(messageBuffer1.SameMessages(messageBuffer2)).To(Equal(false))
+			Expect(messageBuffer2.SameMessages(messageBuffer1)).To(Equal(false))
 		})
 
 		It("returns false when the message buffer has an extra message in the middle of buffer", func() {
@@ -157,13 +159,13 @@ var _ = Describe("MessageBuffer interface", func() {
 			messageBuffer2.Messages = append(messageBuffer2.Messages, extraMessage)
 			messageBuffer2 = createMessageFromInitialBuffer(messageID, messageMsg, messageGossipCount, messageCount/2, messageCount, messageBuffer2)
 
-			Expect(messageBuffer1.SameMessages(&messageBuffer2)).To(Equal(false))
-			Expect(messageBuffer2.SameMessages(&messageBuffer1)).To(Equal(false))
+			Expect(messageBuffer1.SameMessages(messageBuffer2)).To(Equal(false))
+			Expect(messageBuffer2.SameMessages(messageBuffer1)).To(Equal(false))
 		})
 
 		It("returns true when the messages are same", func() {
 			_, messageBuffer2 := createMessage(messageID, messageMsg, messageGossipCount, messageCount)
-			Expect(messageBuffer1.SameMessages(&messageBuffer2)).To(Equal(true))
+			Expect(messageBuffer1.SameMessages(messageBuffer2)).To(Equal(true))
 		})
 	})
 })

@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func createDigest(ID string, cnt int) ([]string, DigestBuffer) {
-	var digestBuffer DigestBuffer
+func createDigest(ID string, cnt int) ([]string, *DigestBuffer) {
+	digestBuffer := &DigestBuffer{}
 	var digestSlice []string
 	for i := 0; i < cnt; i++ {
 		_ID := fmt.Sprintf("%s-%02d", ID, i)
@@ -19,7 +19,7 @@ func createDigest(ID string, cnt int) ([]string, DigestBuffer) {
 	return digestSlice, digestBuffer
 }
 
-func createDigestFromInitialBuffer(ID string, beginIndex, endIndex int, digestBuffer DigestBuffer) DigestBuffer {
+func createDigestFromInitialBuffer(ID string, beginIndex, endIndex int, digestBuffer *DigestBuffer) *DigestBuffer {
 	for i := beginIndex; i < endIndex; i++ {
 		_ID := fmt.Sprintf("%s-%02d", ID, i)
 		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: _ID})
@@ -29,7 +29,7 @@ func createDigestFromInitialBuffer(ID string, beginIndex, endIndex int, digestBu
 
 var _ = Describe("DigestBuffer interface", func() {
 	var (
-		digestBuffer DigestBuffer
+		digestBuffer *DigestBuffer
 		digestSlice  []string
 		digestID     string
 		digestCount  = 3
@@ -49,7 +49,7 @@ var _ = Describe("DigestBuffer interface", func() {
 
 	Describe("at SameDigests function call", func() {
 		var (
-			digestBuffer1 DigestBuffer
+			digestBuffer1 *DigestBuffer
 			extraDigest   Digest
 		)
 
@@ -59,7 +59,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns false when a digest has an extra digest at the beginning of buffer", func() {
-			var digestBuffer2 DigestBuffer
+			digestBuffer2 := &DigestBuffer{}
 			digestBuffer2.Digests = append(digestBuffer2.Digests, extraDigest)
 			digestBuffer2 = createDigestFromInitialBuffer(digestID, 0, digestCount, digestBuffer2)
 
@@ -92,14 +92,17 @@ var _ = Describe("DigestBuffer interface", func() {
 
 	Describe("at GetMissignDigests function call", func() {
 		var (
-			digestBuffer1     DigestBuffer
+			digestBuffer1     *DigestBuffer
 			extraDigest       Digest
-			emptyDigestBuffer = DigestBuffer{Digests: []Digest{}}
+			emptyDigestBuffer *DigestBuffer
+			extraDigestBuffer *DigestBuffer
 		)
 
 		BeforeEach(func() {
 			_, digestBuffer1 = createDigest(digestID, digestCount)
 			extraDigest = Digest{ID: digestID}
+			emptyDigestBuffer = &DigestBuffer{Digests: []Digest{}}
+			extraDigestBuffer = &DigestBuffer{Digests: []Digest{extraDigest}}
 		})
 
 		It("returns empty digest buffer when digests are same", func() {
@@ -108,13 +111,12 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns extra digest when a buffer has an extra digest at the beginning", func() {
-			var digestBuffer2 DigestBuffer
+			digestBuffer2 := &DigestBuffer{}
 			digestBuffer2.Digests = append(digestBuffer2.Digests, extraDigest)
 			digestBuffer2 = createDigestFromInitialBuffer(digestID, 0, digestCount, digestBuffer2)
 
 			Expect(digestBuffer1.GetMissingDigests(digestBuffer2)).To(Equal(emptyDigestBuffer))
-			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(
-				DigestBuffer{Digests: []Digest{extraDigest}}))
+			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(extraDigestBuffer))
 		})
 
 		It("returns extra digest when a buffer has an extra digest at the end", func() {
@@ -122,8 +124,7 @@ var _ = Describe("DigestBuffer interface", func() {
 			digestBuffer2.Digests = append(digestBuffer2.Digests, extraDigest)
 
 			Expect(digestBuffer1.GetMissingDigests(digestBuffer2)).To(Equal(emptyDigestBuffer))
-			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(
-				DigestBuffer{Digests: []Digest{extraDigest}}))
+			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(extraDigestBuffer))
 		})
 
 		It("returns extra digest when a buffer  has an extra digest in the middle of  buffer", func() {
@@ -132,8 +133,7 @@ var _ = Describe("DigestBuffer interface", func() {
 			digestBuffer2 = createDigestFromInitialBuffer(digestID, digestCount/2, digestCount, digestBuffer2)
 
 			Expect(digestBuffer1.GetMissingDigests(digestBuffer2)).To(Equal(emptyDigestBuffer))
-			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(
-				DigestBuffer{Digests: []Digest{extraDigest}}))
+			Expect(digestBuffer2.GetMissingDigests(digestBuffer1)).To(Equal(extraDigestBuffer))
 		})
 	})
 
@@ -145,7 +145,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns true when the buffer contains the given digest at the beginning", func() {
-			digestBuffer := DigestBuffer{}
+			digestBuffer := &DigestBuffer{}
 			digestBuffer.Digests = append(digestBuffer.Digests, digest)
 			digestBuffer = createDigestFromInitialBuffer(digestID, 0, digestCount, digestBuffer)
 
@@ -168,8 +168,8 @@ var _ = Describe("DigestBuffer interface", func() {
 
 	Describe("at GetMissingMessageBuffer function call", func() {
 		var (
-			msgBuffer         MessageBuffer
-			expectedMsgBuffer MessageBuffer
+			msgBuffer         *MessageBuffer
+			expectedMsgBuffer *MessageBuffer
 			msgMsg            string
 			msgGossipCount    int
 		)
@@ -193,7 +193,10 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns the message buffer in concordance with the given digest buffer", func() {
-			expectedMsgBuffer = msgBuffer
+			expectedMsgBuffer = NewMessageBuffer()
+			expectedMsgBuffer.Messages = append(expectedMsgBuffer.Messages, msgBuffer.Messages...)
+
+			// add extra message in initial message buffer
 			msgBuffer.Messages = append(msgBuffer.Messages,
 				Message{
 					ID:          digestID,

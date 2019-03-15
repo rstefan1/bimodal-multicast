@@ -14,8 +14,8 @@ type DigestBuffer struct {
 }
 
 // WrapDigestBuffer wraps []string into DigestBuffer
-func WrapDigestBuffer(digestSlice []string) DigestBuffer {
-	var digestBuffer DigestBuffer
+func WrapDigestBuffer(digestSlice []string) *DigestBuffer {
+	digestBuffer := &DigestBuffer{}
 	for _, d := range digestSlice {
 		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: d})
 	}
@@ -29,7 +29,7 @@ func compareDigestsFn(digest []Digest) func(int, int) bool {
 }
 
 // SameDigests returns true if given digest are same
-func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
+func (a *DigestBuffer) SameDigests(b *DigestBuffer) bool {
 	if len(a.Digests) != len(b.Digests) {
 		return false
 	}
@@ -48,8 +48,8 @@ func (a DigestBuffer) SameDigests(b DigestBuffer) bool {
 
 // GetMissingDigests returns the disjunction between the digest buffers
 // digestBufferA - digestBufferB
-func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
-	missingDigestBuffer := DigestBuffer{
+func (a *DigestBuffer) GetMissingDigests(b *DigestBuffer) *DigestBuffer {
+	missingDigestBuffer := &DigestBuffer{
 		Digests: []Digest{},
 	}
 
@@ -71,7 +71,7 @@ func (a DigestBuffer) GetMissingDigests(b DigestBuffer) DigestBuffer {
 }
 
 // ContainsDigest check if digest buffer contains the given digest
-func (digestBuffer DigestBuffer) ContainsDigest(digest Digest) bool {
+func (digestBuffer *DigestBuffer) ContainsDigest(digest Digest) bool {
 	for _, d := range digestBuffer.Digests {
 		if d.ID == digest.ID {
 			return true
@@ -81,13 +81,13 @@ func (digestBuffer DigestBuffer) ContainsDigest(digest Digest) bool {
 }
 
 // Length returns the length of digest buffer
-func (digestBuffer DigestBuffer) Length() int {
+func (digestBuffer *DigestBuffer) Length() int {
 	return len(digestBuffer.Digests)
 }
 
 // GetMissingMessageBuffer returns messages buffer from given digest buffer
-func (digestBuffer DigestBuffer) GetMissingMessageBuffer(msgBuffer MessageBuffer) MessageBuffer {
-	missingMsgBuffer := MessageBuffer{
+func (digestBuffer *DigestBuffer) GetMissingMessageBuffer(msgBuffer *MessageBuffer) *MessageBuffer {
+	missingMsgBuffer := &MessageBuffer{
 		Mux: &sync.Mutex{},
 	}
 

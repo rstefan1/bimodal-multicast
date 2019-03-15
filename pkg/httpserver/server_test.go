@@ -58,7 +58,7 @@ var _ = Describe("HTTP Server", func() {
 		mockServerPort      string
 		httpServerCfg       config.HTTPConfig
 		peerBuffer          []peer.Peer
-		httpServerMsgBuffer buffer.MessageBuffer
+		httpServerMsgBuffer *buffer.MessageBuffer
 		httpServerStop      chan struct{}
 		rcvMsg              receivedMessages
 		mockServer          *http.Server
@@ -69,16 +69,15 @@ var _ = Describe("HTTP Server", func() {
 		httpServerPort = strconv.Itoa(suggestPort())
 		mockServerPort = strconv.Itoa(suggestPort())
 
+		httpServerMsgBuffer = buffer.NewMessageBuffer()
+		peerBuffer = []peer.Peer{}
+
 		httpServerCfg = config.HTTPConfig{
 			Addr:    "",
 			Port:    httpServerPort,
 			PeerBuf: peerBuffer,
-			MsgBuf:  &httpServerMsgBuffer,
+			MsgBuf:  httpServerMsgBuffer,
 		}
-
-		peerBuffer = []peer.Peer{}
-
-		httpServerMsgBuffer = buffer.NewMessageBuffer()
 
 		httpServerStop = make(chan struct{})
 
@@ -130,7 +129,7 @@ var _ = Describe("HTTP Server", func() {
 
 		It("responds with solicitation request when nodes have different digests", func() {
 			// create gossip request
-			gossipDigest := buffer.DigestBuffer{
+			gossipDigest := &buffer.DigestBuffer{
 				Digests: []buffer.Digest{
 					{ID: fmt.Sprintf("%d", rand.Int31())},
 				},
@@ -139,7 +138,7 @@ var _ = Describe("HTTP Server", func() {
 				Addr:        "localhost",
 				Port:        mockServerPort,
 				RoundNumber: rand.Int63(),
-				Digests:     gossipDigest,
+				Digests:     *gossipDigest,
 			}
 			jsonGossip, err := json.Marshal(gossipMessage)
 			Expect(err).To(Succeed())
@@ -150,7 +149,7 @@ var _ = Describe("HTTP Server", func() {
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			Expect(msg.(httpmessage.HTTPSolicitation).Digests).To(Equal(gossipDigest))
+			Expect(msg.(httpmessage.HTTPSolicitation).Digests).To(Equal(*gossipDigest))
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
@@ -163,7 +162,7 @@ var _ = Describe("HTTP Server", func() {
 				Addr:        "localhost",
 				Port:        mockServerPort,
 				RoundNumber: rand.Int63(),
-				Digests:     httpServerMsgBuffer.DigestBuffer(),
+				Digests:     *httpServerMsgBuffer.DigestBuffer(),
 			}
 			jsonDigest, err := json.Marshal(gossipMessage)
 			Expect(err).To(Succeed())
@@ -222,7 +221,7 @@ var _ = Describe("HTTP Server", func() {
 			})
 
 			// create solicitation request
-			solicitationDigest := buffer.DigestBuffer{
+			solicitationDigest := &buffer.DigestBuffer{
 				Digests: []buffer.Digest{
 					{ID: messageID},
 				},
@@ -231,7 +230,7 @@ var _ = Describe("HTTP Server", func() {
 				Addr:        "localhost",
 				Port:        mockServerPort,
 				RoundNumber: rand.Int63(),
-				Digests:     solicitationDigest,
+				Digests:     *solicitationDigest,
 			}
 			jsonSolicitation, err := json.Marshal(solicitationMessage)
 			Expect(err).To(Succeed())
@@ -242,7 +241,7 @@ var _ = Describe("HTTP Server", func() {
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			Expect(msg.(httpmessage.HTTPSynchronization).Messages).To(Equal(httpServerMsgBuffer))
+			Expect(msg.(httpmessage.HTTPSynchronization).Messages).To(Equal(*httpServerMsgBuffer))
 		})
 	})
 
@@ -262,7 +261,7 @@ var _ = Describe("HTTP Server", func() {
 			syncMessage := httpmessage.HTTPSynchronization{
 				Addr:     "localhost",
 				Port:     mockServerPort,
-				Messages: syncMsgBuffer,
+				Messages: *syncMsgBuffer,
 			}
 			jsonSync, err := json.Marshal(syncMessage)
 			Expect(err).To(Succeed())

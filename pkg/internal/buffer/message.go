@@ -17,15 +17,15 @@ type MessageBuffer struct {
 }
 
 // NewMessageBuffer creates new MessageBuffer
-func NewMessageBuffer() MessageBuffer {
-	return MessageBuffer{
+func NewMessageBuffer() *MessageBuffer {
+	return &MessageBuffer{
 		Mux: &sync.Mutex{},
 	}
 }
 
 // Digest returns a slice with ID of messages from given buffer
-func (msgBuffer MessageBuffer) DigestBuffer() DigestBuffer {
-	var digestBuffer DigestBuffer
+func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
+	digestBuffer := &DigestBuffer{}
 
 	msgBuffer.Mux.Lock()
 	defer msgBuffer.Mux.Unlock()

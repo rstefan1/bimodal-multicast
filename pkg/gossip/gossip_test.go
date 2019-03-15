@@ -41,8 +41,8 @@ var _ = Describe("Gossip Server", func() {
 		mockPort     string
 		gossipPeers  []peer.Peer
 		mockPeers    []peer.Peer
-		gossipMsgBuf buffer.MessageBuffer
-		mockMsgBuf   buffer.MessageBuffer
+		gossipMsgBuf *buffer.MessageBuffer
+		mockMsgBuf   *buffer.MessageBuffer
 		gossipCfg    config.GossipConfig
 		httpCfg      config.HTTPConfig
 		mockCfg      config.HTTPConfig
@@ -70,19 +70,19 @@ var _ = Describe("Gossip Server", func() {
 			Addr:    "localhost",
 			Port:    gossipPort,
 			PeerBuf: gossipPeers,
-			MsgBuf:  &gossipMsgBuf,
+			MsgBuf:  gossipMsgBuf,
 		}
 		httpCfg = config.HTTPConfig{
 			Addr:    "localhost",
 			Port:    gossipPort,
 			PeerBuf: gossipPeers,
-			MsgBuf:  &gossipMsgBuf,
+			MsgBuf:  gossipMsgBuf,
 		}
 		mockCfg = config.HTTPConfig{
 			Addr:    "localhost",
 			Port:    mockPort,
 			PeerBuf: mockPeers,
-			MsgBuf:  &mockMsgBuf,
+			MsgBuf:  mockMsgBuf,
 		}
 
 		gossipStop = make(chan struct{})
@@ -118,7 +118,7 @@ var _ = Describe("Gossip Server", func() {
 		}()
 
 		Eventually(func() bool {
-			return gossipMsgBuf.SameMessages(&mockMsgBuf)
+			return gossipMsgBuf.SameMessages(mockMsgBuf)
 		}, timeout).Should(Equal(true))
 	})
 })
