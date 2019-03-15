@@ -1,8 +1,8 @@
 BINDIR ?= $(CURDIR)/bin
 
 # Run tests
-test: generate 
-	ginkgo \
+test: generate
+	$(BINDIR)/ginkgo \
 		--randomizeAllSpecs --randomizeSuites --failOnPending \
 		--cover --coverprofile cover.out --trace --race -v \
 		./pkg/...
