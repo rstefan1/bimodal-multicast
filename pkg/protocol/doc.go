@@ -14,21 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httpserver
-
-import (
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
-)
-
-// Config has configs for http server
-type Config struct {
-	// Addr is http server address
-	Addr string
-	// Port is http server port
-	Port string
-	// PeerBuf is the list of peers
-	PeerBuf []peer.Peer
-	// MsgBuf is the list of messages
-	MsgBuf *buffer.MessageBuffer
-}
+package protocol

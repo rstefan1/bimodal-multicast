@@ -17,8 +17,11 @@ limitations under the License.
 package buffer
 
 import (
+	"fmt"
+	"math/rand"
 	"sort"
 	"sync"
+	"time"
 )
 
 type Message struct {
@@ -30,6 +33,14 @@ type Message struct {
 type MessageBuffer struct {
 	Messages []Message   `json:"message_buffer_list"`
 	Mux      *sync.Mutex `json:"message_buffer_Mux"`
+}
+
+func NewMessage(m string) Message {
+	return Message{
+		ID:          fmt.Sprintf("%s%d", time.Now().Format("20060102150405"), rand.Int31()),
+		Msg:         m,
+		GossipCount: 0,
+	}
 }
 
 // NewMessageBuffer creates new MessageBuffer
@@ -59,6 +70,20 @@ func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
 	defer msgBuffer.Mux.Unlock()
 
 	msgBuffer.Messages = append(msgBuffer.Messages, msg)
+}
+
+// TODO write a test for this function
+// UnwrapMessageBuffer wraps a message buffer
+func (msgBuffer *MessageBuffer) UnwrapMessageBuffer() []string {
+	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
+	messages := make([]string, len(msgBuffer.Messages))
+	for i := range msgBuffer.Messages {
+		messages[i] = msgBuffer.Messages[i].Msg
+	}
+
+	return messages
 }
 
 // IncrementGossipCount increments gossip count for each message from message

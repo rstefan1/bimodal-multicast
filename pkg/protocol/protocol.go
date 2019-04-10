@@ -16,28 +16,78 @@ limitations under the License.
 
 package protocol
 
-// import (
-// 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-// 	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
-// 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
-// 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-// )
+import (
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossipserver"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
+)
 
-// var (
-// 	// shared buffer for peers
-// 	peerBuffer = []peer.Peer{}
-// 	// shared buffer for messages
-// 	msgBuffer = buffer.NewMessageBuffer()
-// )
+type Protocol struct {
+	// shared buffer with addresses of nodes in system
+	peerBuffer []peer.Peer
+	// shared buffer with gossip messages
+	msgBuffer *buffer.MessageBuffer
+	// http server
+	httpServer *httpserver.HTTP
+	// gossip server
+	gossipServer *gossipserver.Gossip
+	// stop channel
+	stopCh chan struct{}
+}
 
-// func BMC() error {
-// 	stop := make(chan struct{})
-// 	cfg := config.Config{}
+// New creates a new instance for the protocol
+func New(cfg Config) *Protocol {
+	p := &Protocol{
+		peerBuffer: cfg.Peers,
+		msgBuffer:  buffer.NewMessageBuffer(),
+		stopCh:     make(chan struct{}),
+	}
 
-// 	if err := httpserver.Start(&peerBuffer, &msgBuffer, stop, cfg); err != nil {
-// 		return err
-// 	}
-// 	gossipgossip.Start(&peerBuffer, &msgBuffer)
+	p.httpServer = httpserver.New(httpserver.Config{
+		Addr:    cfg.HTTPAddr,
+		Port:    cfg.HTTPPort,
+		PeerBuf: p.peerBuffer,
+		MsgBuf:  p.msgBuffer,
+	})
 
-// 	return nil
-// }
+	p.gossipServer = gossipserver.New(gossipserver.Config{
+		Addr:    cfg.GossipAddr,
+		Port:    cfg.GossipPort,
+		PeerBuf: p.peerBuffer,
+		MsgBuf:  p.msgBuffer,
+		Beta:    cfg.Beta,
+	})
+
+	return p
+}
+
+// Start starts the gossip server and the http server
+func (p *Protocol) Start(stop chan struct{}) error {
+	p.stopCh = stop
+
+	// start http server
+	if err := p.httpServer.Start(stop); err != nil {
+		return err
+	}
+
+	// start gossip server
+	go func() {
+		p.gossipServer.Start(stop)
+	}()
+
+	return nil
+}
+
+// Stop stops the gossip server and the http server
+func (p *Protocol) Stop() {
+	close(p.stopCh)
+}
+
+func (p *Protocol) AddMessage(msg string) {
+	p.msgBuffer.AddMessage(buffer.NewMessage(msg))
+}
+
+func (p *Protocol) GetMessages() []string {
+	return p.msgBuffer.UnwrapMessageBuffer()
+}

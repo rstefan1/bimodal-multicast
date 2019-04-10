@@ -32,7 +32,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type receivedMessages struct {
@@ -171,7 +171,7 @@ var _ = Describe("HTTP Server", func() {
 			httpServerMsgBuffer.AddMessage(buffer.Message{
 				ID:          fmt.Sprintf("%d", rand.Int31()),
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: rand.Int(),
+				GossipCount: 0,
 			})
 			gossipMessage := httpmessage.HTTPGossip{
 				Addr:        "localhost",
@@ -232,7 +232,7 @@ var _ = Describe("HTTP Server", func() {
 			httpServerMsgBuffer.AddMessage(buffer.Message{
 				ID:          messageID,
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: rand.Int(),
+				GossipCount: 0,
 			})
 
 			// create solicitation request
@@ -269,7 +269,7 @@ var _ = Describe("HTTP Server", func() {
 			syncMsgBuffer.AddMessage(buffer.Message{
 				ID:          fmt.Sprintf("%d", rand.Int31()),
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: rand.Int(),
+				GossipCount: 0,
 			})
 
 			// create synchronization request

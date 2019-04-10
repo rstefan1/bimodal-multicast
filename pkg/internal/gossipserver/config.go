@@ -18,17 +18,19 @@ package gossipserver
 
 import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 // Config has configs for gossip object
 type Config struct {
-	// Addr is HTTP address for node which runs gossip round
+	// Addr is the address for node which runs gossip round
 	Addr string
-	// Port is HTTP port for node which runs gossip round
+	// Port is the port for node which runs gossip round
 	Port string
 	// PeerBuf is the list of peers
 	PeerBuf []peer.Peer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
+	// Beta is the expected fanout
+	Beta float64
 }
