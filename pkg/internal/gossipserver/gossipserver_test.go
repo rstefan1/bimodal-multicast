@@ -1,4 +1,4 @@
-package gossip
+package gossipserver
 
 import (
 	"fmt"
@@ -10,9 +10,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/httpserver"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
@@ -43,9 +42,9 @@ var _ = Describe("Gossip Server", func() {
 		mockPeers    []peer.Peer
 		gossipMsgBuf *buffer.MessageBuffer
 		mockMsgBuf   *buffer.MessageBuffer
-		gossipCfg    config.GossipConfig
-		httpCfg      config.HTTPConfig
-		mockCfg      config.HTTPConfig
+		gossipCfg    Config
+		httpCfg      httpserver.Config
+		mockCfg      httpserver.Config
 		gossipStop   chan struct{}
 		httpStop     chan struct{}
 		mockStop     chan struct{}
@@ -66,19 +65,19 @@ var _ = Describe("Gossip Server", func() {
 		})
 		mockMsgBuf = buffer.NewMessageBuffer()
 
-		gossipCfg = config.GossipConfig{
+		gossipCfg = Config{
 			Addr:    "localhost",
 			Port:    gossipPort,
 			PeerBuf: gossipPeers,
 			MsgBuf:  gossipMsgBuf,
 		}
-		httpCfg = config.HTTPConfig{
+		httpCfg = httpserver.Config{
 			Addr:    "localhost",
 			Port:    gossipPort,
 			PeerBuf: gossipPeers,
 			MsgBuf:  gossipMsgBuf,
 		}
-		mockCfg = config.HTTPConfig{
+		mockCfg = httpserver.Config{
 			Addr:    "localhost",
 			Port:    mockPort,
 			PeerBuf: mockPeers,
@@ -97,15 +96,15 @@ var _ = Describe("Gossip Server", func() {
 		close(mockStop)
 	})
 
-	It("first unit test", func() {
+	It("synchronize nodes with missing messages", func() {
 		go func() {
-			mockHTTPServer := server.New(mockCfg)
+			mockHTTPServer := httpserver.New(mockCfg)
 			err := mockHTTPServer.Start(mockStop)
 			Expect(err).To(Succeed())
 		}()
 
 		go func() {
-			gossipHTTPServer := server.New(httpCfg)
+			gossipHTTPServer := httpserver.New(httpCfg)
 			err := gossipHTTPServer.Start(httpStop)
 			Expect(err).To(Succeed())
 		}()

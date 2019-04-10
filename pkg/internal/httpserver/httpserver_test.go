@@ -1,4 +1,4 @@
-package server
+package httpserver
 
 import (
 	"bytes"
@@ -15,7 +15,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
@@ -56,7 +55,7 @@ var _ = Describe("HTTP Server", func() {
 	var (
 		httpServerPort      string
 		mockServerPort      string
-		httpServerCfg       config.HTTPConfig
+		httpServerCfg       Config
 		peerBuffer          []peer.Peer
 		httpServerMsgBuffer *buffer.MessageBuffer
 		httpServerStop      chan struct{}
@@ -72,7 +71,7 @@ var _ = Describe("HTTP Server", func() {
 		httpServerMsgBuffer = buffer.NewMessageBuffer()
 		peerBuffer = []peer.Peer{}
 
-		httpServerCfg = config.HTTPConfig{
+		httpServerCfg = Config{
 			Addr:    "",
 			Port:    httpServerPort,
 			PeerBuf: peerBuffer,

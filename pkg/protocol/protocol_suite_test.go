@@ -1,4 +1,4 @@
-package gossip
+package protocol
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestHTTPServer(t *testing.T) {
+func TestProtocol(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gossip Server Suite")
+	RunSpecs(t, "Protocol Suite Test")
 }
