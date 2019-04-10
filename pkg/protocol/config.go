@@ -14,21 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httpserver
+package protocol
 
 import (
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
-// Config has configs for http server
 type Config struct {
-	// Addr is http server address
-	Addr string
-	// Port is http server port
-	Port string
+	// GossipAddr is HTTP address for node which runs gossip round
+	GossipAddr string
+	// GossipPort is HTTP port for node which runs gossip round
+	GossipPort string
+	// HTTPAddr is http server address
+	HTTPAddr string
+	// HTTPPort is http server port
+	HTTPPort string
 	// PeerBuf is the list of peers
-	PeerBuf []peer.Peer
-	// MsgBuf is the list of messages
-	MsgBuf *buffer.MessageBuffer
+	Peers []peer.Peer
+	// Beta is the expected fanout for gossip rounds
+	Beta float64
 }

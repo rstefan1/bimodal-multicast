@@ -27,7 +27,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type HTTP struct {

@@ -27,7 +27,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type Gossip struct {
@@ -48,7 +48,7 @@ type Gossip struct {
 }
 
 // randomlySelectPeer is a helper func that returns a random peer
-func (g Gossip) randomlySelectPeer() peer.Peer {
+func (g *Gossip) randomlySelectPeer() peer.Peer {
 	for {
 		r := rand.Intn(len(g.peerBuffer))
 		if g.selectedPeers[r] {
@@ -60,14 +60,14 @@ func (g Gossip) randomlySelectPeer() peer.Peer {
 }
 
 // resetSelectedPeers is a helper func that clear slice with selected peers in gossip round
-func (g Gossip) resetSelectedPeers() {
+func (g *Gossip) resetSelectedPeers() {
 	for i := range g.selectedPeers {
 		g.selectedPeers[i] = false
 	}
 }
 
 // gossipRound is the gossip round that runs every 100ms
-func (g Gossip) gossipRound(stop <-chan struct{}) {
+func (g *Gossip) gossipRound(stop <-chan struct{}) {
 	var (
 		dest peer.Peer
 		path string
@@ -117,18 +117,19 @@ func (g Gossip) gossipRound(stop <-chan struct{}) {
 	}
 }
 
-func (g Gossip) Start(stop <-chan struct{}) {
+func (g *Gossip) Start(stop <-chan struct{}) {
 	log.Printf("Starting Gossip server on %s:%s", g.gossipAddr, g.gossipPort)
 	g.gossipRound(stop)
 }
 
-func New(cfg Config) Gossip {
-	return Gossip{
+func New(cfg Config) *Gossip {
+	return &Gossip{
 		peerBuffer:    cfg.PeerBuf,
 		msgBuffer:     cfg.MsgBuf,
 		gossipAddr:    cfg.Addr,
 		gossipPort:    cfg.Port,
 		selectedPeers: make([]bool, len(cfg.PeerBuf)),
+		beta:          cfg.Beta,
 		roundNumber:   1,
 	}
 }

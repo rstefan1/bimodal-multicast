@@ -28,7 +28,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 const (
@@ -51,7 +51,7 @@ func suggestPort() int {
 
 var _ = Describe("Gossip Server", func() {
 	var (
-		gossip       Gossip
+		gossip       *Gossip
 		gossipPort   string
 		mockPort     string
 		gossipPeers  []peer.Peer
