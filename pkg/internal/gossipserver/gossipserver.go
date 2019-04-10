@@ -1,4 +1,4 @@
-package gossip
+package gossipserver
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
@@ -107,7 +106,7 @@ func (g Gossip) Start(stop <-chan struct{}) {
 	g.gossipRound(stop)
 }
 
-func New(cfg config.GossipConfig) Gossip {
+func New(cfg Config) Gossip {
 	return Gossip{
 		peerBuffer:    cfg.PeerBuf,
 		msgBuffer:     cfg.MsgBuf,

@@ -1,4 +1,4 @@
-package server
+package httpserver
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/config"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
@@ -126,7 +125,7 @@ func gracefullyShutdown(s *http.Server) {
 	}
 }
 
-func New(cfg config.HTTPConfig) *HTTP {
+func New(cfg Config) *HTTP {
 	return &HTTP{
 		server: &http.Server{
 			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),

@@ -1,4 +1,4 @@
-package server
+package gossipserver
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestHTTPServer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "HTTP Server Suite")
+	RunSpecs(t, "Gossip Server Suite")
 }
