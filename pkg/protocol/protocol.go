@@ -33,7 +33,7 @@ type Protocol struct {
 	// gossip server
 	gossipServer *gossipserver.Gossip
 	// stop channel
-	stopCh chan struct{}
+	stop chan struct{}
 }
 
 // New creates a new instance for the protocol
@@ -41,7 +41,6 @@ func New(cfg Config) *Protocol {
 	p := &Protocol{
 		peerBuffer: cfg.Peers,
 		msgBuffer:  buffer.NewMessageBuffer(),
-		stopCh:     make(chan struct{}),
 	}
 
 	p.httpServer = httpserver.New(httpserver.Config{
@@ -63,17 +62,17 @@ func New(cfg Config) *Protocol {
 }
 
 // Start starts the gossip server and the http server
-func (p *Protocol) Start(stop chan struct{}) error {
-	p.stopCh = stop
+func (p *Protocol) Start() error {
+	p.stop = make(chan struct{})
 
 	// start http server
-	if err := p.httpServer.Start(stop); err != nil {
+	if err := p.httpServer.Start(p.stop); err != nil {
 		return err
 	}
 
 	// start gossip server
 	go func() {
-		p.gossipServer.Start(stop)
+		p.gossipServer.Start(p.stop)
 	}()
 
 	return nil
@@ -81,7 +80,7 @@ func (p *Protocol) Start(stop chan struct{}) error {
 
 // Stop stops the gossip server and the http server
 func (p *Protocol) Stop() {
-	close(p.stopCh)
+	close(p.stop)
 }
 
 func (p *Protocol) AddMessage(msg string) {
