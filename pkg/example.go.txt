@@ -21,14 +21,14 @@ limitations under the License.
 // 	"time"
 
 // 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
-// 	"github.com/rstefan1/bimodal-multicast/pkg/protocol"
+// 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 // )
 
 // func main() {
 // 	host := "localhost"
 // 	port := "14999"
 
-// 	cfg := protocol.Config{
+// 	cfg := bmmc.Config{
 // 		HTTPAddr:   host,
 // 		HTTPPort:   port,
 // 		GossipAddr: "localhost",
@@ -41,7 +41,7 @@ limitations under the License.
 // 		},
 // 	}
 
-// 	p := protocol.New(cfg)
+// 	p := bmmc.New(cfg)
 
 // 	// start the protocol
 // 	p.Start()

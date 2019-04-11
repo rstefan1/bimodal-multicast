@@ -26,7 +26,7 @@ called solicitation.
 ```golang
 import (
     "github.com/rstefan1/bimodal-multicast/pkg/peer"
-    "github.com/rstefan1/bimodal-multicast/pkg/protocol"
+    "github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 )
 ```
 
@@ -36,7 +36,7 @@ import (
     host := "localhost"
     port := "14999"
 
-    cfg := protocol.Config{
+    cfg := bmmc.Config{
         HTTPAddr:   host,
         HTTPPort:   port,
         GossipAddr: "localhost",
@@ -53,7 +53,7 @@ import (
 #### Create an instance for protocol
 
 ```golang
-    p := protocol.New(cfg)
+    p := bmmc.New(cfg)
 ```
 
 #### Start the protocol

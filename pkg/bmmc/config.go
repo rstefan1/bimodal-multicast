@@ -14,16 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package protocol
+package bmmc
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
-func TestProtocol(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Protocol Suite Test")
+type Config struct {
+	// GossipAddr is HTTP address for node which runs gossip round
+	GossipAddr string
+	// GossipPort is HTTP port for node which runs gossip round
+	GossipPort string
+	// HTTPAddr is http server address
+	HTTPAddr string
+	// HTTPPort is http server port
+	HTTPPort string
+	// PeerBuf is the list of peers
+	Peers []peer.Peer
+	// Beta is the expected fanout for gossip rounds
+	Beta float64
 }
