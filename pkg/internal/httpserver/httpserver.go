@@ -122,7 +122,9 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 
 	rcvMsgBuf := t.Messages
 	for _, m := range rcvMsgBuf.Messages {
-		msgBuffer.AddMessage(m)
+		if !msgBuffer.AlreadyExists(m) {
+			msgBuffer.AddMessage(m)
+		}
 	}
 }
 
