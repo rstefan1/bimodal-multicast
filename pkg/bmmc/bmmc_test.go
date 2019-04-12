@@ -17,6 +17,8 @@ limitations under the License.
 package bmmc_test
 
 import (
+	"fmt"
+	"math/rand"
 	"net"
 	"sort"
 	"strconv"
@@ -54,11 +56,12 @@ func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 }
 
 var _ = Describe("BMMC", func() {
-	When("System has two nodes and one node has a message in buffer", func() {
+	When("system has two nodes and one node has a message in buffer", func() {
 		var (
-			node1 *bmmc.Bmmc
-			node2 *bmmc.Bmmc
-			msg   string
+			node1       *bmmc.Bmmc
+			node2       *bmmc.Bmmc
+			msg         string
+			expectedBuf []string
 		)
 
 		BeforeEach(func() {
@@ -94,10 +97,11 @@ var _ = Describe("BMMC", func() {
 
 			// add a message in first node
 			msg = "awesome-message"
+			expectedBuf = append(expectedBuf, msg)
 			node1.AddMessage(msg)
 			Eventually(getSortedBuffer(node1), time.Second).Should(SatisfyAll(
 				HaveLen(1),
-				Equal([]string{msg}),
+				Equal(expectedBuf),
 			))
 		})
 
@@ -109,8 +113,98 @@ var _ = Describe("BMMC", func() {
 		It("sync buffers with the message", func() {
 			Eventually(getSortedBuffer(node2), time.Second).Should(SatisfyAll(
 				HaveLen(1),
-				Equal([]string{msg}),
+				Equal(expectedBuf),
 			))
+		})
+	})
+
+	When("system has ten nodes", func() {
+		const len = 10
+		var nodes [len]*bmmc.Bmmc
+
+		BeforeEach(func() {
+			var (
+				ports [len]string
+				peers []peer.Peer
+			)
+
+			for i := 0; i < len; i++ {
+				ports[i] = suggestPort()
+				peers = append(peers, peer.Peer{
+					Addr: "localhost",
+					Port: ports[i],
+				})
+			}
+
+			for i := 0; i < len; i++ {
+				nodes[i] = bmmc.New(bmmc.Config{
+					Addr:  "localhost",
+					Port:  ports[i],
+					Peers: peers,
+				})
+				Expect(nodes[i].Start())
+			}
+		})
+
+		AfterEach(func() {
+			for i := range nodes {
+				nodes[i].Stop()
+			}
+		})
+
+		When("one node has an message", func() {
+			var (
+				expectedBuf []string
+			)
+
+			BeforeEach(func() {
+				msg := "another-awesome-message"
+				expectedBuf = append(expectedBuf, msg)
+				randomNode := rand.Intn(len)
+				nodes[randomNode].AddMessage(msg)
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
+					HaveLen(1),
+					Equal(expectedBuf),
+				))
+			})
+
+			It("sync all nodes with the message", func() {
+				for i := range nodes {
+					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(SatisfyAll(
+						HaveLen(1),
+						Equal(expectedBuf),
+					))
+				}
+			})
+		})
+
+		When("one node has more messages", func() {
+			var (
+				expectedBuf []string
+			)
+
+			BeforeEach(func() {
+				randomNode := rand.Intn(len)
+				for i := 0; i < 3; i++ {
+					msg := fmt.Sprintf("awesome-message-%d", i)
+					expectedBuf = append(expectedBuf, msg)
+					nodes[randomNode].AddMessage(msg)
+				}
+
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
+					HaveLen(3),
+					Equal(expectedBuf),
+				))
+			})
+
+			It("sync all nodes with all messages", func() {
+				for i := range nodes {
+					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(SatisfyAll(
+						HaveLen(3),
+						Equal(expectedBuf),
+					))
+				}
+			})
 		})
 	})
 })
