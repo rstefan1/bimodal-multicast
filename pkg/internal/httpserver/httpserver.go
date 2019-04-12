@@ -41,8 +41,8 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Fatal("Error at decoding HTTPGossip message: ", err)
-		panic(err)
+		log.Printf("Error at decoding HTTPGossip message in HTTP Server: %s", err)
+		return
 	}
 
 	gossipDigestBuffer := t.Digests
@@ -63,14 +63,14 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 		}
 		jsonSolicitation, err := json.Marshal(solicitation)
 		if err != nil {
-			log.Fatal("Error at marshal HTTPSolicitation: ", err)
-			panic(err)
+			log.Printf("Error at marshal HTTPSolicitation in HTTP Server: %s", err)
+			return
 		}
 		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
 		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
-			log.Fatal("Error at sending HTTPSoliccitation message: ", err)
-			panic(err)
+			log.Printf("Error at sending HTTPSoliccitation message in HTTP Serer: %s", err)
+			return
 		}
 	}
 }
@@ -80,8 +80,8 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Fatal("Error at decoding HTTPSolicitation message: ", err)
-		panic(err)
+		log.Printf("Error at decoding HTTPSolicitation message in HTTP Server: %s", err)
+		return
 	}
 
 	missingDigestBuffer := t.Digests
@@ -100,14 +100,14 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
-		log.Fatal("Error at marshal HTTPSynchronization message: ", err)
-		panic(err)
+		log.Printf("Error at marshal HTTPSynchronization message in HTTP Server: %s", err)
+		return
 	}
 	path := fmt.Sprintf("http://%s:%s/synchronization", t.Addr, t.Port)
 	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
-		log.Fatal("Error at sending HTTPSynchronization message: ", err)
-		panic(err)
+		log.Printf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
+		return
 	}
 }
 
@@ -116,8 +116,8 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Fatal("Error at decoding HTTPSynchronization message: ", err)
-		panic(err)
+		log.Printf("Error at decoding HTTPSynchronization message in HTTP Server: %s", err)
+		return
 	}
 
 	rcvMsgBuf := t.Messages
@@ -129,7 +129,7 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 func startHTTPServer(s *http.Server) error {
 	log.Printf("HTTP Server listening at %s", s.Addr)
 	if err := s.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatal(err, "unable to start HTTP server")
+		log.Printf("Unable to start HTTP server: %s", err)
 		return err
 	}
 	return nil
@@ -137,7 +137,7 @@ func startHTTPServer(s *http.Server) error {
 
 func gracefullyShutdown(s *http.Server) {
 	if err := s.Shutdown(context.TODO()); err != nil {
-		log.Fatal(err, "unable to shutdown HTTP server properly")
+		log.Printf("Unable to shutdown HTTP server properly: %s", err)
 	}
 }
 

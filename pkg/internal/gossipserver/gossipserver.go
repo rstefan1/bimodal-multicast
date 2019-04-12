@@ -98,14 +98,14 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 				path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
 				jsonGossip, err := json.Marshal(gossipMsg)
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("Gossip server from %s: %s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
 					continue
 				}
 
 				// send the gossip message
 				_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("Gossip server from %s: %s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
 				}
 			}
 
