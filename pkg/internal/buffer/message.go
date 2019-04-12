@@ -64,6 +64,19 @@ func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 	return digestBuffer
 }
 
+// AlreadyExists return true if the message already exists in message buffer
+func (msgBuffer *MessageBuffer) AlreadyExists(msg Message) bool {
+	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
+	for i := range msgBuffer.Messages {
+		if msgBuffer.Messages[i].ID == msg.ID {
+			return true
+		}
+	}
+	return false
+}
+
 // AddMessage adds message in message buffer
 func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
 	msgBuffer.Mux.Lock()
