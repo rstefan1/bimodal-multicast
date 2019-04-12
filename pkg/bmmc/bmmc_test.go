@@ -142,7 +142,6 @@ var _ = Describe("BMMC", func() {
 					Port:  ports[i],
 					Peers: peers,
 				})
-				Expect(nodes[i].Start())
 			}
 		})
 
@@ -153,9 +152,7 @@ var _ = Describe("BMMC", func() {
 		})
 
 		When("one node has an message", func() {
-			var (
-				expectedBuf []string
-			)
+			var expectedBuf []string
 
 			BeforeEach(func() {
 				msg := "another-awesome-message"
@@ -166,6 +163,11 @@ var _ = Describe("BMMC", func() {
 					HaveLen(1),
 					Equal(expectedBuf),
 				))
+
+				// start protocol for all nodes
+				for i := 0; i < len; i++ {
+					Expect(nodes[i].Start())
+				}
 			})
 
 			It("sync all nodes with the message", func() {
@@ -179,9 +181,7 @@ var _ = Describe("BMMC", func() {
 		})
 
 		When("one node has more messages", func() {
-			var (
-				expectedBuf []string
-			)
+			var expectedBuf []string
 
 			BeforeEach(func() {
 				randomNode := rand.Intn(len)
@@ -195,11 +195,48 @@ var _ = Describe("BMMC", func() {
 					HaveLen(3),
 					Equal(expectedBuf),
 				))
+
+				// start protocol for all nodes
+				for i := 0; i < len; i++ {
+					Expect(nodes[i].Start())
+				}
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(SatisfyAll(
+					Eventually(getSortedBuffer(nodes[i]), time.Second*2).Should(SatisfyAll(
+						HaveLen(3),
+						Equal(expectedBuf),
+					))
+				}
+			})
+		})
+
+		When("three nodes have three different messages", func() {
+			var expectedBuf []string
+
+			BeforeEach(func() {
+				for i := 0; i < 3; i++ {
+					randomNode := rand.Intn(len)
+					msg := fmt.Sprintf("awesome-message-%d", i)
+					expectedBuf = append(expectedBuf, msg)
+					nodes[randomNode].AddMessage(msg)
+
+					Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
+						HaveLen(1),
+						Equal([]string{msg}),
+					))
+				}
+
+				// start protocol for all nodes
+				for i := 0; i < len; i++ {
+					Expect(nodes[i].Start())
+				}
+			})
+
+			It("sync all nodes with all messages", func() {
+				for i := range nodes {
+					Eventually(getSortedBuffer(nodes[i]), time.Second*3).Should(SatisfyAll(
 						HaveLen(3),
 						Equal(expectedBuf),
 					))
