@@ -45,14 +45,14 @@ func New(cfg Config) *Bmmc {
 
 	p.httpServer = httpserver.New(httpserver.Config{
 		Addr:    cfg.Addr,
-		Port:    cfg.HTTPPort,
+		Port:    cfg.Port,
 		PeerBuf: p.peerBuffer,
 		MsgBuf:  p.msgBuffer,
 	})
 
 	p.gossipServer = gossipserver.New(gossipserver.Config{
 		Addr:    cfg.Addr,
-		Port:    cfg.GossipPort,
+		Port:    cfg.Port,
 		PeerBuf: p.peerBuffer,
 		MsgBuf:  p.msgBuffer,
 		Beta:    cfg.Beta,

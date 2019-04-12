@@ -62,33 +62,31 @@ var _ = Describe("BMMC", func() {
 		)
 
 		BeforeEach(func() {
-			httpPort1 := suggestPort()
-			httpPort2 := suggestPort()
+			port1 := suggestPort()
+			port2 := suggestPort()
 
 			peers := []peer.Peer{
 				{
 					Addr: "localhost",
-					Port: httpPort1,
+					Port: port1,
 				},
 				{
 					Addr: "localhost",
-					Port: httpPort2,
+					Port: port2,
 				},
 			}
 
 			node1 = bmmc.New(bmmc.Config{
-				Addr:       "localhost",
-				GossipPort: suggestPort(),
-				HTTPPort:   httpPort1,
-				Peers:      peers,
-				Beta:       0.5,
+				Addr:  "localhost",
+				Port:  port1,
+				Peers: peers,
+				Beta:  0.5,
 			})
 			node2 = bmmc.New(bmmc.Config{
-				Addr:       "localhost",
-				GossipPort: suggestPort(),
-				HTTPPort:   httpPort2,
-				Peers:      peers,
-				Beta:       0.5,
+				Addr:  "localhost",
+				Port:  port2,
+				Peers: peers,
+				Beta:  0.5,
 			})
 
 			Expect(node1.Start())
@@ -109,11 +107,10 @@ var _ = Describe("BMMC", func() {
 		})
 
 		It("sync buffers with the message", func() {
-			time.Sleep(time.Second)
-			// Eventually(getSortedBuffer(node2), time.Second).Should(SatisfyAll(
-			// 	HaveLen(1),
-			// 	Equal([]string{msg}),
-			// ))
+			Eventually(getSortedBuffer(node2), time.Second).Should(SatisfyAll(
+				HaveLen(1),
+				Equal([]string{msg}),
+			))
 		})
 	})
 })
