@@ -34,17 +34,18 @@ import (
 
 ```golang
     host := "localhost"
-    port := "14999"
+    httpPort := "14999"
+    gossipPort := "15999"
 
     cfg := bmmc.Config{
-        HTTPAddr:   host,
-        HTTPPort:   port,
+        Addr:   host,
+        HTTPPort:   httpPort,
         GossipAddr: "localhost",
-        GossipPort: "15999",
+        GossipPort: gossipPort,
         Peers: []peer.Peer{
             {
                 Addr: host,
-                Port: port,
+                Port: httpPort,
             },
         },
     }

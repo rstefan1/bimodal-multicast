@@ -44,14 +44,14 @@ func New(cfg Config) *Protocol {
 	}
 
 	p.httpServer = httpserver.New(httpserver.Config{
-		Addr:    cfg.HTTPAddr,
+		Addr:    cfg.Addr,
 		Port:    cfg.HTTPPort,
 		PeerBuf: p.peerBuffer,
 		MsgBuf:  p.msgBuffer,
 	})
 
 	p.gossipServer = gossipserver.New(gossipserver.Config{
-		Addr:    cfg.GossipAddr,
+		Addr:    cfg.Addr,
 		Port:    cfg.GossipPort,
 		PeerBuf: p.peerBuffer,
 		MsgBuf:  p.msgBuffer,
