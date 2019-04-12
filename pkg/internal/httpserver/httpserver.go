@@ -69,7 +69,7 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
 		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
-			log.Printf("Error at sending HTTPSoliccitation message in HTTP Serer: %s", err)
+			log.Printf("Error at sending HTTPSoliccitation message in HTTP Server: %s", err)
 			return
 		}
 	}
@@ -145,7 +145,6 @@ func New(cfg Config) *HTTP {
 	return &HTTP{
 		server: &http.Server{
 			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
-			//Handler:getSynchronizationHandler(cfg.MsgBuf),
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":

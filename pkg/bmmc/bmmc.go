@@ -23,7 +23,7 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
-type Protocol struct {
+type Bmmc struct {
 	// shared buffer with addresses of nodes in system
 	peerBuffer []peer.Peer
 	// shared buffer with gossip messages
@@ -37,8 +37,8 @@ type Protocol struct {
 }
 
 // New creates a new instance for the protocol
-func New(cfg Config) *Protocol {
-	p := &Protocol{
+func New(cfg Config) *Bmmc {
+	p := &Bmmc{
 		peerBuffer: cfg.Peers,
 		msgBuffer:  buffer.NewMessageBuffer(),
 	}
@@ -62,31 +62,31 @@ func New(cfg Config) *Protocol {
 }
 
 // Start starts the gossip server and the http server
-func (p *Protocol) Start() error {
-	p.stop = make(chan struct{})
+func (b *Bmmc) Start() error {
+	b.stop = make(chan struct{})
 
 	// start http server
-	if err := p.httpServer.Start(p.stop); err != nil {
+	if err := b.httpServer.Start(b.stop); err != nil {
 		return err
 	}
 
 	// start gossip server
 	go func() {
-		p.gossipServer.Start(p.stop)
+		b.gossipServer.Start(b.stop)
 	}()
 
 	return nil
 }
 
 // Stop stops the gossip server and the http server
-func (p *Protocol) Stop() {
-	close(p.stop)
+func (b *Bmmc) Stop() {
+	close(b.stop)
 }
 
-func (p *Protocol) AddMessage(msg string) {
-	p.msgBuffer.AddMessage(buffer.NewMessage(msg))
+func (b *Bmmc) AddMessage(msg string) {
+	b.msgBuffer.AddMessage(buffer.NewMessage(msg))
 }
 
-func (p *Protocol) GetMessages() []string {
-	return p.msgBuffer.UnwrapMessageBuffer()
+func (b *Bmmc) GetMessages() []string {
+	return b.msgBuffer.UnwrapMessageBuffer()
 }
