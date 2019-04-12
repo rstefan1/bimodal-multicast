@@ -21,12 +21,10 @@ import (
 )
 
 type Config struct {
-	// GossipAddr is HTTP address for node which runs gossip and http rounds
+	// Addr is HTTP address for node which runs gossip and http servers
 	Addr string
-	// GossipPort is HTTP port for node which runs gossip round
-	GossipPort string
-	// HTTPPort is http server port
-	HTTPPort string
+	// Port is HTTP port for node which runs gossip  and http servers
+	Port string
 	// PeerBuf is the list of peers
 	Peers []peer.Peer
 	// Beta is the expected fanout for gossip rounds
