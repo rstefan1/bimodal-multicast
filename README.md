@@ -79,15 +79,14 @@ import (
 ```
 
 ## Roadmap to v0.2.x
- - [x] you can create an instance for Bimodal Multicast Protocol, you can start it,
- stop it, add message and retrieve all mesages
+ - [x] create an instance of Bimodal Multicast Protocol, start it,
+ stop it, add message and retrieve all messages
  - [ ] metrics
- - [ ] messages from buffer must be in `command-args` form
- - [ ] let user to register callbacks
- - [ ] when adding or deleting a peer, the nodes will update their peer nodes via
- the Bimodal Multicast Protocol
+ - [ ] messages from buffer to have a command and more arguments
+ - [ ] register callbacks for each messages
+ - [ ] add and remove peers via protocol
  - [ ] circular message buffer
- - [ ] ...
+ - [ ] more details about protocol in readme
  
 ## License
 
