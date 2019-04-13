@@ -9,9 +9,9 @@ versions.
 
 ## Overview
 
-The protocol runs in a series of rounds.
+The Bimodal Multicast Protocol runs in a series of rounds.
 At the beginning of each round, every node randomly chooses another node and
-sends it a digest of its message histories. The message is the gossip
+sends it a digest of its message histories. The message is called gossip
 message.
 The node that receive the gossip message compares the given digest with the
 messages in its own message buffer.
@@ -78,3 +78,18 @@ import (
     messages := p.GetMessages()
 ```
 
+## Roadmap to v0.2.x
+ - [x] you can create an instance for Bimodal Multicast Protocol, you can start it,
+ stop it, add message and retrieve all mesages
+ - [ ] metrics
+ - [ ] messages from buffer must be in `command-args` form
+ - [ ] let user to register callbacks
+ - [ ] when adding or deleting a peer, the nodes will update their peer nodes via
+ the Bimodal Multicast Protocol
+ - [ ] circular message buffer
+ - [ ] ...
+ 
+## License
+
+This project is licensed under Apache 2.0 license. Read the [LICENSE](LICENSE) file
+in the top distribution directory for the full license text.
