@@ -99,10 +99,7 @@ var _ = Describe("BMMC", func() {
 			msg = "awesome-message"
 			expectedBuf = append(expectedBuf, msg)
 			node1.AddMessage(msg)
-			Eventually(getSortedBuffer(node1), time.Second).Should(SatisfyAll(
-				HaveLen(1),
-				Equal(expectedBuf),
-			))
+			Eventually(getSortedBuffer(node1), time.Second).Should(Equal(expectedBuf))
 		})
 
 		AfterEach(func() {
@@ -159,10 +156,7 @@ var _ = Describe("BMMC", func() {
 				expectedBuf = append(expectedBuf, msg)
 				randomNode := rand.Intn(len)
 				nodes[randomNode].AddMessage(msg)
-				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
-					HaveLen(1),
-					Equal(expectedBuf),
-				))
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
 
 				// start protocol for all nodes
 				for i := 0; i < len; i++ {
@@ -172,10 +166,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with the message", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(SatisfyAll(
-						HaveLen(1),
-						Equal(expectedBuf),
-					))
+					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(Equal(expectedBuf))
 				}
 			})
 		})
@@ -191,10 +182,7 @@ var _ = Describe("BMMC", func() {
 					nodes[randomNode].AddMessage(msg)
 				}
 
-				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
-					HaveLen(3),
-					Equal(expectedBuf),
-				))
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
 
 				// start protocol for all nodes
 				for i := 0; i < len; i++ {
@@ -204,10 +192,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second*2).Should(SatisfyAll(
-						HaveLen(3),
-						Equal(expectedBuf),
-					))
+					Eventually(getSortedBuffer(nodes[i]), time.Second*2).Should(Equal(expectedBuf))
 				}
 			})
 		})
@@ -216,16 +201,14 @@ var _ = Describe("BMMC", func() {
 			var expectedBuf []string
 
 			BeforeEach(func() {
+				randomNodes := [3]int{2, 4, 6}
+
 				for i := 0; i < 3; i++ {
-					randomNode := rand.Intn(len)
 					msg := fmt.Sprintf("awesome-message-%d", i)
 					expectedBuf = append(expectedBuf, msg)
-					nodes[randomNode].AddMessage(msg)
+					nodes[randomNodes[i]].AddMessage(msg)
 
-					Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(SatisfyAll(
-						HaveLen(1),
-						Equal([]string{msg}),
-					))
+					Eventually(getSortedBuffer(nodes[randomNodes[i]]), time.Second).Should(Equal([]string{msg}))
 				}
 
 				// start protocol for all nodes
@@ -236,10 +219,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second*3).Should(SatisfyAll(
-						HaveLen(3),
-						Equal(expectedBuf),
-					))
+					Eventually(getSortedBuffer(nodes[i]), time.Second*3).Should(Equal(expectedBuf))
 				}
 			})
 		})
