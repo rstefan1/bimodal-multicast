@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gossipserver
+package gossip
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -49,7 +49,7 @@ func suggestPort() int {
 	return l.Addr().(*net.TCPAddr).Port
 }
 
-var _ = Describe("Gossip Server", func() {
+var _ = Describe("Gossiper", func() {
 	var (
 		gossip       *Gossip
 		gossipPort   string
@@ -59,8 +59,8 @@ var _ = Describe("Gossip Server", func() {
 		gossipMsgBuf *buffer.MessageBuffer
 		mockMsgBuf   *buffer.MessageBuffer
 		gossipCfg    Config
-		httpCfg      httpserver.Config
-		mockCfg      httpserver.Config
+		httpCfg      server.Config
+		mockCfg      server.Config
 		gossipStop   chan struct{}
 		httpStop     chan struct{}
 		mockStop     chan struct{}
@@ -87,13 +87,13 @@ var _ = Describe("Gossip Server", func() {
 			PeerBuf: gossipPeers,
 			MsgBuf:  gossipMsgBuf,
 		}
-		httpCfg = httpserver.Config{
+		httpCfg = server.Config{
 			Addr:    "localhost",
 			Port:    gossipPort,
 			PeerBuf: gossipPeers,
 			MsgBuf:  gossipMsgBuf,
 		}
-		mockCfg = httpserver.Config{
+		mockCfg = server.Config{
 			Addr:    "localhost",
 			Port:    mockPort,
 			PeerBuf: mockPeers,
@@ -114,13 +114,13 @@ var _ = Describe("Gossip Server", func() {
 
 	It("synchronize nodes with missing messages", func() {
 		go func() {
-			mockHTTPServer := httpserver.New(mockCfg)
+			mockHTTPServer := server.New(mockCfg)
 			err := mockHTTPServer.Start(mockStop)
 			Expect(err).To(Succeed())
 		}()
 
 		go func() {
-			gossipHTTPServer := httpserver.New(httpCfg)
+			gossipHTTPServer := server.New(httpCfg)
 			err := gossipHTTPServer.Start(httpStop)
 			Expect(err).To(Succeed())
 		}()

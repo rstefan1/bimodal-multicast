@@ -18,8 +18,8 @@ package bmmc
 
 import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossipserver"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpserver"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -29,9 +29,9 @@ type Bmmc struct {
 	// shared buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// http server
-	httpServer *httpserver.HTTP
+	httpServer *server.HTTP
 	// gossip server
-	gossipServer *gossipserver.Gossip
+	gossipServer *gossip.Gossip
 	// stop channel
 	stop chan struct{}
 }
@@ -43,14 +43,14 @@ func New(cfg Config) *Bmmc {
 		msgBuffer:  buffer.NewMessageBuffer(),
 	}
 
-	p.httpServer = httpserver.New(httpserver.Config{
+	p.httpServer = server.New(server.Config{
 		Addr:    cfg.Addr,
 		Port:    cfg.Port,
 		PeerBuf: p.peerBuffer,
 		MsgBuf:  p.msgBuffer,
 	})
 
-	p.gossipServer = gossipserver.New(gossipserver.Config{
+	p.gossipServer = gossip.New(gossip.Config{
 		Addr:    cfg.Addr,
 		Port:    cfg.Port,
 		PeerBuf: p.peerBuffer,

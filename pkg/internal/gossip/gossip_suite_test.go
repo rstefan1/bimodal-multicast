@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httpserver
+package gossip
 
 import (
 	"testing"
@@ -25,5 +25,5 @@ import (
 
 func TestHTTPServer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "HTTP Server Suite")
+	RunSpecs(t, "Gossip Suite")
 }
