@@ -19,8 +19,6 @@ package gossip
 import (
 	"fmt"
 	"math/rand"
-	"net"
-	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -28,26 +26,13 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 const (
 	timeout = time.Second
 )
-
-func suggestPort() int {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		panic(err)
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		panic(err)
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port
-}
 
 var _ = Describe("Gossiper", func() {
 	var (
@@ -67,8 +52,8 @@ var _ = Describe("Gossiper", func() {
 	)
 
 	BeforeEach(func() {
-		gossipPort = strconv.Itoa(suggestPort())
-		mockPort = strconv.Itoa(suggestPort())
+		gossipPort = testutil.SuggestPort()
+		mockPort = testutil.SuggestPort()
 
 		gossipPeers = append(gossipPeers, peer.Peer{Addr: "localhost", Port: mockPort})
 		mockPeers = append(mockPeers, peer.Peer{Addr: "localhost", Port: gossipPort})

@@ -19,32 +19,16 @@ package bmmc_test
 import (
 	"fmt"
 	"math/rand"
-	"net"
 	"sort"
-	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
-
-func suggestPort() string {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		panic(err)
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		panic(err)
-	}
-	defer l.Close()
-
-	return strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
-}
 
 // getSortedBuffer is a helper func that returns a sorted buffer
 func getSortedBuffer(node *bmmc.Bmmc) func() []string {
@@ -65,8 +49,8 @@ var _ = Describe("BMMC", func() {
 		)
 
 		BeforeEach(func() {
-			port1 := suggestPort()
-			port2 := suggestPort()
+			port1 := testutil.SuggestPort()
+			port2 := testutil.SuggestPort()
 
 			peers := []peer.Peer{
 				{
@@ -126,7 +110,7 @@ var _ = Describe("BMMC", func() {
 			)
 
 			for i := 0; i < len; i++ {
-				ports[i] = suggestPort()
+				ports[i] = testutil.SuggestPort()
 				peers = append(peers, peer.Peer{
 					Addr: "localhost",
 					Port: ports[i],

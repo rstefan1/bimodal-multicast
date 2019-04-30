@@ -21,9 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -32,6 +30,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -53,20 +52,6 @@ func (r *receivedMessages) GetMessage() interface{} {
 	return m
 }
 
-func suggestPort() int {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		panic(err)
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		panic(err)
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port
-}
-
 var _ = Describe("HTTP Server", func() {
 	var (
 		httpServerPort      string
@@ -81,8 +66,8 @@ var _ = Describe("HTTP Server", func() {
 	)
 
 	BeforeEach(func() {
-		httpServerPort = strconv.Itoa(suggestPort())
-		mockServerPort = strconv.Itoa(suggestPort())
+		httpServerPort = testutil.SuggestPort()
+		mockServerPort = testutil.SuggestPort()
 
 		httpServerMsgBuffer = buffer.NewMessageBuffer()
 		peerBuffer = []peer.Peer{}
