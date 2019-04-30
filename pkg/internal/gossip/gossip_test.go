@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
@@ -43,6 +44,8 @@ var _ = Describe("Gossiper", func() {
 		mockPeers    []peer.Peer
 		gossipMsgBuf *buffer.MessageBuffer
 		mockMsgBuf   *buffer.MessageBuffer
+		gossipRound  *round.GossipRound
+		mockRound    *round.GossipRound
 		gossipCfg    Config
 		httpCfg      server.Config
 		mockCfg      server.Config
@@ -55,6 +58,9 @@ var _ = Describe("Gossiper", func() {
 		gossipPort = testutil.SuggestPort()
 		mockPort = testutil.SuggestPort()
 
+		gossipRound = round.NewGossipRound()
+		mockRound = round.NewGossipRound()
+
 		gossipPeers = append(gossipPeers, peer.Peer{Addr: "localhost", Port: mockPort})
 		mockPeers = append(mockPeers, peer.Peer{Addr: "localhost", Port: gossipPort})
 
@@ -62,27 +68,30 @@ var _ = Describe("Gossiper", func() {
 		gossipMsgBuf.AddMessage(buffer.Message{
 			ID:          fmt.Sprintf("%d", rand.Int31()),
 			Msg:         fmt.Sprintf("%d", rand.Int31()),
-			GossipCount: rand.Int(),
+			GossipCount: 0,
 		})
 		mockMsgBuf = buffer.NewMessageBuffer()
 
 		gossipCfg = Config{
-			Addr:    "localhost",
-			Port:    gossipPort,
-			PeerBuf: gossipPeers,
-			MsgBuf:  gossipMsgBuf,
+			Addr:        "localhost",
+			Port:        gossipPort,
+			PeerBuf:     gossipPeers,
+			MsgBuf:      gossipMsgBuf,
+			GossipRound: gossipRound,
 		}
 		httpCfg = server.Config{
-			Addr:    "localhost",
-			Port:    gossipPort,
-			PeerBuf: gossipPeers,
-			MsgBuf:  gossipMsgBuf,
+			Addr:        "localhost",
+			Port:        gossipPort,
+			PeerBuf:     gossipPeers,
+			MsgBuf:      gossipMsgBuf,
+			GossipRound: gossipRound,
 		}
 		mockCfg = server.Config{
-			Addr:    "localhost",
-			Port:    mockPort,
-			PeerBuf: mockPeers,
-			MsgBuf:  mockMsgBuf,
+			Addr:        "localhost",
+			Port:        mockPort,
+			PeerBuf:     mockPeers,
+			MsgBuf:      mockMsgBuf,
+			GossipRound: mockRound,
 		}
 
 		gossipStop = make(chan struct{})

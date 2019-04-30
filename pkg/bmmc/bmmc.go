@@ -19,6 +19,7 @@ package bmmc
 import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -28,6 +29,8 @@ type Bmmc struct {
 	peerBuffer []peer.Peer
 	// shared buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
+	// gossip round number
+	gossipRound *round.GossipRound
 	// http server
 	httpServer *server.HTTP
 	// gossip server
@@ -39,23 +42,26 @@ type Bmmc struct {
 // New creates a new instance for the protocol
 func New(cfg Config) *Bmmc {
 	p := &Bmmc{
-		peerBuffer: cfg.Peers,
-		msgBuffer:  buffer.NewMessageBuffer(),
+		peerBuffer:  cfg.Peers,
+		msgBuffer:   buffer.NewMessageBuffer(),
+		gossipRound: round.NewGossipRound(),
 	}
 
 	p.httpServer = server.New(server.Config{
-		Addr:    cfg.Addr,
-		Port:    cfg.Port,
-		PeerBuf: p.peerBuffer,
-		MsgBuf:  p.msgBuffer,
+		Addr:        cfg.Addr,
+		Port:        cfg.Port,
+		PeerBuf:     p.peerBuffer,
+		MsgBuf:      p.msgBuffer,
+		GossipRound: p.gossipRound,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{
-		Addr:    cfg.Addr,
-		Port:    cfg.Port,
-		PeerBuf: p.peerBuffer,
-		MsgBuf:  p.msgBuffer,
-		Beta:    cfg.Beta,
+		Addr:        cfg.Addr,
+		Port:        cfg.Port,
+		PeerBuf:     p.peerBuffer,
+		MsgBuf:      p.msgBuffer,
+		Beta:        cfg.Beta,
+		GossipRound: p.gossipRound,
 	})
 
 	return p

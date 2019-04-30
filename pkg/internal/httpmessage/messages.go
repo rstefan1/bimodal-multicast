@@ -16,13 +16,16 @@ limitations under the License.
 
 package httpmessage
 
-import "github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+import (
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
+)
 
 // HTTPGossip is gossip message for http server
 type HTTPGossip struct {
 	Addr        string              `json:"http_gossip_addr"`
 	Port        string              `json:"http_gossip_port"`
-	RoundNumber int64               `json:"http_gossip_round_number"`
+	RoundNumber *round.GossipRound  `json:"http_gossip_round_number"`
 	Digests     buffer.DigestBuffer `json:"http_gossip_digests"`
 }
 
@@ -30,7 +33,7 @@ type HTTPGossip struct {
 type HTTPSolicitation struct {
 	Addr        string              `json:"http_solicitation_addr"`
 	Port        string              `json:"http_solicitation_port"`
-	RoundNumber int64               `json:"http_solicitation_round_number"`
+	RoundNumber *round.GossipRound  `json:"http_solicitation_round_number"`
 	Digests     buffer.DigestBuffer `json:"http_solicitation_digests"`
 }
 
