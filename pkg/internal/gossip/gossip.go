@@ -27,6 +27,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -39,8 +40,8 @@ type Gossip struct {
 	gossipAddr string
 	// port is the gossip node port
 	gossipPort string
-	// round number
-	roundNumber int64
+	// gossip round number
+	gossipRoundNumber *round.GossipRound
 	// beta is the expected fanout for gossip
 	beta float64
 	// selected peers for sending gossip message
@@ -79,18 +80,17 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 			log.Printf("End of gossip round from %s:%s", g.gossipAddr, g.gossipPort)
 			return
 		default:
-			// increment round number
-			g.roundNumber++
+			g.gossipRoundNumber.Increment()
 
 			gossipMsg := httpmessage.HTTPGossip{
 				Addr:        g.gossipAddr,
 				Port:        g.gossipPort,
-				RoundNumber: g.roundNumber,
+				RoundNumber: g.gossipRoundNumber,
 				Digests:     *(g.msgBuffer).DigestBuffer(),
 			}
 
 			// gossipLen is number of nodes which will receive gossip message
-			gossipLen := int(g.beta*float64(len(g.peerBuffer))/float64(g.roundNumber)) + 1
+			gossipLen := int(g.beta*float64(len(g.peerBuffer))/float64(g.gossipRoundNumber.GetNumber())) + 1
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
@@ -124,12 +124,12 @@ func (g *Gossip) Start(stop <-chan struct{}) {
 
 func New(cfg Config) *Gossip {
 	return &Gossip{
-		peerBuffer:    cfg.PeerBuf,
-		msgBuffer:     cfg.MsgBuf,
-		gossipAddr:    cfg.Addr,
-		gossipPort:    cfg.Port,
-		selectedPeers: make([]bool, len(cfg.PeerBuf)),
-		beta:          cfg.Beta,
-		roundNumber:   1,
+		peerBuffer:        cfg.PeerBuf,
+		msgBuffer:         cfg.MsgBuf,
+		gossipAddr:        cfg.Addr,
+		gossipPort:        cfg.Port,
+		selectedPeers:     make([]bool, len(cfg.PeerBuf)),
+		beta:              cfg.Beta,
+		gossipRoundNumber: cfg.GossipRound,
 	}
 }

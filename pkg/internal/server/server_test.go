@@ -30,6 +30,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -137,7 +138,7 @@ var _ = Describe("HTTP Server", func() {
 			gossipMessage := httpmessage.HTTPGossip{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int63(),
+				RoundNumber: round.NewGossipRound(),
 				Digests:     *gossipDigest,
 			}
 			jsonGossip, err := json.Marshal(gossipMessage)
@@ -161,7 +162,7 @@ var _ = Describe("HTTP Server", func() {
 			gossipMessage := httpmessage.HTTPGossip{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int63(),
+				RoundNumber: round.NewGossipRound(),
 				Digests:     *httpServerMsgBuffer.DigestBuffer(),
 			}
 			jsonDigest, err := json.Marshal(gossipMessage)
@@ -229,7 +230,7 @@ var _ = Describe("HTTP Server", func() {
 			solicitationMessage := httpmessage.HTTPSolicitation{
 				Addr:        "localhost",
 				Port:        mockServerPort,
-				RoundNumber: rand.Int63(),
+				RoundNumber: round.NewGossipRound(),
 				Digests:     *solicitationDigest,
 			}
 			jsonSolicitation, err := json.Marshal(solicitationMessage)

@@ -27,13 +27,15 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type HTTP struct {
-	server     *http.Server
-	peerBuffer []peer.Peer
-	msgBuffer  *buffer.MessageBuffer
+	server            *http.Server
+	peerBuffer        []peer.Peer
+	msgBuffer         *buffer.MessageBuffer
+	gossipRoundNumber *round.GossipRound
 }
 
 func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
@@ -158,8 +160,9 @@ func New(cfg Config) *HTTP {
 				}
 			}),
 		},
-		peerBuffer: cfg.PeerBuf,
-		msgBuffer:  cfg.MsgBuf,
+		peerBuffer:        cfg.PeerBuf,
+		msgBuffer:         cfg.MsgBuf,
+		gossipRoundNumber: cfg.GossipRound,
 	}
 }
 

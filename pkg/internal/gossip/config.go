@@ -18,6 +18,7 @@ package gossip
 
 import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -31,6 +32,8 @@ type Config struct {
 	PeerBuf []peer.Peer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
+	// GossipRound is the gossip round number
+	GossipRound *round.GossipRound
 	// Beta is the expected fanout
 	Beta float64
 }
