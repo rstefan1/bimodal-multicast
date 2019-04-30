@@ -5,3 +5,5 @@ bin/*
 *.swp
 
 .idea/*
+
+*.log

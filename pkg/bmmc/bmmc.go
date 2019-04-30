@@ -54,7 +54,7 @@ func New(cfg Config) *Bmmc {
 		MsgBuf:      p.msgBuffer,
 		GossipRound: p.gossipRound,
 		Logger:      cfg.Logger,
-		Loss:        0,
+		Loss:        cfg.loss,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{
