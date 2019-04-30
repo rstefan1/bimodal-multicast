@@ -19,8 +19,14 @@ vet:
 generate:
 	go generate ./pkg/...
 
+# Run golangci-lint
 lint:
 	$(BINDIR)/golangci-lint run ./pkg/...
+
+# Export metrics
+export-metrics:
+	rm -r metrics/logs
+	go run metrics/main.go
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)

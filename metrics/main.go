@@ -14,25 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package bmmc
+package main
 
 import (
-	"log"
+	"fmt"
+	"time"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 )
 
-type Config struct {
-	// Addr is HTTP address for node which runs gossip and http servers
-	Addr string
-	// Port is HTTP port for node which runs gossip  and http servers
-	Port string
-	// PeerBuf is the list of peers
-	Peers []peer.Peer
-	// Beta is the expected fanout for gossip rounds
-	Beta float64
-	// Logger
-	Logger *log.Logger
-	// loss - just for exporting metrics
-	loss float64
+func main() {
+	noPeers := 100
+	noRetries := 20
+	minLoss := 0.0
+	maxLoss := 0.9
+	minBeta := 0.0
+	maxBeta := 0.9
+	timeout := time.Second * 3
+
+	for loss := minLoss; loss <= maxLoss; loss = loss + 0.1 {
+		for beta := minBeta; beta <= maxBeta; beta = beta + 0.1 {
+			fmt.Println("Running BMMC for loss=", loss, " and beta=", beta, "...")
+			if err := bmmc.RunWithSpec(noRetries, noPeers, loss, beta, timeout); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
 }
