@@ -38,7 +38,7 @@ type HTTP struct {
 	gossipRoundNumber *round.GossipRound
 }
 
-func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
+func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
@@ -77,7 +77,7 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 	}
 }
 
-func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
+func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
@@ -113,7 +113,7 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	}
 }
 
-func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer) {
+func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
@@ -122,10 +122,15 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 		return
 	}
 
+	host := strings.Split(r.Host, ":")
+	hostAddr := host[0]
+	hostPort := host[1]
+
 	rcvMsgBuf := t.Messages
 	for _, m := range rcvMsgBuf.Messages {
 		if !msgBuffer.AlreadyExists(m) {
 			msgBuffer.AddMessage(m)
+			log.Printf("BMMC (%s:%s) synced buffer with message (id: %s) in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
 		}
 	}
 }
@@ -152,11 +157,11 @@ func New(cfg Config) *HTTP {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
-					getGossipHandler(w, r, cfg.MsgBuf)
+					getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
 				case "/solicitation":
-					getSolicitationHandler(w, r, cfg.MsgBuf)
+					getSolicitationHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
 				case "/synchronization":
-					getSynchronizationHandler(w, r, cfg.MsgBuf)
+					getSynchronizationHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
 				}
 			}),
 		},
