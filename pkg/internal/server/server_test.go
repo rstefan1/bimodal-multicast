@@ -58,6 +58,7 @@ var _ = Describe("HTTP Server", func() {
 		httpServerPort      string
 		mockServerPort      string
 		httpServerCfg       Config
+		gossipRound         *round.GossipRound
 		peerBuffer          []peer.Peer
 		httpServerMsgBuffer *buffer.MessageBuffer
 		httpServerStop      chan struct{}
@@ -73,11 +74,14 @@ var _ = Describe("HTTP Server", func() {
 		httpServerMsgBuffer = buffer.NewMessageBuffer()
 		peerBuffer = []peer.Peer{}
 
+		gossipRound = round.NewGossipRound()
+
 		httpServerCfg = Config{
-			Addr:    "",
-			Port:    httpServerPort,
-			PeerBuf: peerBuffer,
-			MsgBuf:  httpServerMsgBuffer,
+			Addr:        "",
+			Port:        httpServerPort,
+			PeerBuf:     peerBuffer,
+			MsgBuf:      httpServerMsgBuffer,
+			GossipRound: gossipRound,
 		}
 
 		httpServerStop = make(chan struct{})
