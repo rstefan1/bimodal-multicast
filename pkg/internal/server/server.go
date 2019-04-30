@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -163,7 +164,10 @@ func New(cfg Config) *HTTP {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
-					getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
+					// in production, cfg.Loss = 0
+					if rand.Float64() >= cfg.Loss {
+						getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
+					}
 				case "/solicitation":
 					getSolicitationHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
 				case "/synchronization":
