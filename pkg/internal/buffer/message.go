@@ -32,7 +32,7 @@ type Message struct {
 
 type MessageBuffer struct {
 	Messages []Message   `json:"message_buffer_list"`
-	Mux      *sync.Mutex `json:"message_buffer_Mux"`
+	Mux      *sync.Mutex `json:"message_buffer_mux"`
 }
 
 func NewMessage(m string) Message {
