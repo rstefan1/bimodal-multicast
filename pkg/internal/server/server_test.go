@@ -122,7 +122,7 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				mockServer.ListenAndServe()
+				_ = mockServer.ListenAndServe()
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
@@ -204,7 +204,7 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				mockServer.ListenAndServe()
+				_ = mockServer.ListenAndServe()
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
