@@ -17,6 +17,8 @@ limitations under the License.
 package gossip
 
 import (
+	"log"
+
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
@@ -36,4 +38,6 @@ type Config struct {
 	GossipRound *round.GossipRound
 	// Beta is the expected fanout
 	Beta float64
+	// Logger
+	Logger *log.Logger
 }

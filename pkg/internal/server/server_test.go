@@ -18,6 +18,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -121,15 +122,14 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				err := startHTTPServer(mockServer)
-				Expect(err).To(Succeed())
+				mockServer.ListenAndServe()
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
 		})
 
 		AfterEach(func() {
-			gracefullyShutdown(mockServer)
+			_ = mockServer.Shutdown(context.TODO())
 		})
 
 		It("responds with solicitation request when nodes have different digests", func() {
@@ -204,15 +204,14 @@ var _ = Describe("HTTP Server", func() {
 
 			// start mock server
 			go func() {
-				err := startHTTPServer(mockServer)
-				Expect(err).To(Succeed())
+				mockServer.ListenAndServe()
 			}()
 
 			requestPath = fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
 		})
 
 		AfterEach(func() {
-			gracefullyShutdown(mockServer)
+			_ = mockServer.Shutdown(context.TODO())
 		})
 
 		It("responds with synchronization message", func() {

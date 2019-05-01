@@ -17,6 +17,8 @@ limitations under the License.
 package server
 
 import (
+	"log"
+
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
@@ -34,4 +36,6 @@ type Config struct {
 	MsgBuf *buffer.MessageBuffer
 	// GossipRound is the gossip round number
 	GossipRound *round.GossipRound
+	// Logger
+	Logger *log.Logger
 }

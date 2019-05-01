@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
@@ -36,14 +37,15 @@ type HTTP struct {
 	peerBuffer        []peer.Peer
 	msgBuffer         *buffer.MessageBuffer
 	gossipRoundNumber *round.GossipRound
+	logger            *log.Logger
 }
 
-func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
+func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPGossip
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Printf("Error at decoding HTTPGossip message in HTTP Server: %s", err)
+		logger.Printf("Error at decoding HTTPGossip message in HTTP Server: %s", err)
 		return
 	}
 
@@ -65,24 +67,24 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 		}
 		jsonSolicitation, err := json.Marshal(solicitation)
 		if err != nil {
-			log.Printf("Error at marshal HTTPSolicitation in HTTP Server: %s", err)
+			logger.Printf("Error at marshal HTTPSolicitation in HTTP Server: %s", err)
 			return
 		}
 		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
 		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
-			log.Printf("Error at sending HTTPSoliccitation message in HTTP Server: %s", err)
+			logger.Printf("Error at sending HTTPSoliccitation message in HTTP Server: %s", err)
 			return
 		}
 	}
 }
 
-func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
+func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSolicitation
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Printf("Error at decoding HTTPSolicitation message in HTTP Server: %s", err)
+		logger.Printf("Error at decoding HTTPSolicitation message in HTTP Server: %s", err)
 		return
 	}
 
@@ -102,23 +104,23 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
-		log.Printf("Error at marshal HTTPSynchronization message in HTTP Server: %s", err)
+		logger.Printf("Error at marshal HTTPSynchronization message in HTTP Server: %s", err)
 		return
 	}
 	path := fmt.Sprintf("http://%s:%s/synchronization", t.Addr, t.Port)
 	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
-		log.Printf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
+		logger.Printf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
 		return
 	}
 }
 
-func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound) {
+func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
 	decoder := json.NewDecoder(r.Body)
 	var t httpmessage.HTTPSynchronization
 	err := decoder.Decode(&t)
 	if err != nil {
-		log.Printf("Error at decoding HTTPSynchronization message in HTTP Server: %s", err)
+		logger.Printf("Error at decoding HTTPSynchronization message in HTTP Server: %s", err)
 		return
 	}
 
@@ -130,44 +132,49 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	for _, m := range rcvMsgBuf.Messages {
 		if !msgBuffer.AlreadyExists(m) {
 			msgBuffer.AddMessage(m)
-			log.Printf("BMMC (%s:%s) synced buffer with message (id: %s) in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+			logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
 		}
 	}
 }
 
-func startHTTPServer(s *http.Server) error {
-	log.Printf("HTTP Server listening at %s", s.Addr)
-	if err := s.ListenAndServe(); err != http.ErrServerClosed {
-		log.Printf("Unable to start HTTP server: %s", err)
+func startHTTPServer(s *HTTP) error {
+	s.logger.Printf("HTTP Server listening at %s", s.server.Addr)
+	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
+		s.logger.Printf("Unable to start HTTP server: %s", err)
 		return err
 	}
 	return nil
 }
 
-func gracefullyShutdown(s *http.Server) {
-	if err := s.Shutdown(context.TODO()); err != nil {
-		log.Printf("Unable to shutdown HTTP server properly: %s", err)
+func gracefullyShutdown(s *HTTP) {
+	if err := s.server.Shutdown(context.TODO()); err != nil {
+		s.logger.Printf("Unable to shutdown HTTP server properly: %s", err)
 	}
 }
 
 func New(cfg Config) *HTTP {
+	if cfg.Logger == nil {
+		cfg.Logger = log.New(os.Stdout, "", 0)
+	}
+
 	return &HTTP{
 		server: &http.Server{
 			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
-					getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
+					getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
 				case "/solicitation":
-					getSolicitationHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
+					getSolicitationHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
 				case "/synchronization":
-					getSynchronizationHandler(w, r, cfg.MsgBuf, cfg.GossipRound)
+					getSynchronizationHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
 				}
 			}),
 		},
 		peerBuffer:        cfg.PeerBuf,
 		msgBuffer:         cfg.MsgBuf,
 		gossipRoundNumber: cfg.GossipRound,
+		logger:            cfg.Logger,
 	}
 }
 
@@ -175,13 +182,13 @@ func (h *HTTP) Start(stop <-chan struct{}) error {
 	errChan := make(chan error)
 
 	go func() {
-		err := startHTTPServer(h.server)
+		err := startHTTPServer(h)
 		errChan <- err
 	}()
 
 	go func() {
 		<-stop
-		gracefullyShutdown(h.server)
+		gracefullyShutdown(h)
 	}()
 
 	// return <-errChan

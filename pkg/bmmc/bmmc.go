@@ -53,6 +53,7 @@ func New(cfg Config) *Bmmc {
 		PeerBuf:     p.peerBuffer,
 		MsgBuf:      p.msgBuffer,
 		GossipRound: p.gossipRound,
+		Logger:      cfg.Logger,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{
@@ -62,6 +63,7 @@ func New(cfg Config) *Bmmc {
 		MsgBuf:      p.msgBuffer,
 		Beta:        cfg.Beta,
 		GossipRound: p.gossipRound,
+		Logger:      cfg.Logger,
 	})
 
 	return p

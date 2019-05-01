@@ -23,6 +23,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
@@ -46,6 +47,8 @@ type Gossip struct {
 	beta float64
 	// selected peers for sending gossip message
 	selectedPeers []bool
+	// logger
+	logger *log.Logger
 }
 
 // randomlySelectPeer is a helper func that returns a random peer
@@ -77,7 +80,7 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
-			log.Printf("End of gossip round from %s:%s", g.gossipAddr, g.gossipPort)
+			g.logger.Printf("End of gossip round from %s:%s", g.gossipAddr, g.gossipPort)
 			return
 		default:
 			g.gossipRoundNumber.Increment()
@@ -98,14 +101,14 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 				path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
 				jsonGossip, err := json.Marshal(gossipMsg)
 				if err != nil {
-					log.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
+					g.logger.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
 					continue
 				}
 
 				// send the gossip message
 				_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
 				if err != nil {
-					log.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
+					g.logger.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
 				}
 			}
 
@@ -118,11 +121,15 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 }
 
 func (g *Gossip) Start(stop <-chan struct{}) {
-	log.Printf("Starting Gossiper on %s:%s", g.gossipAddr, g.gossipPort)
+	g.logger.Printf("Starting Gossiper on %s:%s", g.gossipAddr, g.gossipPort)
 	g.gossipRound(stop)
 }
 
 func New(cfg Config) *Gossip {
+	if cfg.Logger == nil {
+		cfg.Logger = log.New(os.Stdout, "", 0)
+	}
+
 	return &Gossip{
 		peerBuffer:        cfg.PeerBuf,
 		msgBuffer:         cfg.MsgBuf,
@@ -131,5 +138,6 @@ func New(cfg Config) *Gossip {
 		selectedPeers:     make([]bool, len(cfg.PeerBuf)),
 		beta:              cfg.Beta,
 		gossipRoundNumber: cfg.GossipRound,
+		logger:            cfg.Logger,
 	}
 }
