@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	noPeers := 100
+	noPeers := 50
 	noRetries := 20
 	minLoss := 0.0
 	maxLoss := 0.9
@@ -34,7 +34,7 @@ func main() {
 
 	for loss := minLoss; loss <= maxLoss; loss = loss + 0.1 {
 		for beta := minBeta; beta <= maxBeta; beta = beta + 0.1 {
-			fmt.Println("Running BMMC for loss=", loss, " and beta=", beta, "...")
+			fmt.Println("Running BMMC for loss =", loss, "and beta =", beta, "...")
 			if err := bmmc.RunWithSpec(noRetries, noPeers, loss, beta, timeout); err != nil {
 				fmt.Println(err)
 			}

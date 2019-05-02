@@ -27,9 +27,9 @@ lint:
 export-metrics:
 	rm -r metrics/logs
 	go run metrics/main.go
+	python metrics/metrics.py
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)
 	GOBIN=$(BINDIR) go install ./vendor/github.com/onsi/ginkgo/ginkgo
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(BINDIR) v1.10.2
-
