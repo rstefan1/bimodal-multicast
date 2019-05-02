@@ -78,10 +78,17 @@ import (
     messages := p.GetMessages()
 ```
 
+## Performance
+
+When beta is 0.5 and loss is 30% (after 20 retries):
+
+![Alt text](docs/metrics/b_50_l_30.png)
+
+
 ## Roadmap to v0.2.x
  - [x] create an instance of Bimodal Multicast Protocol, start it,
  stop it, add message and retrieve all messages
- - [ ] metrics
+ - [x] metrics
  - [ ] messages from buffer to have a command and more arguments
  - [ ] register callbacks for each messages
  - [ ] add and remove peers via protocol

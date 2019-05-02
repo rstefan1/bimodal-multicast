@@ -26,8 +26,8 @@ lint:
 # Export metrics
 export-metrics:
 	rm -r metrics/logs
-	go run metrics/main.go
-	python metrics/metrics.py
+	go run metrics/metrics.go
+	python3 metrics/metrics.py
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)

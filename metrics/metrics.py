@@ -16,6 +16,8 @@ from os import listdir
 from os.path import isfile, join
 from collections import namedtuple
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 
 PATH = "metrics/logs"
 SYNCLOG = "synced buffer with message"
@@ -24,12 +26,23 @@ NOLOSS = 10
 NOBETA = 10
 NOPEERS = 50
 
+betaPlotMin = 0    # the minimial value of the paramater beta
+betaPlotMax = 0.9   # the maximal value of the paramater beta
+betaPlotInit = 0.5   # the value of the parameter beta to be used initially, when the graph is created
+
+lossPlotMin = 0    # the minimial value of the paramater loss
+lossPlotMax = 0.9   # the maximal value of the paramater loss
+lossPlotInit = 0   # the value of the parameter loss to be used initially, when the graph is created
+
 PeerStruct = namedtuple("PeerStruct", ["min", "max"])
 
-# initialize two-dimensioanl arrays
-# We can use: % peers = matrix[beta][loss][round]
+# % procent of peers = matrix[beta][loss][round]
 matrix = np.empty((NOBETA, NOLOSS, NOROUNDS,), dtype = PeerStruct)
 
+# global values for beta and loss used for plotting
+globalBeta = 0
+globalLoss = 0
+globalRoundNumber = 25
 
 def init():
 	for i in range (NOBETA):
@@ -63,8 +76,8 @@ def parseLogFiles():
 		for l in range(lenLines):
 			if SYNCLOG in lines[l]:
 				try:
-					rrr = int(lines[l].split(" ")[9])
-					rounds[rrr] = rounds[rrr] + 1
+					r = int(lines[l].split(" ")[9])
+					rounds[r] = rounds[r] + 1
 					countPeers = countPeers + 1
 				except:
 					print("Invalid log message: ", lines[l])
@@ -77,33 +90,120 @@ def parseLogFiles():
 		# Do not take into account if enough nodes have not been synchronized.
 		# This may mean that nodes have not started
 		if countPeers >= int(NOPEERS) - 10 and countPeers <= NOPEERS:
-			for rr in range(NOROUNDS):
+			for r in range(NOROUNDS):
 				# procent of nodes
-				m = 100.0 * rounds[rr] / countPeers
+				m = 100.0 * rounds[r] / countPeers
 
-				if matrix[beta][loss][rr] == PeerStruct(min = -1.0, max = -1.0):
-					matrix[beta][loss][rr] = PeerStruct(min = m, max = m)
+				if matrix[beta][loss][r] == PeerStruct(min = -1.0, max = -1.0):
+					matrix[beta][loss][r] = PeerStruct(min = m, max = m)
 				else:
-					if m < matrix[beta][loss][rr].min:
-						matrix[beta][loss][rr] = PeerStruct(min = m, max = matrix[beta][loss][rr].max)
-					if m > matrix[beta][loss][rr].max:
-						matrix[beta][loss][rr] = PeerStruct(min = matrix[beta][loss][rr].min, max = m)
+					if m < matrix[beta][loss][r].min:
+						matrix[beta][loss][r] = PeerStruct(min = m, max = matrix[beta][loss][r].max)
+					if m > matrix[beta][loss][r].max:
+						matrix[beta][loss][r] = PeerStruct(min = matrix[beta][loss][r].min, max = m)
 		else:
 			print("Invalid log file: ", fileName)
 
 		file.close()
 
-	# for b in range(len(matrix)):
-	# 	for l in range(len(matrix[b])):
-	# 		for r in range(len(matrix[b][l])):
-	# 			print("for beta = ", b, ", loss = ", l, " and round ", r)
-	# 			print("min: ", matrix[b][l][r].min, " max: ", matrix[b][l][r].max)
 
-	# print(matrix)
+
+def plot():
+	fig = plt.figure(figsize=(8,3))
+
+	global globalBeta
+	globalBeta = int(round(betaPlotInit * 10))
+
+	global globalLoss
+	globalLoss = int(round(lossPlotInit * 10))
+
+	plotRounds = range(globalRoundNumber)
+	plotPeersMin = []
+	plotPeersMax = []
+	for i in range(globalRoundNumber):
+		plotPeersMin.append(matrix[globalBeta][globalLoss][i].min)
+		plotPeersMax.append(matrix[globalBeta][globalLoss][i].max)
+
+	# first we create the general layout of the figure
+	# with two axes objects: one for the plot of the function
+	# and the other for the slider
+	figAx = plt.axes([0.1, 0.27, 0.8, 0.65])
+	betaSliderAx = plt.axes([0.1, 0.12, 0.8, 0.05])
+	lossSliderAx = plt.axes([0.1, 0.05, 0.8, 0.05])
+
+	# in plot_ax we plot the function with the initial value of the parameter beta
+	plt.sca(figAx) # select sin_ax
+	figPlotMin, = plt.plot(plotRounds, plotPeersMin, 'r', label='Min bound')
+	figPlotMax, = plt.plot(plotRounds, plotPeersMax, 'g', label='Max bound')
+	plt.xlabel('Rounds')
+	plt.ylabel('% peers')
+	plt.legend()
+
+	# here we create the beta slider
+	betaSlider = Slider(betaSliderAx,	# the axes object containing the slider
+		'Beta',							# the name of the slider parameter
+		betaPlotMin,					# minimal value of the parameter
+		betaPlotMax,					# maximal value of the parameter
+		valinit = betaPlotInit			# initial value of the parameter
+		)
+
+	# here we create the loss slider
+	lossSlider = Slider(lossSliderAx,	# the axes object containing the slider
+		'Loss',							# the name of the slider parameter
+		lossPlotMin,					# minimal value of the parameter
+		lossPlotMax,					# maximal value of the parameter
+		valinit = lossPlotInit			# initial value of the parameter
+		)
+
+	# We define a function that will be executed each time the value
+	# indicated by the slider changes. The variable of this function will
+	# be assigned the value of the beta slider.
+	def updateBeta(beta):
+		beta = int(round(beta * 10))
+		global globalBeta
+		globalBeta = beta
+
+		plotPeersMin = []
+		plotPeersMax = []
+
+		for i in range(globalRoundNumber):
+			plotPeersMin.append(matrix[beta][globalLoss][i].min)
+			plotPeersMax.append(matrix[beta][globalLoss][i].max)
+
+		figPlotMax.set_ydata(plotPeersMax)	# set new y-coordinates of the plotted points
+		figPlotMin.set_ydata(plotPeersMin)	# set new y-coordinates of the plotted points
+		fig.canvas.draw_idle()				# redraw the plot
+
+	# We define a function that will be executed each time the value
+	# indicated by the slider changes. The variable of this function will
+	# be assigned the value of the loss slider.
+	def updateLoss(loss):
+		loss = int(round(loss * 10))
+		global globalLoss
+		globalLoss = loss
+
+		plotPeersMin = []
+		plotPeersMax = []
+
+		for i in range(globalRoundNumber):
+			plotPeersMin.append(matrix[globalBeta][loss][i].min)
+			plotPeersMax.append(matrix[globalBeta][loss][i].max)
+
+		figPlotMax.set_ydata(plotPeersMax)	# set new y-coordinates of the plotted points
+		figPlotMin.set_ydata(plotPeersMin)	# set new y-coordinates of the plotted points
+		fig.canvas.draw_idle()				# redraw the plot
+
+	# specify that the sliders needs to
+	# execute the above function when its value changes
+	betaSlider.on_changed(updateBeta)
+	lossSlider.on_changed(updateLoss)
+
+	plt.show()
 
 def main():
 	init()
 	parseLogFiles()
+	plot()
 
 if __name__ == "__main__":
 	main()
