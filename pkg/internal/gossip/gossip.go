@@ -17,16 +17,12 @@ limitations under the License.
 package gossip
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"log"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -71,10 +67,7 @@ func (g *Gossip) resetSelectedPeers() {
 
 // gossipRound is the gossip round that runs every 100ms
 func (g *Gossip) gossipRound(stop <-chan struct{}) {
-	var (
-		dest peer.Peer
-		path string
-	)
+	var dest peer.Peer
 
 	for {
 		select {
@@ -84,30 +77,16 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 		default:
 			g.gossipRoundNumber.Increment()
 
-			gossipMsg := httpmessage.HTTPGossip{
-				Addr:        g.gossipAddr,
-				Port:        g.gossipPort,
-				RoundNumber: g.gossipRoundNumber,
-				Digests:     *(g.msgBuffer).DigestBuffer(),
-			}
-
 			// gossipLen is number of nodes which will receive gossip message
 			gossipLen := int(g.beta*float64(len(g.peerBuffer))/float64(g.gossipRoundNumber.GetNumber())) + 1
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
 				dest = g.randomlySelectPeer()
-				path = fmt.Sprintf("http://%s:%s/gossip", dest.Addr, dest.Port)
-				jsonGossip, err := json.Marshal(gossipMsg)
-				if err != nil {
-					g.logger.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
-					continue
-				}
 
-				// send the gossip message
-				_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
+				err := httputil.SendGossip(g.gossipAddr, g.gossipPort, dest.Addr, dest.Port, g.gossipRoundNumber, (g.msgBuffer).DigestBuffer())
 				if err != nil {
-					g.logger.Printf("Gossiper from %s:%s can not marshal the gossip message: %s", g.gossipAddr, g.gossipPort, err)
+					g.logger.Printf("%s", err)
 				}
 			}
 
