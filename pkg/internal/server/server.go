@@ -17,9 +17,7 @@ limitations under the License.
 package server
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -28,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -42,15 +40,12 @@ type HTTP struct {
 }
 
 func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
-	decoder := json.NewDecoder(r.Body)
-	var t httpmessage.HTTPGossip
-	err := decoder.Decode(&t)
+	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
 	if err != nil {
-		logger.Printf("Error at decoding HTTPGossip message in HTTP Server: %s", err)
+		logger.Printf("%s", err)
 		return
 	}
 
-	gossipDigestBuffer := t.Digests
 	msgDigestBuffer := msgBuffer.DigestBuffer()
 	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
 
@@ -59,69 +54,37 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 	hostPort := host[1]
 
 	if missingDigestBuffer.Length() > 0 {
-		// send solicitation request
-		solicitation := httpmessage.HTTPSolicitation{
-			Addr:        hostAddr,
-			Port:        hostPort,
-			RoundNumber: t.RoundNumber,
-			Digests:     *missingDigestBuffer,
-		}
-		jsonSolicitation, err := json.Marshal(solicitation)
+		err = httputil.SendSolicitation(hostAddr, hostPort, tAddr, tPort, tRoundNumber, missingDigestBuffer)
 		if err != nil {
-			logger.Printf("Error at marshal HTTPSolicitation in HTTP Server: %s", err)
-			return
-		}
-		path := fmt.Sprintf("http://%s:%s/solicitation", t.Addr, t.Port)
-		_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
-		if err != nil {
-			logger.Printf("Error at sending HTTPSoliccitation message in HTTP Server: %s", err)
+			logger.Printf("%s", err)
 			return
 		}
 	}
 }
 
 func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
-	decoder := json.NewDecoder(r.Body)
-	var t httpmessage.HTTPSolicitation
-	err := decoder.Decode(&t)
+	missingDigestBuffer, tAddr, tPort, _, err := httputil.ReceiveSolicitation(r)
 	if err != nil {
-		logger.Printf("Error at decoding HTTPSolicitation message in HTTP Server: %s", err)
+		logger.Printf("%s", err)
 		return
 	}
-
-	missingDigestBuffer := t.Digests
 	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(msgBuffer)
 
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
 	hostPort := host[1]
 
-	// send synchronization message
-	synchronization := httpmessage.HTTPSynchronization{
-		Addr:     hostAddr,
-		Port:     hostPort,
-		Messages: *missingMsgBuffer,
-	}
-
-	jsonSynchronization, err := json.Marshal(synchronization)
+	err = httputil.SendSynchronization(hostAddr, hostPort, tAddr, tPort, missingMsgBuffer)
 	if err != nil {
-		logger.Printf("Error at marshal HTTPSynchronization message in HTTP Server: %s", err)
-		return
-	}
-	path := fmt.Sprintf("http://%s:%s/synchronization", t.Addr, t.Port)
-	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
-	if err != nil {
-		logger.Printf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
+		logger.Printf("%s", err)
 		return
 	}
 }
 
 func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
-	decoder := json.NewDecoder(r.Body)
-	var t httpmessage.HTTPSynchronization
-	err := decoder.Decode(&t)
+	rcvMsgBuf, _, _, err := httputil.ReceiveSynchronization(r)
 	if err != nil {
-		logger.Printf("Error at decoding HTTPSynchronization message in HTTP Server: %s", err)
+		logger.Printf("%s", err)
 		return
 	}
 
@@ -129,7 +92,6 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	hostAddr := host[0]
 	hostPort := host[1]
 
-	rcvMsgBuf := t.Messages
 	for _, m := range rcvMsgBuf.Messages {
 		if !msgBuffer.AlreadyExists(m) {
 			msgBuffer.AddMessage(m)
