@@ -60,7 +60,7 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 		// create nodes
 		for i := 0; i < noPeers; i++ {
 			n, err := New(
-				Config{
+				&Config{
 					Addr:   peers[i].Addr,
 					Port:   peers[i].Port,
 					Peers:  peers,

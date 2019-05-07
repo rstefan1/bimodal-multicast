@@ -18,7 +18,9 @@ package bmmc_test
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"time"
 
@@ -40,6 +42,61 @@ func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 }
 
 var _ = Describe("BMMC", func() {
+	When("creates new protocol instance with broken config", func() {
+		var (
+			peers = []peer.Peer{
+				{
+					Addr: "localhost",
+					Port: "1999",
+				},
+			}
+		)
+
+		It("returns error when address is empty", func() {
+			_, err := bmmc.New(&bmmc.Config{
+				Port:   "1999",
+				Peers:  peers,
+				Beta:   0.5,
+				Logger: log.New(os.Stdout, "", 0),
+			})
+			Expect(err).To(Not(Succeed()))
+		})
+
+		It("returns error when port is empty", func() {
+			_, err := bmmc.New(&bmmc.Config{
+				Addr:   "localhost",
+				Peers:  peers,
+				Beta:   0.5,
+				Logger: log.New(os.Stdout, "", 0),
+			})
+			Expect(err).To(Not(Succeed()))
+		})
+
+		It("set default value for beta if it is empty", func() {
+			cfg := bmmc.Config{
+				Addr:   "localhost",
+				Port:   "1999",
+				Peers:  peers,
+				Logger: log.New(os.Stdout, "", 0),
+			}
+			_, err := bmmc.New(&cfg)
+			Expect(err).To(Succeed())
+			Expect(cfg.Beta).To(Equal(0.3))
+		})
+
+		It("set default value for logger if it is empty", func() {
+			cfg := bmmc.Config{
+				Addr:  "localhost",
+				Port:  "1999",
+				Peers: peers,
+				Beta:  0.5,
+			}
+			_, err := bmmc.New(&cfg)
+			Expect(err).To(Succeed())
+			Expect(cfg.Logger).To(Not(BeNil()))
+		})
+	})
+
 	When("system has two nodes and one node has a message in buffer", func() {
 		var (
 			node1       *bmmc.Bmmc
@@ -64,7 +121,7 @@ var _ = Describe("BMMC", func() {
 				},
 			}
 
-			node1, err = bmmc.New(bmmc.Config{
+			node1, err = bmmc.New(&bmmc.Config{
 				Addr:  "localhost",
 				Port:  port1,
 				Peers: peers,
@@ -72,7 +129,7 @@ var _ = Describe("BMMC", func() {
 			})
 			Expect(err).To(Succeed())
 
-			node2, err = bmmc.New(bmmc.Config{
+			node2, err = bmmc.New(&bmmc.Config{
 				Addr:  "localhost",
 				Port:  port2,
 				Peers: peers,
@@ -123,7 +180,7 @@ var _ = Describe("BMMC", func() {
 			}
 
 			for i := 0; i < len; i++ {
-				nodes[i], err = bmmc.New(bmmc.Config{
+				nodes[i], err = bmmc.New(&bmmc.Config{
 					Addr:  "localhost",
 					Port:  ports[i],
 					Peers: peers,

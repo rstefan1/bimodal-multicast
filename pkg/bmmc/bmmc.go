@@ -28,6 +28,8 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
+const defaultBeta = 0.3
+
 type Bmmc struct {
 	// shared buffer with addresses of nodes in system
 	peerBuffer []peer.Peer
@@ -44,7 +46,7 @@ type Bmmc struct {
 }
 
 // New creates a new instance for the protocol
-func New(cfg Config) (*Bmmc, error) {
+func New(cfg *Config) (*Bmmc, error) {
 	if len(cfg.Addr) == 0 {
 		return nil, fmt.Errorf("Address must not be empty")
 	}
@@ -52,7 +54,7 @@ func New(cfg Config) (*Bmmc, error) {
 		return nil, fmt.Errorf("Port must not be empty")
 	}
 	if cfg.Beta == 0 {
-		cfg.Beta = 0.3
+		cfg.Beta = defaultBeta
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
