@@ -17,7 +17,6 @@ limitations under the License.
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -31,6 +30,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
@@ -65,7 +65,6 @@ var _ = Describe("HTTP Server", func() {
 		httpServerStop      chan struct{}
 		rcvMsg              receivedMessages
 		mockServer          *http.Server
-		requestPath         string
 	)
 
 	BeforeEach(func() {
@@ -124,8 +123,6 @@ var _ = Describe("HTTP Server", func() {
 			go func() {
 				_ = mockServer.ListenAndServe()
 			}()
-
-			requestPath = fmt.Sprintf("http://localhost:%s/gossip", httpServerPort)
 		})
 
 		AfterEach(func() {
@@ -133,23 +130,13 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		It("responds with solicitation request when nodes have different digests", func() {
-			// create gossip request
 			gossipDigest := &buffer.DigestBuffer{
 				Digests: []buffer.Digest{
 					{ID: fmt.Sprintf("%d", rand.Int31())},
 				},
 			}
-			gossipMessage := httpmessage.HTTPGossip{
-				Addr:        "localhost",
-				Port:        mockServerPort,
-				RoundNumber: round.NewGossipRound(),
-				Digests:     *gossipDigest,
-			}
-			jsonGossip, err := json.Marshal(gossipMessage)
-			Expect(err).To(Succeed())
 
-			// send gossip request
-			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonGossip))
+			err := httputil.SendGossip("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), gossipDigest)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
@@ -163,17 +150,8 @@ var _ = Describe("HTTP Server", func() {
 				Msg:         fmt.Sprintf("%d", rand.Int31()),
 				GossipCount: 0,
 			})
-			gossipMessage := httpmessage.HTTPGossip{
-				Addr:        "localhost",
-				Port:        mockServerPort,
-				RoundNumber: round.NewGossipRound(),
-				Digests:     *httpServerMsgBuffer.DigestBuffer(),
-			}
-			jsonDigest, err := json.Marshal(gossipMessage)
-			Expect(err).To(Succeed())
 
-			// send gossip request
-			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonDigest))
+			err := httputil.SendGossip("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), httpServerMsgBuffer.DigestBuffer())
 			Expect(err).To(Succeed())
 
 			// wait 1 second for solicitation message
@@ -206,8 +184,6 @@ var _ = Describe("HTTP Server", func() {
 			go func() {
 				_ = mockServer.ListenAndServe()
 			}()
-
-			requestPath = fmt.Sprintf("http://localhost:%s/solicitation", httpServerPort)
 		})
 
 		AfterEach(func() {
@@ -224,23 +200,13 @@ var _ = Describe("HTTP Server", func() {
 				GossipCount: 0,
 			})
 
-			// create solicitation request
 			solicitationDigest := &buffer.DigestBuffer{
 				Digests: []buffer.Digest{
 					{ID: messageID},
 				},
 			}
-			solicitationMessage := httpmessage.HTTPSolicitation{
-				Addr:        "localhost",
-				Port:        mockServerPort,
-				RoundNumber: round.NewGossipRound(),
-				Digests:     *solicitationDigest,
-			}
-			jsonSolicitation, err := json.Marshal(solicitationMessage)
-			Expect(err).To(Succeed())
 
-			// send solicitation request
-			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonSolicitation))
+			err := httputil.SendSolicitation("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), solicitationDigest)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
@@ -250,9 +216,6 @@ var _ = Describe("HTTP Server", func() {
 	})
 
 	Describe("at synchronization request", func() {
-		BeforeEach(func() {
-			requestPath = fmt.Sprintf("http://localhost:%s/synchronization", httpServerPort)
-		})
 		It("updates the message buffer", func() {
 			syncMsgBuffer := buffer.NewMessageBuffer()
 			syncMsgBuffer.AddMessage(buffer.Message{
@@ -261,17 +224,7 @@ var _ = Describe("HTTP Server", func() {
 				GossipCount: 0,
 			})
 
-			// create synchronization request
-			syncMessage := httpmessage.HTTPSynchronization{
-				Addr:     "localhost",
-				Port:     mockServerPort,
-				Messages: *syncMsgBuffer,
-			}
-			jsonSync, err := json.Marshal(syncMessage)
-			Expect(err).To(Succeed())
-
-			// send synchronization request to http server
-			_, err = http.Post(requestPath, "json", bytes.NewBuffer(jsonSync))
+			err := httputil.SendSynchronization("localhost", mockServerPort, "localhost", httpServerPort, syncMsgBuffer)
 			Expect(err).To(Succeed())
 
 			// wait for synchronization of shared message buffer
