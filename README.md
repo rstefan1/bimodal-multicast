@@ -51,7 +51,7 @@ import (
 #### Create an instance for protocol
 
 ```golang
-    p := bmmc.New(cfg)
+    p, err := bmmc.New(cfg)
 ```
 
 #### Start the protocol
