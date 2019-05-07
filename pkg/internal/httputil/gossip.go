@@ -26,8 +26,8 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
-// httpGossip is gossip message for http server
-type httpGossip struct {
+// HTTPGossip is gossip message for http server
+type HTTPGossip struct {
 	Addr        string              `json:"http_gossip_addr"`
 	Port        string              `json:"http_gossip_port"`
 	RoundNumber *round.GossipRound  `json:"http_gossip_round_number"`
@@ -37,7 +37,7 @@ type httpGossip struct {
 // ReceiveGossip receives http gossip message
 func ReceiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
 	decoder := json.NewDecoder(r.Body)
-	var t httpGossip
+	var t HTTPGossip
 	err := decoder.Decode(&t)
 	if err != nil {
 		return nil, "", "", nil, fmt.Errorf("Error at decoding http gossip message in HTTP Server: %s", err)
@@ -47,24 +47,17 @@ func ReceiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *roun
 }
 
 // SendGossip send http gossip message
-func SendGossip(addr, port, tAddr, tPort string, round *round.GossipRound, msg *buffer.DigestBuffer) error {
-	gossipMsg := httpGossip{
-		Addr:        addr,
-		Port:        port,
-		RoundNumber: round,
-		Digests:     *msg,
-	}
-
+func SendGossip(gossipMsg HTTPGossip, tAddr, tPort string) error {
 	jsonGossip, err := json.Marshal(gossipMsg)
 	if err != nil {
-		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", addr, port, err)
+		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", gossipMsg.Addr, gossipMsg.Port, err)
 	}
 
 	path := fmt.Sprintf("http://%s:%s/gossip", tAddr, tPort)
 
 	_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
 	if err != nil {
-		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", addr, port, err)
+		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", gossipMsg.Addr, gossipMsg.Port, err)
 	}
 
 	return nil

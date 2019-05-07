@@ -84,7 +84,14 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 			for i := 0; i < gossipLen; i++ {
 				dest = g.randomlySelectPeer()
 
-				err := httputil.SendGossip(g.gossipAddr, g.gossipPort, dest.Addr, dest.Port, g.gossipRoundNumber, (g.msgBuffer).DigestBuffer())
+				gossipMsg := httputil.HTTPGossip{
+					Addr:        g.gossipAddr,
+					Port:        g.gossipPort,
+					RoundNumber: g.gossipRoundNumber,
+					Digests:     *(g.msgBuffer).DigestBuffer(),
+				}
+
+				err := httputil.SendGossip(gossipMsg, dest.Addr, dest.Port)
 				if err != nil {
 					g.logger.Printf("%s", err)
 				}
