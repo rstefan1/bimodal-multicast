@@ -46,6 +46,7 @@ var _ = Describe("BMMC", func() {
 			node2       *bmmc.Bmmc
 			msg         string
 			expectedBuf []string
+			err         error
 		)
 
 		BeforeEach(func() {
@@ -63,18 +64,21 @@ var _ = Describe("BMMC", func() {
 				},
 			}
 
-			node1 = bmmc.New(bmmc.Config{
+			node1, err = bmmc.New(bmmc.Config{
 				Addr:  "localhost",
 				Port:  port1,
 				Peers: peers,
 				Beta:  0.5,
 			})
-			node2 = bmmc.New(bmmc.Config{
+			Expect(err).To(Succeed())
+
+			node2, err = bmmc.New(bmmc.Config{
 				Addr:  "localhost",
 				Port:  port2,
 				Peers: peers,
 				Beta:  0.5,
 			})
+			Expect(err).To(Succeed())
 
 			Expect(node1.Start())
 			Expect(node2.Start())
@@ -107,6 +111,7 @@ var _ = Describe("BMMC", func() {
 			var (
 				ports [len]string
 				peers []peer.Peer
+				err   error
 			)
 
 			for i := 0; i < len; i++ {
@@ -118,11 +123,12 @@ var _ = Describe("BMMC", func() {
 			}
 
 			for i := 0; i < len; i++ {
-				nodes[i] = bmmc.New(bmmc.Config{
+				nodes[i], err = bmmc.New(bmmc.Config{
 					Addr:  "localhost",
 					Port:  ports[i],
 					Peers: peers,
 				})
+				Expect(err).To(Succeed())
 			}
 		})
 

@@ -18,7 +18,9 @@ package gossip
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -78,6 +80,7 @@ var _ = Describe("Gossiper", func() {
 			PeerBuf:     gossipPeers,
 			MsgBuf:      gossipMsgBuf,
 			GossipRound: gossipRound,
+			Logger:      log.New(os.Stdout, "", 0),
 		}
 		httpCfg = server.Config{
 			Addr:        "localhost",

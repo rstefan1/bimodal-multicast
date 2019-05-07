@@ -59,7 +59,7 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 
 		// create nodes
 		for i := 0; i < noPeers; i++ {
-			nodes = append(nodes, New(
+			n, err := New(
 				Config{
 					Addr:   peers[i].Addr,
 					Port:   peers[i].Port,
@@ -68,7 +68,12 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 					Logger: logger,
 					loss:   loss,
 				},
-			))
+			)
+			if err != nil {
+				return err
+			}
+
+			nodes = append(nodes, n)
 		}
 
 		// add a message

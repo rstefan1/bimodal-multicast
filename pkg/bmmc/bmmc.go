@@ -17,6 +17,10 @@ limitations under the License.
 package bmmc
 
 import (
+	"fmt"
+	"log"
+	"os"
+
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
@@ -40,7 +44,20 @@ type Bmmc struct {
 }
 
 // New creates a new instance for the protocol
-func New(cfg Config) *Bmmc {
+func New(cfg Config) (*Bmmc, error) {
+	if len(cfg.Addr) == 0 {
+		return nil, fmt.Errorf("Address must not be empty")
+	}
+	if len(cfg.Port) == 0 {
+		return nil, fmt.Errorf("Port must not be empty")
+	}
+	if cfg.Beta == 0 {
+		cfg.Beta = 0.3
+	}
+	if cfg.Logger == nil {
+		cfg.Logger = log.New(os.Stdout, "", 0)
+	}
+
 	p := &Bmmc{
 		peerBuffer:  cfg.Peers,
 		msgBuffer:   buffer.NewMessageBuffer(),
@@ -67,7 +84,7 @@ func New(cfg Config) *Bmmc {
 		Logger:      cfg.Logger,
 	})
 
-	return p
+	return p, nil
 }
 
 // Start starts the gossip server and the http server

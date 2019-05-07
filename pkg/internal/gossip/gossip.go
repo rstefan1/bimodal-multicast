@@ -23,7 +23,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
@@ -126,10 +125,6 @@ func (g *Gossip) Start(stop <-chan struct{}) {
 }
 
 func New(cfg Config) *Gossip {
-	if cfg.Logger == nil {
-		cfg.Logger = log.New(os.Stdout, "", 0)
-	}
-
 	return &Gossip{
 		peerBuffer:        cfg.PeerBuf,
 		msgBuffer:         cfg.MsgBuf,
