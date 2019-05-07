@@ -65,10 +65,8 @@ func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 }
 
 // AlreadyExists return true if the message already exists in message buffer
-func (msgBuffer *MessageBuffer) AlreadyExists(msg Message) bool {
-	msgBuffer.Mux.Lock()
-	defer msgBuffer.Mux.Unlock()
-
+func (msgBuffer *MessageBuffer) alreadyExists(msg Message) bool {
+	// Important! Whoever calls this function must LOCK the buffer
 	for i := range msgBuffer.Messages {
 		if msgBuffer.Messages[i].ID == msg.ID {
 			return true
@@ -82,7 +80,9 @@ func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
 	msgBuffer.Mux.Lock()
 	defer msgBuffer.Mux.Unlock()
 
-	msgBuffer.Messages = append(msgBuffer.Messages, msg)
+	if !msgBuffer.alreadyExists(msg) {
+		msgBuffer.Messages = append(msgBuffer.Messages, msg)
+	}
 }
 
 // TODO write a test for this function

@@ -106,10 +106,8 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	hostPort := host[1]
 
 	for _, m := range rcvMsgBuf.Messages {
-		if !msgBuffer.AlreadyExists(m) {
-			msgBuffer.AddMessage(m)
-			logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
-		}
+		msgBuffer.AddMessage(m)
+		logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
 	}
 }
 
