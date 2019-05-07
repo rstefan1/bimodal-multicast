@@ -99,6 +99,21 @@ var _ = Describe("MessageBuffer interface", func() {
 			Expect(msgBuffer.Messages).To(HaveLen(1))
 			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
 		})
+
+		It("doesn't add the message if it already exists in buffer", func() {
+			msg := Message{
+				ID:          msgID,
+				Msg:         msgMsg,
+				GossipCount: msgGossipCount,
+			}
+			msgBuffer := NewMessageBuffer()
+			msgBuffer.Messages = append(msgBuffer.Messages, msg)
+
+			// try to add same message in buffer
+			msgBuffer.AddMessage(msg)
+			Expect(msgBuffer.Messages).To(HaveLen(1))
+			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
+		})
 	})
 
 	Describe("at DigestBuffer fuction call", func() {
