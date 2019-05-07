@@ -26,8 +26,8 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
-// httpSolicitation is solicitation message for http server
-type httpSolicitation struct {
+// HTTPSolicitation is solicitation message for http server
+type HTTPSolicitation struct {
 	Addr        string              `json:"http_solicitation_addr"`
 	Port        string              `json:"http_solicitation_port"`
 	RoundNumber *round.GossipRound  `json:"http_solicitation_round_number"`
@@ -37,7 +37,7 @@ type httpSolicitation struct {
 // ReceiveSolicitation receives http solicitation message
 func ReceiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
 	decoder := json.NewDecoder(r.Body)
-	var t httpSolicitation
+	var t HTTPSolicitation
 	err := decoder.Decode(&t)
 	if err != nil {
 		return nil, "", "", nil, fmt.Errorf("Error at decoding http solicitation message in HTTP Server: %s", err)
@@ -47,14 +47,7 @@ func ReceiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string,
 }
 
 // SendSolicitation send http solicitation message
-func SendSolicitation(addr, port, tAddr, tPort string, round *round.GossipRound, msg *buffer.DigestBuffer) error {
-	solicitation := httpSolicitation{
-		Addr:        addr,
-		Port:        port,
-		RoundNumber: round,
-		Digests:     *msg,
-	}
-
+func SendSolicitation(solicitation HTTPSolicitation, tAddr, tPort string) error {
 	jsonSolicitation, err := json.Marshal(solicitation)
 	if err != nil {
 		return fmt.Errorf("Error at marshal http solicitation in HTTP Server: %s", err)

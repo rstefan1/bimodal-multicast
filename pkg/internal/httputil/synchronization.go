@@ -26,7 +26,7 @@ import (
 )
 
 // httppSynchronization is synchronization message for http server
-type httpSynchronization struct {
+type HTTPSynchronization struct {
 	Addr     string               `json:"http_synchronization_addr"`
 	Port     string               `json:"http_synchronization_port"`
 	Messages buffer.MessageBuffer `json:"http_synchronization_digests"`
@@ -35,7 +35,7 @@ type httpSynchronization struct {
 // ReceiveSynchronization receives http solicitation message
 func ReceiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
 	decoder := json.NewDecoder(r.Body)
-	var t httpSynchronization
+	var t HTTPSynchronization
 	err := decoder.Decode(&t)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("Error at decoding http synchronization message in HTTP Server: %s", err)
@@ -45,13 +45,7 @@ func ReceiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, str
 }
 
 // SendSynchronization send http synchronization message
-func SendSynchronization(addr, port, tAddr, tPort string, msg *buffer.MessageBuffer) error {
-	synchronization := httpSynchronization{
-		Addr:     addr,
-		Port:     port,
-		Messages: *msg,
-	}
-
+func SendSynchronization(synchronization HTTPSynchronization, tAddr, tPort string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
 		return fmt.Errorf("Error at marshal http synchronization message in HTTP Server: %s", err)

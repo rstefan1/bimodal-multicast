@@ -54,7 +54,14 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 	hostPort := host[1]
 
 	if missingDigestBuffer.Length() > 0 {
-		err = httputil.SendSolicitation(hostAddr, hostPort, tAddr, tPort, tRoundNumber, missingDigestBuffer)
+		solicitationMsg := httputil.HTTPSolicitation{
+			Addr:        hostAddr,
+			Port:        hostPort,
+			RoundNumber: tRoundNumber,
+			Digests:     *missingDigestBuffer,
+		}
+
+		err = httputil.SendSolicitation(solicitationMsg, tAddr, tPort)
 		if err != nil {
 			logger.Printf("%s", err)
 			return
@@ -74,7 +81,13 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 	hostAddr := host[0]
 	hostPort := host[1]
 
-	err = httputil.SendSynchronization(hostAddr, hostPort, tAddr, tPort, missingMsgBuffer)
+	synchronizationMsg := httputil.HTTPSynchronization{
+		Addr:     hostAddr,
+		Port:     hostPort,
+		Messages: *missingMsgBuffer,
+	}
+
+	err = httputil.SendSynchronization(synchronizationMsg, tAddr, tPort)
 	if err != nil {
 		logger.Printf("%s", err)
 		return

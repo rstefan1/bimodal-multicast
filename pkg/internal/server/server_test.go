@@ -29,7 +29,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httpmessage"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
@@ -109,7 +108,7 @@ var _ = Describe("HTTP Server", func() {
 					func(w http.ResponseWriter, r *http.Request) {
 						if r.URL.Path == "/solicitation" {
 							decoder := json.NewDecoder(r.Body)
-							var t httpmessage.HTTPSolicitation
+							var t httputil.HTTPSolicitation
 							err := decoder.Decode(&t)
 							if err != nil {
 								panic(err)
@@ -136,12 +135,19 @@ var _ = Describe("HTTP Server", func() {
 				},
 			}
 
-			err := httputil.SendGossip("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), gossipDigest)
+			gossipMsg := httputil.HTTPGossip{
+				Addr:        "localhost",
+				Port:        mockServerPort,
+				RoundNumber: round.NewGossipRound(),
+				Digests:     *gossipDigest,
+			}
+
+			err := httputil.SendGossip(gossipMsg, "localhost", httpServerPort)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			Expect(msg.(httpmessage.HTTPSolicitation).Digests).To(Equal(*gossipDigest))
+			Expect(msg.(httputil.HTTPSolicitation).Digests).To(Equal(*gossipDigest))
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
@@ -151,7 +157,14 @@ var _ = Describe("HTTP Server", func() {
 				GossipCount: 0,
 			})
 
-			err := httputil.SendGossip("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), httpServerMsgBuffer.DigestBuffer())
+			gossipMsg := httputil.HTTPGossip{
+				Addr:        "localhost",
+				Port:        mockServerPort,
+				RoundNumber: round.NewGossipRound(),
+				Digests:     *httpServerMsgBuffer.DigestBuffer(),
+			}
+
+			err := httputil.SendGossip(gossipMsg, "localhost", httpServerPort)
 			Expect(err).To(Succeed())
 
 			// wait 1 second for solicitation message
@@ -170,7 +183,7 @@ var _ = Describe("HTTP Server", func() {
 					func(w http.ResponseWriter, r *http.Request) {
 						if r.URL.Path == "/synchronization" {
 							decoder := json.NewDecoder(r.Body)
-							var t httpmessage.HTTPSynchronization
+							var t httputil.HTTPSynchronization
 							err := decoder.Decode(&t)
 							if err != nil {
 								panic(err)
@@ -206,12 +219,19 @@ var _ = Describe("HTTP Server", func() {
 				},
 			}
 
-			err := httputil.SendSolicitation("localhost", mockServerPort, "localhost", httpServerPort, round.NewGossipRound(), solicitationDigest)
+			solicitationMsg := httputil.HTTPSolicitation{
+				Addr:        "localhost",
+				Port:        mockServerPort,
+				RoundNumber: round.NewGossipRound(),
+				Digests:     *solicitationDigest,
+			}
+
+			err := httputil.SendSolicitation(solicitationMsg, "localhost", httpServerPort)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			Expect(msg.(httpmessage.HTTPSynchronization).Messages).To(Equal(*httpServerMsgBuffer))
+			Expect(msg.(httputil.HTTPSynchronization).Messages).To(Equal(*httpServerMsgBuffer))
 		})
 	})
 
@@ -224,7 +244,13 @@ var _ = Describe("HTTP Server", func() {
 				GossipCount: 0,
 			})
 
-			err := httputil.SendSynchronization("localhost", mockServerPort, "localhost", httpServerPort, syncMsgBuffer)
+			synchronizationMsg := httputil.HTTPSynchronization{
+				Addr:     "localhost",
+				Port:     mockServerPort,
+				Messages: *syncMsgBuffer,
+			}
+
+			err := httputil.SendSynchronization(synchronizationMsg, "localhost", httpServerPort)
 			Expect(err).To(Succeed())
 
 			// wait for synchronization of shared message buffer
