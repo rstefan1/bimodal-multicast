@@ -27,8 +27,21 @@ called solicitation.
 import (
     "github.com/rstefan1/bimodal-multicast/pkg/peer"
     "github.com/rstefan1/bimodal-multicast/pkg/bmmc"
+    "github.com/rstefan1/bimodal-multicast/pkg/callback"
 )
 ```
+
+#### Register callbacks
+``` golang
+    cb := callback.NewRegistry()
+    err := cb.Register(
+        "awesome-callback",
+        func (msg string) (bool, error) {
+            fmt.Println("The message is:", msg)
+            return true, nil
+        })
+```
+Note! The buffer will be updated only if the callback fucntion call returns true.
 
 #### Configure the protocol
 
@@ -45,6 +58,7 @@ import (
                 Port: port,
             },
         },
+        Callbacks: cb,
     }
 ```
 
@@ -69,7 +83,7 @@ import (
 #### Add a new string message in buffer
 
 ```golang
-    p.AddMessage("awesome message")
+    p.AddMessage("awesome message", "awesome-callback")
 ```
 
 #### Get all messages from the buffer
@@ -89,8 +103,7 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  - [x] create an instance of Bimodal Multicast Protocol, start it,
  stop it, add message and retrieve all messages
  - [x] metrics
- - [ ] messages from buffer to have a command and more arguments
- - [ ] register callbacks for each messages
+ - [x] register callbacks for each messages
  - [ ] add and remove peers via protocol
  - [ ] circular message buffer
  - [ ] more details about protocol in readme
