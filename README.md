@@ -33,13 +33,15 @@ import (
 
 #### Register callbacks
 ``` golang
-    cb := callback.NewRegistry()
-    err := cb.Register(
-        "awesome-callback",
-        func (msg string) (bool, error) {
-            fmt.Println("The message is:", msg)
-            return true, nil
-        })
+    cb := callback.NewRegistry(
+        map[string]CallbackFn {
+            "awesome-callback":
+            func (msg string) (bool, error) {
+                fmt.Println("The message is:", msg)
+                return true, nil
+            }
+        },
+    )
 ```
 Note! The buffer will be updated only if the callback fucntion call returns true.
 
