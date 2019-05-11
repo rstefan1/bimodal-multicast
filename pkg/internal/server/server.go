@@ -110,7 +110,7 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 		// run callback function for messages with a callback registered
 		if m.CallbackType != callback.NOCALLBACK {
 			// get callback from callbacks registry
-			callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
+			callbackFn, err := cfg.Callbacks.GetCallback(m.CallbackType)
 			if err != nil {
 				cfg.Logger.Printf("BMMC %s:%s: Error at getting callback function: %s", hostAddr, hostPort, err)
 				continue

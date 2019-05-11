@@ -41,6 +41,6 @@ type Config struct {
 	Logger *log.Logger
 	// Loss is the loss for gossip handler
 	Loss float64
-	// CallbackRegistry
-	Callbacks *callback.CallbacksRegistry
+	// Callbacks Registry
+	Callbacks *callback.Registry
 }

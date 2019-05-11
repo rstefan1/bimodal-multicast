@@ -36,6 +36,6 @@ type Config struct {
 	Logger *log.Logger
 	// loss - just for exporting metrics
 	loss float64
-	// Callbacks
-	Callbacks *callback.CallbacksRegistry
+	// Callbacks Registry
+	Callbacks *callback.Registry
 }

@@ -43,7 +43,7 @@ func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 	}
 }
 
-func getFakeCallbackRegistry(cbType string, b bool, err error) *callback.CallbacksRegistry {
+func getFakeCallbackRegistry(cbType string, b bool, err error) *callback.Registry {
 	r := callback.NewRegistry()
 	_ = r.Register(
 		cbType,
@@ -125,7 +125,7 @@ var _ = Describe("BMMC", func() {
 		})
 	})
 
-	DescribeTable("when system has two nodes and one node has a message in buffer", func(cbRegistry *callback.CallbacksRegistry, msg, callbackType string, expectedBuf []string) {
+	DescribeTable("when system has two nodes and one node has a message in buffer", func(cbRegistry *callback.Registry, msg, callbackType string, expectedBuf []string) {
 		port1 := testutil.SuggestPort()
 		port2 := testutil.SuggestPort()
 
