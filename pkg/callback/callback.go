@@ -18,6 +18,9 @@ package callback
 
 import "fmt"
 
+// NOCALLBACK is type for messages without callback function
+const NOCALLBACK = "no-callback"
+
 type CallbacksRegistry struct {
 	callbacks map[string]func(string) error
 }

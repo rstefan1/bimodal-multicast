@@ -23,6 +23,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -79,7 +80,7 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 		// add a message
 		msg := "another-awesome-message"
 		randomNode := rand.Intn(noPeers)
-		nodes[randomNode].AddMessage(msg)
+		nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 
 		// start nodes
 		for i := 0; i < noPeers; i++ {

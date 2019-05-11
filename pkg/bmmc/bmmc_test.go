@@ -28,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -54,30 +55,45 @@ var _ = Describe("BMMC", func() {
 
 		It("returns error when address is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
-				Port:   "1999",
-				Peers:  peers,
-				Beta:   0.5,
-				Logger: log.New(os.Stdout, "", 0),
+				Port:      "1999",
+				Peers:     peers,
+				Beta:      0.5,
+				Logger:    log.New(os.Stdout, "", 0),
+				Callbacks: callback.NewRegistry(),
 			})
 			Expect(err).To(Not(Succeed()))
 		})
 
 		It("returns error when port is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
-				Addr:   "localhost",
-				Peers:  peers,
-				Beta:   0.5,
-				Logger: log.New(os.Stdout, "", 0),
+				Addr:      "localhost",
+				Peers:     peers,
+				Beta:      0.5,
+				Logger:    log.New(os.Stdout, "", 0),
+				Callbacks: callback.NewRegistry(),
 			})
+			Expect(err).To(Not(Succeed()))
+		})
+
+		It("returns error when callback registry is nil", func() {
+			cfg := bmmc.Config{
+				Addr:   "localhost",
+				Port:   "1999",
+				Beta:   0.5,
+				Peers:  peers,
+				Logger: log.New(os.Stdout, "", 0),
+			}
+			_, err := bmmc.New(&cfg)
 			Expect(err).To(Not(Succeed()))
 		})
 
 		It("set default value for beta if it is empty", func() {
 			cfg := bmmc.Config{
-				Addr:   "localhost",
-				Port:   "1999",
-				Peers:  peers,
-				Logger: log.New(os.Stdout, "", 0),
+				Addr:      "localhost",
+				Port:      "1999",
+				Peers:     peers,
+				Logger:    log.New(os.Stdout, "", 0),
+				Callbacks: callback.NewRegistry(),
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -86,10 +102,11 @@ var _ = Describe("BMMC", func() {
 
 		It("set default value for logger if it is empty", func() {
 			cfg := bmmc.Config{
-				Addr:  "localhost",
-				Port:  "1999",
-				Peers: peers,
-				Beta:  0.5,
+				Addr:      "localhost",
+				Port:      "1999",
+				Peers:     peers,
+				Beta:      0.5,
+				Callbacks: callback.NewRegistry(),
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -122,18 +139,20 @@ var _ = Describe("BMMC", func() {
 			}
 
 			node1, err = bmmc.New(&bmmc.Config{
-				Addr:  "localhost",
-				Port:  port1,
-				Peers: peers,
-				Beta:  0.5,
+				Addr:      "localhost",
+				Port:      port1,
+				Peers:     peers,
+				Beta:      0.5,
+				Callbacks: callback.NewRegistry(),
 			})
 			Expect(err).To(Succeed())
 
 			node2, err = bmmc.New(&bmmc.Config{
-				Addr:  "localhost",
-				Port:  port2,
-				Peers: peers,
-				Beta:  0.5,
+				Addr:      "localhost",
+				Port:      port2,
+				Peers:     peers,
+				Beta:      0.5,
+				Callbacks: callback.NewRegistry(),
 			})
 			Expect(err).To(Succeed())
 
@@ -143,7 +162,7 @@ var _ = Describe("BMMC", func() {
 			// add a message in first node
 			msg = "awesome-message"
 			expectedBuf = append(expectedBuf, msg)
-			node1.AddMessage(msg)
+			node1.AddMessage(msg, callback.NOCALLBACK)
 			Eventually(getSortedBuffer(node1), time.Second).Should(Equal(expectedBuf))
 		})
 
@@ -181,9 +200,10 @@ var _ = Describe("BMMC", func() {
 
 			for i := 0; i < len; i++ {
 				nodes[i], err = bmmc.New(&bmmc.Config{
-					Addr:  "localhost",
-					Port:  ports[i],
-					Peers: peers,
+					Addr:      "localhost",
+					Port:      ports[i],
+					Peers:     peers,
+					Callbacks: callback.NewRegistry(),
 				})
 				Expect(err).To(Succeed())
 			}
@@ -202,7 +222,7 @@ var _ = Describe("BMMC", func() {
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 				randomNode := rand.Intn(len)
-				nodes[randomNode].AddMessage(msg)
+				nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
 
 				// start protocol for all nodes
@@ -226,7 +246,7 @@ var _ = Describe("BMMC", func() {
 				for i := 0; i < 3; i++ {
 					msg := fmt.Sprintf("awesome-message-%d", i)
 					expectedBuf = append(expectedBuf, msg)
-					nodes[randomNode].AddMessage(msg)
+					nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				}
 
 				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
@@ -253,7 +273,7 @@ var _ = Describe("BMMC", func() {
 				for i := 0; i < 3; i++ {
 					msg := fmt.Sprintf("awesome-message-%d", i)
 					expectedBuf = append(expectedBuf, msg)
-					nodes[randomNodes[i]].AddMessage(msg)
+					nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
 
 					Eventually(getSortedBuffer(nodes[randomNodes[i]]), time.Second).Should(Equal([]string{msg}))
 				}
