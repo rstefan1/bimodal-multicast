@@ -43,26 +43,45 @@ func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 	}
 }
 
-func getFakeCallbackRegistry(cbType string, b bool, err error) *callback.Registry {
-	r := callback.NewRegistry()
-	_ = r.Register(
-		cbType,
-		func(msg string) (bool, error) {
-			return b, err
-		})
+func getFakeCallbackRegistry(cbType string, b bool, e error) *callback.Registry {
+	r, err := callback.NewRegistry(
+		map[string]callback.CallbackFn{
+			cbType: func(msg string) (bool, error) {
+				return b, e
+			},
+		},
+	)
+	if err != nil {
+		return nil
+	}
 	return r
+}
+
+func getFakeEmptyCallbackRegistry() *callback.Registry {
+	cb, err := callback.NewRegistry(map[string]callback.CallbackFn{})
+	if err != nil {
+		return nil
+	}
+	return cb
 }
 
 var _ = Describe("BMMC", func() {
 	When("creates new protocol instance with broken config", func() {
 		var (
+			peers []peer.Peer
+			cb    *callback.Registry
+		)
+
+		BeforeEach(func() {
 			peers = []peer.Peer{
 				{
 					Addr: "localhost",
 					Port: "1999",
 				},
 			}
-		)
+			cb = getFakeEmptyCallbackRegistry()
+			Expect(cb).To(Not(BeNil()))
+		})
 
 		It("returns error when address is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
@@ -70,7 +89,7 @@ var _ = Describe("BMMC", func() {
 				Peers:     peers,
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: callback.NewRegistry(),
+				Callbacks: getFakeEmptyCallbackRegistry(),
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -81,7 +100,7 @@ var _ = Describe("BMMC", func() {
 				Peers:     peers,
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: callback.NewRegistry(),
+				Callbacks: getFakeEmptyCallbackRegistry(),
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -104,7 +123,7 @@ var _ = Describe("BMMC", func() {
 				Port:      "1999",
 				Peers:     peers,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: callback.NewRegistry(),
+				Callbacks: getFakeEmptyCallbackRegistry(),
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -117,7 +136,7 @@ var _ = Describe("BMMC", func() {
 				Port:      "1999",
 				Peers:     peers,
 				Beta:      0.5,
-				Callbacks: callback.NewRegistry(),
+				Callbacks: getFakeEmptyCallbackRegistry(),
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -126,6 +145,8 @@ var _ = Describe("BMMC", func() {
 	})
 
 	DescribeTable("when system has two nodes and one node has a message in buffer", func(cbRegistry *callback.Registry, msg, callbackType string, expectedBuf []string) {
+		Expect(cbRegistry).To(Not(BeNil()))
+
 		port1 := testutil.SuggestPort()
 		port2 := testutil.SuggestPort()
 
@@ -171,7 +192,11 @@ var _ = Describe("BMMC", func() {
 
 		Expect(getSortedBuffer(node2)()).To(Equal(expectedBuf))
 	},
-		Entry("sync buffers with the message", callback.NewRegistry(), "awesome-message", callback.NOCALLBACK, []string{"awesome-message"}),
+		Entry("sync buffers with the message",
+			getFakeEmptyCallbackRegistry(),
+			"awesome-message",
+			callback.NOCALLBACK,
+			[]string{"awesome-message"}),
 		Entry("doesn't sync buffers if callback returned error",
 			getFakeCallbackRegistry("my-callback", true, fmt.Errorf("invalid-callback")),
 			"awesome-message",
@@ -208,7 +233,7 @@ var _ = Describe("BMMC", func() {
 					Addr:      "localhost",
 					Port:      ports[i],
 					Peers:     peers,
-					Callbacks: callback.NewRegistry(),
+					Callbacks: getFakeEmptyCallbackRegistry(),
 				})
 				Expect(err).To(Succeed())
 			}

@@ -38,6 +38,12 @@ const (
 	timeout = time.Second
 )
 
+func getFakeEmptyCallbackRegistry() *callback.Registry {
+	cb, err := callback.NewRegistry(map[string]callback.CallbackFn{})
+	Expect(err).To(Succeed())
+	return cb
+}
+
 var _ = Describe("Gossiper", func() {
 	var (
 		gossip       *Gossip
@@ -88,7 +94,7 @@ var _ = Describe("Gossiper", func() {
 			PeerBuf:     gossipPeers,
 			MsgBuf:      gossipMsgBuf,
 			GossipRound: gossipRound,
-			Callbacks:   callback.NewRegistry(),
+			Callbacks:   getFakeEmptyCallbackRegistry(),
 		}
 		mockCfg = server.Config{
 			Addr:        "localhost",
@@ -96,7 +102,7 @@ var _ = Describe("Gossiper", func() {
 			PeerBuf:     mockPeers,
 			MsgBuf:      mockMsgBuf,
 			GossipRound: mockRound,
-			Callbacks:   callback.NewRegistry(),
+			Callbacks:   getFakeEmptyCallbackRegistry(),
 		}
 
 		gossipStop = make(chan struct{})

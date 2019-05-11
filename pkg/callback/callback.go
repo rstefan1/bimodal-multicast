@@ -21,28 +21,25 @@ import "fmt"
 // NOCALLBACK is type for messages without callback function
 const NOCALLBACK = "no-callback"
 
+type CallbackFn func(string) (bool, error)
+
 type Registry struct {
-	callbacks map[string]func(string) (bool, error)
+	callbacks map[string]CallbackFn
 }
 
 // NewRegistry creates a callback registry
-func NewRegistry() *Registry {
+func NewRegistry(cb map[string]CallbackFn) (*Registry, error) {
 	r := &Registry{}
-	r.callbacks = make(map[string]func(string) (bool, error))
-	return r
-}
 
-// Register registers a new callback in registry
-func (r *Registry) Register(t string, fn func(string) (bool, error)) error {
-	if _, ok := r.callbacks[t]; ok {
-		return fmt.Errorf("callback type already exists in registry")
+	if cb == nil {
+		return nil, fmt.Errorf("Callback map must not be empty")
 	}
 
-	r.callbacks[t] = fn
-	return nil
+	r.callbacks = cb
+	return r, nil
 }
 
-func (r *Registry) GetCallback(t string) (func(string) (bool, error), error) {
+func (r *Registry) GetCallback(t string) (CallbackFn, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
