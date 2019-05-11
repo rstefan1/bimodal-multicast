@@ -25,6 +25,7 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
@@ -40,6 +41,16 @@ func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 		sort.Strings(buf)
 		return buf
 	}
+}
+
+func getFakeCallbackRegistry(cbType string, b bool, err error) *callback.CallbacksRegistry {
+	r := callback.NewRegistry()
+	_ = r.Register(
+		cbType,
+		func(msg string) (bool, error) {
+			return b, err
+		})
+	return r
 }
 
 var _ = Describe("BMMC", func() {
@@ -114,70 +125,64 @@ var _ = Describe("BMMC", func() {
 		})
 	})
 
-	When("system has two nodes and one node has a message in buffer", func() {
-		var (
-			node1       *bmmc.Bmmc
-			node2       *bmmc.Bmmc
-			msg         string
-			expectedBuf []string
-			err         error
-		)
+	DescribeTable("when system has two nodes and one node has a message in buffer", func(cbRegistry *callback.CallbacksRegistry, msg, callbackType string, expectedBuf []string) {
+		port1 := testutil.SuggestPort()
+		port2 := testutil.SuggestPort()
 
-		BeforeEach(func() {
-			port1 := testutil.SuggestPort()
-			port2 := testutil.SuggestPort()
+		peers := []peer.Peer{
+			{
+				Addr: "localhost",
+				Port: port1,
+			},
+			{
+				Addr: "localhost",
+				Port: port2,
+			},
+		}
 
-			peers := []peer.Peer{
-				{
-					Addr: "localhost",
-					Port: port1,
-				},
-				{
-					Addr: "localhost",
-					Port: port2,
-				},
-			}
-
-			node1, err = bmmc.New(&bmmc.Config{
-				Addr:      "localhost",
-				Port:      port1,
-				Peers:     peers,
-				Beta:      0.5,
-				Callbacks: callback.NewRegistry(),
-			})
-			Expect(err).To(Succeed())
-
-			node2, err = bmmc.New(&bmmc.Config{
-				Addr:      "localhost",
-				Port:      port2,
-				Peers:     peers,
-				Beta:      0.5,
-				Callbacks: callback.NewRegistry(),
-			})
-			Expect(err).To(Succeed())
-
-			Expect(node1.Start())
-			Expect(node2.Start())
-
-			// add a message in first node
-			msg = "awesome-message"
-			expectedBuf = append(expectedBuf, msg)
-			node1.AddMessage(msg, callback.NOCALLBACK)
-			Eventually(getSortedBuffer(node1), time.Second).Should(Equal(expectedBuf))
+		node1, err := bmmc.New(&bmmc.Config{
+			Addr:      "localhost",
+			Port:      port1,
+			Peers:     peers,
+			Beta:      0.5,
+			Callbacks: cbRegistry,
 		})
+		Expect(err).To(Succeed())
 
-		AfterEach(func() {
-			node1.Stop()
-			node2.Stop()
+		node2, err := bmmc.New(&bmmc.Config{
+			Addr:      "localhost",
+			Port:      port2,
+			Peers:     peers,
+			Beta:      0.5,
+			Callbacks: cbRegistry,
 		})
+		Expect(err).To(Succeed())
 
-		It("sync buffers with the message", func() {
-			Eventually(getSortedBuffer(node2), time.Second).Should(SatisfyAll(
-				HaveLen(1),
-				Equal(expectedBuf),
-			))
-		})
-	})
+		Expect(node1.Start())
+		Expect(node2.Start())
+
+		// add a message in first node
+		node1.AddMessage(msg, callbackType)
+		Eventually(getSortedBuffer(node1), time.Second).Should(Equal([]string{msg}))
+
+		// Wait 1 second before checking the buffer.
+		// In this second buffer needs to be updated.
+		time.Sleep(time.Millisecond * 500)
+
+		Expect(getSortedBuffer(node2)()).To(Equal(expectedBuf))
+	},
+		Entry("sync buffers with the message", callback.NewRegistry(), "awesome-message", callback.NOCALLBACK, []string{"awesome-message"}),
+		Entry("doesn't sync buffers if callback returned error",
+			getFakeCallbackRegistry("my-callback", true, fmt.Errorf("invalid-callback")),
+			"awesome-message",
+			"my-callback",
+			[]string{}),
+		Entry("doesn't sync buffers if callback returned false",
+			getFakeCallbackRegistry("my-callback", false, nil),
+			"awesome-message",
+			"my-callback",
+			[]string{}),
+	)
 
 	When("system has ten nodes", func() {
 		const len = 10

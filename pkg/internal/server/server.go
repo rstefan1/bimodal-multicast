@@ -96,15 +96,15 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) 
 }
 
 func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
-	rcvMsgBuf, _, _, err := httputil.ReceiveSynchronization(r)
-	if err != nil {
-		cfg.Logger.Printf("%s", err)
-		return
-	}
-
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
 	hostPort := host[1]
+
+	rcvMsgBuf, _, _, err := httputil.ReceiveSynchronization(r)
+	if err != nil {
+		cfg.Logger.Printf("BMMC %s:%s Error at receiving synchronization error: %s", hostAddr, hostPort, err)
+		return
+	}
 
 	for _, m := range rcvMsgBuf.Messages {
 		// run callback function for messages with a callback registered
@@ -112,14 +112,14 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 			// get callback from callbacks registry
 			callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
 			if err != nil {
-				cfg.Logger.Printf("%s", err)
+				cfg.Logger.Printf("BMMC %s:%s: Error at getting callback function: %s", hostAddr, hostPort, err)
 				continue
 			}
 
-			// run callback fucntion
+			// run callback function
 			ok, err := callbackFn(m.Msg)
 			if err != nil {
-				cfg.Logger.Printf("%s", err)
+				cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
 				continue
 			}
 
