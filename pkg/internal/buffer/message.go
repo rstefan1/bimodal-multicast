@@ -25,9 +25,10 @@ import (
 )
 
 type Message struct {
-	ID          string `json:"message_ID"`
-	Msg         string `json:"message_msg"`
-	GossipCount int    `json:"message_gossip_count"`
+	ID           string `json:"message_ID"`
+	Msg          string `json:"message_msg"`
+	CallbackType string `json:"message_callback_type"`
+	GossipCount  int    `json:"message_gossip_count"`
 }
 
 type MessageBuffer struct {

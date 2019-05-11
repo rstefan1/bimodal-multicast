@@ -25,7 +25,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
@@ -38,7 +37,6 @@ type HTTP struct {
 	msgBuffer         *buffer.MessageBuffer
 	gossipRoundNumber *round.GossipRound
 	logger            *log.Logger
-	callbacks         *callback.CallbacksRegistry
 }
 
 func getGossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
@@ -108,6 +106,17 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 	hostPort := host[1]
 
 	for _, m := range rcvMsgBuf.Messages {
+		callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
+		if err != nil {
+			cfg.Logger.Printf("%s", err)
+			continue
+		}
+
+		err = callbackFn(m.Msg)
+		if err != nil {
+			cfg.Logger.Printf("%s", err)
+			continue
+		}
 
 		cfg.MsgBuf.AddMessage(m)
 		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
@@ -155,7 +164,6 @@ func New(cfg Config) *HTTP {
 		msgBuffer:         cfg.MsgBuf,
 		gossipRoundNumber: cfg.GossipRound,
 		logger:            cfg.Logger,
-		callbacks:         cfg.Callbacks,
 	}
 }
 
