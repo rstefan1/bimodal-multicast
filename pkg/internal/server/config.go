@@ -19,6 +19,7 @@ package server
 import (
 	"log"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
@@ -40,4 +41,6 @@ type Config struct {
 	Logger *log.Logger
 	// Loss is the loss for gossip handler
 	Loss float64
+	// CallbackRegistry
+	Callbacks *callback.CallbacksRegistry
 }

@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
@@ -37,16 +38,17 @@ type HTTP struct {
 	msgBuffer         *buffer.MessageBuffer
 	gossipRoundNumber *round.GossipRound
 	logger            *log.Logger
+	callbacks         *callback.CallbacksRegistry
 }
 
-func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
+func getGossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
 	if err != nil {
-		logger.Printf("%s", err)
+		cfg.Logger.Printf("%s", err)
 		return
 	}
 
-	msgDigestBuffer := msgBuffer.DigestBuffer()
+	msgDigestBuffer := cfg.MsgBuf.DigestBuffer()
 	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
 
 	host := strings.Split(r.Host, ":")
@@ -63,19 +65,19 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.
 
 		err = httputil.SendSolicitation(solicitationMsg, tAddr, tPort)
 		if err != nil {
-			logger.Printf("%s", err)
+			cfg.Logger.Printf("%s", err)
 			return
 		}
 	}
 }
 
-func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
+func getSolicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	missingDigestBuffer, tAddr, tPort, _, err := httputil.ReceiveSolicitation(r)
 	if err != nil {
-		logger.Printf("%s", err)
+		cfg.Logger.Printf("%s", err)
 		return
 	}
-	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(msgBuffer)
+	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(cfg.MsgBuf)
 
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
@@ -89,15 +91,15 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *b
 
 	err = httputil.SendSynchronization(synchronizationMsg, tAddr, tPort)
 	if err != nil {
-		logger.Printf("%s", err)
+		cfg.Logger.Printf("%s", err)
 		return
 	}
 }
 
-func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer *buffer.MessageBuffer, gossipRound *round.GossipRound, logger *log.Logger) {
+func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	rcvMsgBuf, _, _, err := httputil.ReceiveSynchronization(r)
 	if err != nil {
-		logger.Printf("%s", err)
+		cfg.Logger.Printf("%s", err)
 		return
 	}
 
@@ -106,8 +108,9 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, msgBuffer
 	hostPort := host[1]
 
 	for _, m := range rcvMsgBuf.Messages {
-		msgBuffer.AddMessage(m)
-		logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+
+		cfg.MsgBuf.AddMessage(m)
+		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
 	}
 }
 
@@ -139,12 +142,12 @@ func New(cfg Config) *HTTP {
 				case "/gossip":
 					// in production, cfg.Loss = 0
 					if rand.Float64() >= cfg.Loss {
-						getGossipHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
+						getGossipHandler(w, r, cfg)
 					}
 				case "/solicitation":
-					getSolicitationHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
+					getSolicitationHandler(w, r, cfg)
 				case "/synchronization":
-					getSynchronizationHandler(w, r, cfg.MsgBuf, cfg.GossipRound, cfg.Logger)
+					getSynchronizationHandler(w, r, cfg)
 				}
 			}),
 		},
@@ -152,6 +155,7 @@ func New(cfg Config) *HTTP {
 		msgBuffer:         cfg.MsgBuf,
 		gossipRoundNumber: cfg.GossipRound,
 		logger:            cfg.Logger,
+		callbacks:         cfg.Callbacks,
 	}
 }
 
