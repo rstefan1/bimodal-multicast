@@ -28,7 +28,14 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
-func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout time.Duration) error {
+func RunWithSpec(retries int,
+	noPeers int,
+	loss float64,
+	beta float64,
+	cbRegistry *callback.Registry,
+	cbType string,
+	timeout time.Duration) error {
+
 	// create path for logs
 	logPath := "metrics/logs"
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
@@ -62,12 +69,12 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 		for i := 0; i < noPeers; i++ {
 			n, err := New(
 				&Config{
-					Addr:   peers[i].Addr,
-					Port:   peers[i].Port,
-					Peers:  peers,
-					Beta:   beta,
-					Logger: logger,
-					loss:   loss,
+					Addr:      peers[i].Addr,
+					Port:      peers[i].Port,
+					Peers:     peers,
+					Beta:      beta,
+					Logger:    logger,
+					Callbacks: cbRegistry,
 				},
 			)
 			if err != nil {
@@ -80,7 +87,7 @@ func RunWithSpec(retries int, noPeers int, loss float64, beta float64, timeout t
 		// add a message
 		msg := "another-awesome-message"
 		randomNode := rand.Intn(noPeers)
-		nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+		nodes[randomNode].AddMessage(msg, cbType)
 
 		// start nodes
 		for i := 0; i < noPeers; i++ {

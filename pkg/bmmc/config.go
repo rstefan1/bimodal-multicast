@@ -34,8 +34,6 @@ type Config struct {
 	Beta float64
 	// Logger
 	Logger *log.Logger
-	// loss - just for exporting metrics
-	loss float64
 	// Callbacks Registry
 	Callbacks *callback.Registry
 }

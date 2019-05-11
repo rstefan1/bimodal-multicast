@@ -76,7 +76,6 @@ func New(cfg *Config) (*Bmmc, error) {
 		MsgBuf:      p.msgBuffer,
 		GossipRound: p.gossipRound,
 		Logger:      cfg.Logger,
-		Loss:        cfg.loss,
 		Callbacks:   cfg.Callbacks,
 	})
 

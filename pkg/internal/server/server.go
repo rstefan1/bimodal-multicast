@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -161,10 +160,7 @@ func New(cfg Config) *HTTP {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
-					// in production, cfg.Loss = 0
-					if rand.Float64() >= cfg.Loss {
-						getGossipHandler(w, r, cfg)
-					}
+					getGossipHandler(w, r, cfg)
 				case "/solicitation":
 					getSolicitationHandler(w, r, cfg)
 				case "/synchronization":

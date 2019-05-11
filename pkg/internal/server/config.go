@@ -39,8 +39,6 @@ type Config struct {
 	GossipRound *round.GossipRound
 	// Logger
 	Logger *log.Logger
-	// Loss is the loss for gossip handler
-	Loss float64
 	// Callbacks Registry
 	Callbacks *callback.Registry
 }
