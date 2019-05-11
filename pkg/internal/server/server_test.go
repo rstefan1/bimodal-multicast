@@ -28,6 +28,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
@@ -151,11 +152,10 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
-			httpServerMsgBuffer.AddMessage(buffer.Message{
-				ID:          fmt.Sprintf("%d", rand.Int31()),
-				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: 0,
-			})
+			httpServerMsgBuffer.AddMessage(buffer.NewMessage(
+				fmt.Sprintf("%d", rand.Int31()),
+				callback.NOCALLBACK,
+			))
 
 			gossipMsg := httputil.HTTPGossip{
 				Addr:        "localhost",
@@ -206,11 +206,12 @@ var _ = Describe("HTTP Server", func() {
 		It("responds with synchronization message", func() {
 			messageID := fmt.Sprintf("%d", rand.Int31())
 
-			// populate buffer with a message
+			// add a message in buffer
 			httpServerMsgBuffer.AddMessage(buffer.Message{
-				ID:          messageID,
-				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: 0,
+				ID:           messageID,
+				Msg:          fmt.Sprintf("%d", rand.Int31()),
+				GossipCount:  0,
+				CallbackType: callback.NOCALLBACK,
 			})
 
 			solicitationDigest := &buffer.DigestBuffer{
@@ -238,11 +239,10 @@ var _ = Describe("HTTP Server", func() {
 	Describe("at synchronization request", func() {
 		It("updates the message buffer", func() {
 			syncMsgBuffer := buffer.NewMessageBuffer()
-			syncMsgBuffer.AddMessage(buffer.Message{
-				ID:          fmt.Sprintf("%d", rand.Int31()),
-				Msg:         fmt.Sprintf("%d", rand.Int31()),
-				GossipCount: 0,
-			})
+			syncMsgBuffer.AddMessage(buffer.NewMessage(
+				fmt.Sprintf("%d", rand.Int31()),
+				callback.NOCALLBACK,
+			))
 
 			synchronizationMsg := httputil.HTTPSynchronization{
 				Addr:     "localhost",

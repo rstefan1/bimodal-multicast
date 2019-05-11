@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
@@ -106,16 +107,19 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 	hostPort := host[1]
 
 	for _, m := range rcvMsgBuf.Messages {
-		callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
-		if err != nil {
-			cfg.Logger.Printf("%s", err)
-			continue
-		}
+		// run callback function for messages with a callback registered
+		if m.CallbackType != callback.NOCALLBACK {
+			callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
+			if err != nil {
+				cfg.Logger.Printf("%s", err)
+				continue
+			}
 
-		err = callbackFn(m.Msg)
-		if err != nil {
-			cfg.Logger.Printf("%s", err)
-			continue
+			err = callbackFn(m.Msg)
+			if err != nil {
+				cfg.Logger.Printf("%s", err)
+				continue
+			}
 		}
 
 		cfg.MsgBuf.AddMessage(m)

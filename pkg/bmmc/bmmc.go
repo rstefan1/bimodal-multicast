@@ -115,8 +115,8 @@ func (b *Bmmc) Stop() {
 	close(b.stop)
 }
 
-func (b *Bmmc) AddMessage(msg string) {
-	b.msgBuffer.AddMessage(buffer.NewMessage(msg))
+func (b *Bmmc) AddMessage(msg, callbackType string) {
+	b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 
 func (b *Bmmc) GetMessages() []string {

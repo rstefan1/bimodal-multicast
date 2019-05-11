@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
@@ -67,11 +68,10 @@ var _ = Describe("Gossiper", func() {
 		mockPeers = append(mockPeers, peer.Peer{Addr: "localhost", Port: gossipPort})
 
 		gossipMsgBuf = buffer.NewMessageBuffer()
-		gossipMsgBuf.AddMessage(buffer.Message{
-			ID:          fmt.Sprintf("%d", rand.Int31()),
-			Msg:         fmt.Sprintf("%d", rand.Int31()),
-			GossipCount: 0,
-		})
+		gossipMsgBuf.AddMessage(buffer.NewMessage(
+			fmt.Sprintf("%d", rand.Int31()),
+			callback.NOCALLBACK,
+		))
 		mockMsgBuf = buffer.NewMessageBuffer()
 
 		gossipCfg = Config{
@@ -88,6 +88,7 @@ var _ = Describe("Gossiper", func() {
 			PeerBuf:     gossipPeers,
 			MsgBuf:      gossipMsgBuf,
 			GossipRound: gossipRound,
+			Callbacks:   callback.NewRegistry(),
 		}
 		mockCfg = server.Config{
 			Addr:        "localhost",
@@ -95,6 +96,7 @@ var _ = Describe("Gossiper", func() {
 			PeerBuf:     mockPeers,
 			MsgBuf:      mockMsgBuf,
 			GossipRound: mockRound,
+			Callbacks:   callback.NewRegistry(),
 		}
 
 		gossipStop = make(chan struct{})
