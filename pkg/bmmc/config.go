@@ -19,6 +19,7 @@ package bmmc
 import (
 	"log"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -35,4 +36,6 @@ type Config struct {
 	Logger *log.Logger
 	// loss - just for exporting metrics
 	loss float64
+	// Callbacks
+	Callbacks *callback.CallbacksRegistry
 }

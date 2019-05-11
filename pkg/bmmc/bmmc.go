@@ -53,6 +53,9 @@ func New(cfg *Config) (*Bmmc, error) {
 	if len(cfg.Port) == 0 {
 		return nil, fmt.Errorf("Port must not be empty")
 	}
+	if cfg.Callbacks == nil {
+		return nil, fmt.Errorf("Callbacks Resistry must not be nil")
+	}
 	if cfg.Beta == 0 {
 		cfg.Beta = defaultBeta
 	}
@@ -74,6 +77,7 @@ func New(cfg *Config) (*Bmmc, error) {
 		GossipRound: p.gossipRound,
 		Logger:      cfg.Logger,
 		Loss:        cfg.loss,
+		Callbacks:   cfg.Callbacks,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{
