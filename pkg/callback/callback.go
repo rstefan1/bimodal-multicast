@@ -22,18 +22,18 @@ import "fmt"
 const NOCALLBACK = "no-callback"
 
 type CallbacksRegistry struct {
-	callbacks map[string]func(string) error
+	callbacks map[string]func(string) (bool, error)
 }
 
 // NewRegistry creates a callback registry
 func NewRegistry() *CallbacksRegistry {
 	r := &CallbacksRegistry{}
-	r.callbacks = make(map[string]func(string) error)
+	r.callbacks = make(map[string]func(string) (bool, error))
 	return r
 }
 
 // Register registers a new callback in registry
-func (r *CallbacksRegistry) Register(t string, fn func(string) error) error {
+func (r *CallbacksRegistry) Register(t string, fn func(string) (bool, error)) error {
 	if _, ok := r.callbacks[t]; ok {
 		return fmt.Errorf("callback type already exists in registry")
 	}
@@ -42,7 +42,7 @@ func (r *CallbacksRegistry) Register(t string, fn func(string) error) error {
 	return nil
 }
 
-func (r *CallbacksRegistry) Get(t string) (func(string) error, error) {
+func (r *CallbacksRegistry) Get(t string) (func(string) (bool, error), error) {
 	if _, ok := r.callbacks[t]; ok {
 		return r.callbacks[t], nil
 	}
