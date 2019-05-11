@@ -109,21 +109,29 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 	for _, m := range rcvMsgBuf.Messages {
 		// run callback function for messages with a callback registered
 		if m.CallbackType != callback.NOCALLBACK {
+			// get callback from callbacks registry
 			callbackFn, err := cfg.Callbacks.Get(m.CallbackType)
 			if err != nil {
 				cfg.Logger.Printf("%s", err)
 				continue
 			}
 
-			err = callbackFn(m.Msg)
+			// run callback fucntion
+			ok, err := callbackFn(m.Msg)
 			if err != nil {
 				cfg.Logger.Printf("%s", err)
 				continue
 			}
-		}
 
-		cfg.MsgBuf.AddMessage(m)
-		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+			// add message in buffer only if callback call returns true
+			if ok {
+				cfg.MsgBuf.AddMessage(m)
+				cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+			}
+		} else {
+			cfg.MsgBuf.AddMessage(m)
+			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+		}
 	}
 }
 
