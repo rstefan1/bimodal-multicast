@@ -27,13 +27,13 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type HTTP struct {
 	server            *http.Server
-	peerBuffer        []peer.Peer
+	peerBuffer        *peer.PeerBuffer
 	msgBuffer         *buffer.MessageBuffer
 	gossipRoundNumber *round.GossipRound
 	logger            *log.Logger

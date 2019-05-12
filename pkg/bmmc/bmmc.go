@@ -24,16 +24,16 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 const defaultBeta = 0.3
 
 type Bmmc struct {
 	// shared buffer with addresses of nodes in system
-	peerBuffer []peer.Peer
+	peerBuffer *peer.PeerBuffer
 	// shared buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// gossip round number
@@ -66,8 +66,14 @@ func New(cfg *Config) (*Bmmc, error) {
 		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
 	}
 
+	peerBuf := peer.NewPeerBuffer()
+	for _, p := range cfg.Peers {
+		pp := peer.NewPeer(p.Addr, p.Port)
+		_ = peerBuf.AddPeer(pp)
+	}
+
 	p := &Bmmc{
-		peerBuffer:  cfg.Peers,
+		peerBuffer:  peerBuf,
 		msgBuffer:   buffer.NewMessageBuffer(),
 		gossipRound: round.NewGossipRound(),
 	}

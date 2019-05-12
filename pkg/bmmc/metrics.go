@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 func RunWithSpec(retries int,
@@ -45,7 +44,7 @@ func RunWithSpec(retries int,
 
 	// run the protocol `retries` times
 	for r := 0; r < retries; r++ {
-		peers := []peer.Peer{}
+		peers := []Peer{}
 		nodes := []*Bmmc{}
 
 		// create file for logs
@@ -61,7 +60,7 @@ func RunWithSpec(retries int,
 		// set random ports for peers
 		for i := 0; i < noPeers; i++ {
 			suggestedPort := testutil.SuggestPort()
-			peers = append(peers, peer.Peer{Addr: "localhost", Port: suggestedPort})
+			peers = append(peers, Peer{Addr: "localhost", Port: suggestedPort})
 		}
 
 		// create nodes

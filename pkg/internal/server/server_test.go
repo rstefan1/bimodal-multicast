@@ -31,9 +31,9 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type receivedMessages struct {
@@ -60,7 +60,7 @@ var _ = Describe("HTTP Server", func() {
 		mockServerPort      string
 		httpServerCfg       Config
 		gossipRound         *round.GossipRound
-		peerBuffer          []peer.Peer
+		peerBuffer          *peer.PeerBuffer
 		httpServerMsgBuffer *buffer.MessageBuffer
 		httpServerStop      chan struct{}
 		rcvMsg              receivedMessages
@@ -72,7 +72,7 @@ var _ = Describe("HTTP Server", func() {
 		mockServerPort = testutil.SuggestPort()
 
 		httpServerMsgBuffer = buffer.NewMessageBuffer()
-		peerBuffer = []peer.Peer{}
+		peerBuffer = peer.NewPeerBuffer()
 
 		gossipRound = round.NewGossipRound()
 

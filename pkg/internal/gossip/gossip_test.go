@@ -28,10 +28,10 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 const (
@@ -49,8 +49,8 @@ var _ = Describe("Gossiper", func() {
 		gossip       *Gossip
 		gossipPort   string
 		mockPort     string
-		gossipPeers  []peer.Peer
-		mockPeers    []peer.Peer
+		gossipPeers  *peer.PeerBuffer
+		mockPeers    *peer.PeerBuffer
 		gossipMsgBuf *buffer.MessageBuffer
 		mockMsgBuf   *buffer.MessageBuffer
 		gossipRound  *round.GossipRound
@@ -64,14 +64,22 @@ var _ = Describe("Gossiper", func() {
 	)
 
 	BeforeEach(func() {
-		gossipPort = testutil.SuggestPort()
-		mockPort = testutil.SuggestPort()
-
 		gossipRound = round.NewGossipRound()
 		mockRound = round.NewGossipRound()
 
-		gossipPeers = append(gossipPeers, peer.Peer{Addr: "localhost", Port: mockPort})
-		mockPeers = append(mockPeers, peer.Peer{Addr: "localhost", Port: gossipPort})
+		gossipPort = testutil.SuggestPort()
+		mockPort = testutil.SuggestPort()
+
+		mockPeer := peer.NewPeer("localhost", mockPort)
+		gossipPeer := peer.NewPeer("localhost", gossipPort)
+
+		mockPeers = peer.NewPeerBuffer()
+		ok := mockPeers.AddPeer(gossipPeer)
+		Expect(ok).To(BeTrue())
+
+		gossipPeers = peer.NewPeerBuffer()
+		ok = gossipPeers.AddPeer(mockPeer)
+		Expect(ok).To(BeTrue())
 
 		gossipMsgBuf = buffer.NewMessageBuffer()
 		gossipMsgBuf.AddMessage(buffer.NewMessage(

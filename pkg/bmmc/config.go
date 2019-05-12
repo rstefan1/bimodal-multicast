@@ -18,9 +18,12 @@ package bmmc
 
 import (
 	"log"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
+
+type Peer struct {
+	Addr string
+	Port string
+}
 
 type Config struct {
 	// Addr is HTTP address for node which runs gossip and http servers
@@ -28,7 +31,7 @@ type Config struct {
 	// Port is HTTP port for node which runs gossip  and http servers
 	Port string
 	// PeerBuf is the list of peers
-	Peers []peer.Peer
+	Peers []Peer
 	// Beta is the expected fanout for gossip rounds
 	Beta float64
 	// Logger

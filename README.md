@@ -25,9 +25,7 @@ called solicitation.
 
 ```golang
 import (
-    "github.com/rstefan1/bimodal-multicast/pkg/peer"
     "github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-    "github.com/rstefan1/bimodal-multicast/pkg/callback"
 )
 ```
 
@@ -40,13 +38,13 @@ import (
     cfg := bmmc.Config{
         Addr:   host,
         Port:   port,
-        Peers: []peer.Peer{
+        Peers: []bmmc.Peer{
             {
                 Addr: host,
                 Port: port,
             },
         },
-        Callbacks: map[string]callback.CallbackFn {
+        Callbacks: map[string]func (string) (bool, error) {
             "awesome-callback":
             func (msg string) (bool, error) {
                 fmt.Println("The message is:", msg)
