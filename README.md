@@ -21,7 +21,7 @@ called solicitation.
 
 ## Usage
 
-#### Imports
+* Imports
 
 ```golang
 import (
@@ -31,21 +31,21 @@ import (
 )
 ```
 
-#### Register callbacks
+* Register callbacks
 ``` golang
-    cb := callback.NewRegistry(
-        map[string]CallbackFn {
+    cb, err := callback.NewRegistry(
+        map[string]callback.CallbackFn {
             "awesome-callback":
             func (msg string) (bool, error) {
                 fmt.Println("The message is:", msg)
                 return true, nil
-            }
+            },
         },
     )
 ```
 Note! The buffer will be updated only if the callback fucntion call returns true.
 
-#### Configure the protocol
+* Configure the protocol
 
 ```golang
     host := "localhost"
@@ -64,31 +64,31 @@ Note! The buffer will be updated only if the callback fucntion call returns true
     }
 ```
 
-#### Create an instance for protocol
+* Create an instance for protocol
 
 ```golang
     p, err := bmmc.New(cfg)
 ```
 
-#### Start the protocol
+* Start the protocol
 
 ```golang
     p.Start()
 ```
 
-#### Stop the protocol
+* Stop the protocol
 
 ```golang
     p.Stop()
 ```
 
-#### Add a new string message in buffer
+* Add a new string message in buffer
 
 ```golang
     p.AddMessage("awesome message", "awesome-callback")
 ```
 
-#### Get all messages from the buffer
+* Get all messages from the buffer
 
 ```golang
     messages := p.GetMessages()
@@ -110,6 +110,11 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  - [ ] circular message buffer
  - [ ] more details about protocol in readme
  
+## Contributing
+
+We welcome all contributions in the form of new issues for feature requests, bugs
+or even pull requests.
+
 ## License
 
 This project is licensed under Apache 2.0 license. Read the [LICENSE](LICENSE) file
