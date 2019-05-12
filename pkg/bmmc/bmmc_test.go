@@ -31,7 +31,6 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 // getSortedBuffer is a helper func that returns a sorted buffer
@@ -54,11 +53,11 @@ func fakeRegistry(cbType string, b bool, e error) map[string]func(string) (bool,
 var _ = Describe("BMMC", func() {
 	When("creates new protocol instance with broken config", func() {
 		var (
-			peers []peer.Peer
+			peers []bmmc.Peer
 		)
 
 		BeforeEach(func() {
-			peers = []peer.Peer{
+			peers = []bmmc.Peer{
 				{
 					Addr: "localhost",
 					Port: "1999",
@@ -135,7 +134,7 @@ var _ = Describe("BMMC", func() {
 			port1 := testutil.SuggestPort()
 			port2 := testutil.SuggestPort()
 
-			peers := []peer.Peer{
+			peers := []bmmc.Peer{
 				{
 					Addr: "localhost",
 					Port: port1,
@@ -201,13 +200,13 @@ var _ = Describe("BMMC", func() {
 		BeforeEach(func() {
 			var (
 				ports [len]string
-				peers []peer.Peer
+				peers []bmmc.Peer
 				err   error
 			)
 
 			for i := 0; i < len; i++ {
 				ports[i] = testutil.SuggestPort()
-				peers = append(peers, peer.Peer{
+				peers = append(peers, bmmc.Peer{
 					Addr: "localhost",
 					Port: ports[i],
 				})

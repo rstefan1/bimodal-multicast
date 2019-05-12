@@ -21,8 +21,8 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 // Config has configs for http server
@@ -32,7 +32,7 @@ type Config struct {
 	// Port is http server port
 	Port string
 	// PeerBuf is the list of peers
-	PeerBuf []peer.Peer
+	PeerBuf *peer.PeerBuffer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
 	// GossipRound is the gossip round number

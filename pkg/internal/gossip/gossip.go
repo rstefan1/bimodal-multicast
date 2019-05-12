@@ -18,18 +18,17 @@ package gossip
 
 import (
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
-	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
 type Gossip struct {
 	// buffer with addresses of nodes in system
-	peerBuffer []peer.Peer
+	peerBuffer *peer.PeerBuffer
 	// buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// gossipAddr is the gossip server address
@@ -47,14 +46,14 @@ type Gossip struct {
 }
 
 // randomlySelectPeer is a helper func that returns a random peer
-func (g *Gossip) randomlySelectPeer() peer.Peer {
+func (g *Gossip) randomlySelectPeer() (string, string) {
 	for {
-		r := rand.Intn(len(g.peerBuffer))
-		if g.selectedPeers[r] {
+		addr, port, i := g.peerBuffer.GetRandom()
+		if g.selectedPeers[i] {
 			continue
 		}
-		g.selectedPeers[r] = true
-		return (g.peerBuffer)[r]
+		g.selectedPeers[i] = true
+		return addr, port
 	}
 }
 
@@ -67,8 +66,6 @@ func (g *Gossip) resetSelectedPeers() {
 
 // gossipRound is the gossip round that runs every 100ms
 func (g *Gossip) gossipRound(stop <-chan struct{}) {
-	var dest peer.Peer
-
 	for {
 		select {
 		case <-stop:
@@ -78,11 +75,11 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 			g.gossipRoundNumber.Increment()
 
 			// gossipLen is number of nodes which will receive gossip message
-			gossipLen := int(g.beta*float64(len(g.peerBuffer))/float64(g.gossipRoundNumber.GetNumber())) + 1
+			gossipLen := int(g.beta*float64(g.peerBuffer.Length())/float64(g.gossipRoundNumber.GetNumber())) + 1
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
-				dest = g.randomlySelectPeer()
+				destAddr, destPort := g.randomlySelectPeer()
 
 				gossipMsg := httputil.HTTPGossip{
 					Addr:        g.gossipAddr,
@@ -91,7 +88,7 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 					Digests:     *(g.msgBuffer).DigestBuffer(),
 				}
 
-				err := httputil.SendGossip(gossipMsg, dest.Addr, dest.Port)
+				err := httputil.SendGossip(gossipMsg, destAddr, destPort)
 				if err != nil {
 					g.logger.Printf("%s", err)
 				}
@@ -116,7 +113,7 @@ func New(cfg Config) *Gossip {
 		msgBuffer:         cfg.MsgBuf,
 		gossipAddr:        cfg.Addr,
 		gossipPort:        cfg.Port,
-		selectedPeers:     make([]bool, len(cfg.PeerBuf)),
+		selectedPeers:     make([]bool, peer.MAXPEERS),
 		beta:              cfg.Beta,
 		gossipRoundNumber: cfg.GossipRound,
 		logger:            cfg.Logger,
