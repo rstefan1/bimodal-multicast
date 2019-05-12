@@ -86,6 +86,19 @@ import (
     messages := p.GetMessages()
 ```
 
+* Add a new peer in peers buffer
+
+```golang
+    p.AddPeer("localhost", "18999")
+```
+
+* Remove a peer from peers buffer
+
+```golang
+    p.RemovePeer("localhost", "18999")
+```
+
+
 ## Performance
 
 When beta is 0.5 and loss is 30% (after 20 retries):
