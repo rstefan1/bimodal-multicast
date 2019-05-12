@@ -28,8 +28,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"

@@ -26,8 +26,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
@@ -38,8 +38,8 @@ const (
 	timeout = time.Second
 )
 
-func getFakeEmptyCallbackRegistry() *callback.Registry {
-	cb, err := callback.NewRegistry(map[string]callback.CallbackFn{})
+func getFakeEmptyCallbackRegistry() *callback.CustomRegistry {
+	cb, err := callback.NewCustomRegistry(map[string]func(string) (bool, error){})
 	Expect(err).To(Succeed())
 	return cb
 }

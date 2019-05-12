@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
@@ -53,14 +54,16 @@ func New(cfg *Config) (*Bmmc, error) {
 	if len(cfg.Port) == 0 {
 		return nil, fmt.Errorf("Port must not be empty")
 	}
-	if cfg.Callbacks == nil {
-		return nil, fmt.Errorf("Callbacks Resistry must not be nil")
-	}
 	if cfg.Beta == 0 {
 		cfg.Beta = defaultBeta
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
+	}
+
+	cbCustomRegistry, err := callback.NewCustomRegistry(cfg.Callbacks)
+	if err != nil {
+		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
 	}
 
 	p := &Bmmc{
@@ -76,7 +79,7 @@ func New(cfg *Config) (*Bmmc, error) {
 		MsgBuf:      p.msgBuffer,
 		GossipRound: p.gossipRound,
 		Logger:      cfg.Logger,
-		Callbacks:   cfg.Callbacks,
+		Callbacks:   cbCustomRegistry,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{

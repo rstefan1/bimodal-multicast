@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 )
 
 func main() {
@@ -37,19 +36,13 @@ func main() {
 
 	for loss := minLoss; loss <= maxLoss; loss = loss + 0.1 {
 		for beta := minBeta; beta <= maxBeta; beta = beta + 0.1 {
-			cbRegistry := callback.NewRegistry()
-			err := cbRegistry.Register(
-				cbType,
-				func(msg string) (bool, error) {
+			cbRegistry := map[string]func(string) (bool, error){
+				cbType: func(msg string) (bool, error) {
 					if rand.Float64() >= loss {
 						return true, nil
 					}
 					return false, nil
 				},
-			)
-			if err != nil {
-				fmt.Println(err)
-				continue
 			}
 
 			fmt.Println("Running BMMC for loss =", loss, "and beta =", beta, "...")

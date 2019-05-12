@@ -16,20 +16,21 @@ limitations under the License.
 
 package callback
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NOCALLBACK is type for messages without callback function
 const NOCALLBACK = "no-callback"
 
-type CallbackFn func(string) (bool, error)
-
-type Registry struct {
-	callbacks map[string]CallbackFn
+// CustomRegistry is a custom callbacks registry
+type CustomRegistry struct {
+	callbacks map[string]func(string) (bool, error)
 }
 
-// NewRegistry creates a callback registry
-func NewRegistry(cb map[string]CallbackFn) (*Registry, error) {
-	r := &Registry{}
+// NewCustomRegistry creates a custom callback registry
+func NewCustomRegistry(cb map[string]func(string) (bool, error)) (*CustomRegistry, error) {
+	r := &CustomRegistry{}
 
 	if cb == nil {
 		return nil, fmt.Errorf("Callback map must not be empty")
@@ -39,7 +40,8 @@ func NewRegistry(cb map[string]CallbackFn) (*Registry, error) {
 	return r, nil
 }
 
-func (r *Registry) GetCallback(t string) (CallbackFn, error) {
+// GetCustomCallback returns a custom callback from registry
+func (r *CustomRegistry) GetCustomCallback(t string) (func(string) (bool, error), error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
