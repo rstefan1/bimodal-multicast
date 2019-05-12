@@ -188,7 +188,7 @@ var _ = Describe("BMMC", func() {
 
 		// Wait 1 second before checking the buffer.
 		// In this second buffer needs to be updated.
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Second * 1)
 
 		Expect(getSortedBuffer(node2)()).To(Equal(expectedBuf))
 	},
