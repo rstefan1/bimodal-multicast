@@ -20,9 +20,6 @@ import (
 	"fmt"
 )
 
-// NOCALLBACK is type for messages without callback function
-const NOCALLBACK = "no-callback"
-
 // CustomRegistry is a custom callbacks registry
 type CustomRegistry struct {
 	callbacks map[string]func(string) (bool, error)

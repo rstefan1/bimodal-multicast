@@ -127,6 +127,24 @@ func (b *Bmmc) AddMessage(msg, callbackType string) {
 	b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 
+func (b *Bmmc) AddPeer(addr, port string) {
+	b.msgBuffer.AddMessage(
+		buffer.NewMessage(
+			fmt.Sprintf("%s/%s", addr, port),
+			callback.ADDPEER,
+		),
+	)
+}
+
+func (b *Bmmc) RemovePeer(addr, port string) {
+	b.msgBuffer.AddMessage(
+		buffer.NewMessage(
+			fmt.Sprintf("%s/%s", addr, port),
+			callback.REMOVEPEER,
+		),
+	)
+}
+
 func (b *Bmmc) GetMessages() []string {
 	return b.msgBuffer.UnwrapMessageBuffer()
 }
