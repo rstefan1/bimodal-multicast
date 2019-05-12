@@ -18,30 +18,24 @@ package callback
 
 import (
 	"fmt"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
-// NOCALLBACK is type for messages without callback function
-const NOCALLBACK = "no-callback"
-
-// CustomRegistry is a custom callbacks registry
-type CustomRegistry struct {
-	callbacks map[string]func(string) (bool, error)
+// DefaultRegistry is a default callbacks registry
+type DefaultRegistry struct {
+	callbacks map[string]func(buffer.Message) (bool, error)
 }
 
-// NewCustomRegistry creates a custom callback registry
-func NewCustomRegistry(cb map[string]func(string) (bool, error)) (*CustomRegistry, error) {
-	r := &CustomRegistry{}
-
-	if cb == nil {
-		return nil, fmt.Errorf("callback map must not be empty")
-	}
-
-	r.callbacks = cb
+// NewDefaultRegistry creates a default callback registry
+func NewDefaultRegistry() (*DefaultRegistry, error) {
+	r := &DefaultRegistry{}
+	r.callbacks = make(map[string]func(buffer.Message) (bool, error))
 	return r, nil
 }
 
-// GetCustomCallback returns a custom callback from registry
-func (r *CustomRegistry) GetCustomCallback(t string) (func(string) (bool, error), error) {
+// GetDefaultCallback returns a default callback from registry
+func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message) (bool, error), error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
