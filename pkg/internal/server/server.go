@@ -119,7 +119,6 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 			ok, err := callbackFn(m.Msg)
 			if err != nil {
 				cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-				continue
 			}
 
 			// add message in buffer only if callback call returns true
