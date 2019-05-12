@@ -23,7 +23,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -32,7 +31,7 @@ func RunWithSpec(retries int,
 	noPeers int,
 	loss float64,
 	beta float64,
-	cbRegistry *callback.Registry,
+	cbRegistry map[string]func(string) (bool, error),
 	cbType string,
 	timeout time.Duration) error {
 

@@ -31,20 +31,6 @@ import (
 )
 ```
 
-* Register callbacks
-``` golang
-    cb, err := callback.NewRegistry(
-        map[string]callback.CallbackFn {
-            "awesome-callback":
-            func (msg string) (bool, error) {
-                fmt.Println("The message is:", msg)
-                return true, nil
-            },
-        },
-    )
-```
-Note! The buffer will be updated only if the callback fucntion call returns true.
-
 * Configure the protocol
 
 ```golang
@@ -60,9 +46,17 @@ Note! The buffer will be updated only if the callback fucntion call returns true
                 Port: port,
             },
         },
-        Callbacks: cb,
+        Callbacks: map[string]callback.CallbackFn {
+            "awesome-callback":
+            func (msg string) (bool, error) {
+                fmt.Println("The message is:", msg)
+                return true, nil
+            },
+        },
     }
 ```
+
+#### Note! The buffer will be updated only if the callback function call returns true.
 
 * Create an instance for protocol
 

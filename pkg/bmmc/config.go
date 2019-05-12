@@ -19,7 +19,6 @@ package bmmc
 import (
 	"log"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
 
@@ -34,6 +33,6 @@ type Config struct {
 	Beta float64
 	// Logger
 	Logger *log.Logger
-	// Callbacks Registry
-	Callbacks *callback.Registry
+	// Callbacks funtions
+	Callbacks map[string]func(string) (bool, error)
 }

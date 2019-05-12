@@ -19,8 +19,8 @@ package server
 import (
 	"log"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 	"github.com/rstefan1/bimodal-multicast/pkg/peer"
 )
@@ -40,5 +40,5 @@ type Config struct {
 	// Logger
 	Logger *log.Logger
 	// Callbacks Registry
-	Callbacks *callback.Registry
+	Callbacks *callback.CustomRegistry
 }

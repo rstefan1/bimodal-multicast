@@ -23,16 +23,16 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CallbackRegistry interface", func() {
+var _ = Describe("CustomCallbackRegistry interface", func() {
 	It("creates new registry when given callbacks map is empty", func() {
-		cb := map[string]CallbackFn{}
-		r, err := NewRegistry(cb)
+		cb := map[string]func(string) (bool, error){}
+		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 		Expect(r.callbacks).To(Equal(cb))
 	})
 
 	It("creates new registry when given callbacks map has more callbacks", func() {
-		cb := map[string]CallbackFn{
+		cb := map[string]func(string) (bool, error){
 			"first-callback": func(msg string) (bool, error) {
 				return true, nil
 			},
@@ -40,13 +40,13 @@ var _ = Describe("CallbackRegistry interface", func() {
 				return false, nil
 			},
 		}
-		r, err := NewRegistry(cb)
+		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 		Expect(r.callbacks).To(Equal(cb))
 	})
 
 	It("returns error if given callbacks map is empty", func() {
-		r, err := NewRegistry(nil)
+		r, err := NewCustomRegistry(nil)
 		Expect(err).To(Not(Succeed()))
 		Expect(r).To(BeNil())
 	})
@@ -54,7 +54,7 @@ var _ = Describe("CallbackRegistry interface", func() {
 	It("returns proper callback func when given callback type exists in registry", func() {
 		var (
 			cbType string
-			cbFn   CallbackFn
+			cbFn   func(string) (bool, error)
 		)
 
 		cbType = "my-callback"
@@ -62,23 +62,23 @@ var _ = Describe("CallbackRegistry interface", func() {
 			return true, nil
 		}
 
-		cb := map[string]CallbackFn{
+		cb := map[string]func(string) (bool, error){
 			cbType: cbFn,
 		}
-		r, err := NewRegistry(cb)
+		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 
-		fn, err := r.GetCallback(cbType)
+		fn, err := r.GetCustomCallback(cbType)
 		Expect(err).To(Succeed())
 		Expect(reflect.ValueOf(fn)).To(Equal(reflect.ValueOf(cbFn)))
 	})
 
 	It("returns error when given callback type doesn't exist in registry", func() {
-		cb := map[string]CallbackFn{}
-		r, err := NewRegistry(cb)
+		cb := map[string]func(string) (bool, error){}
+		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 
-		fn, err := r.GetCallback("mu-callback")
+		fn, err := r.GetCustomCallback("mu-callback")
 		Expect(err).To(Not(Succeed()))
 		Expect(fn).To(BeNil())
 	})
