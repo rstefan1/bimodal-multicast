@@ -67,9 +67,11 @@ func New(cfg *Config) (*Bmmc, error) {
 	}
 
 	peerBuf := peer.NewPeerBuffer()
-	for _, p := range cfg.Peers {
-		pp := peer.NewPeer(p.Addr, p.Port)
-		_ = peerBuf.AddPeer(pp)
+	if cfg.Peers != nil {
+		for _, p := range cfg.Peers {
+			pp := peer.NewPeer(p.Addr, p.Port)
+			_ = peerBuf.AddPeer(pp)
+		}
 	}
 
 	p := &Bmmc{

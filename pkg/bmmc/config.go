@@ -27,15 +27,21 @@ type Peer struct {
 
 type Config struct {
 	// Addr is HTTP address for node which runs gossip and http servers
+	// Required field
 	Addr string
 	// Port is HTTP port for node which runs gossip  and http servers
+	// Required field
 	Port string
 	// PeerBuf is the list of peers
+	// Optional field
 	Peers []Peer
 	// Beta is the expected fanout for gossip rounds
+	// Optional field
 	Beta float64
 	// Logger
+	// Optional field
 	Logger *log.Logger
 	// Callbacks funtions
+	// Required field
 	Callbacks map[string]func(string) (bool, error)
 }

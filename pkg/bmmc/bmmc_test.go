@@ -124,6 +124,17 @@ var _ = Describe("BMMC", func() {
 			Expect(err).To(Succeed())
 			Expect(cfg.Logger).To(Not(BeNil()))
 		})
+
+		It("create empty peers buffer when given peers list is nil", func() {
+			cfg := bmmc.Config{
+				Addr:      "localhost",
+				Port:      "1999",
+				Beta:      0.5,
+				Callbacks: map[string]func(string) (bool, error){},
+			}
+			_, err := bmmc.New(&cfg)
+			Expect(err).To(Succeed())
+		})
 	})
 
 	DescribeTable("when system has two nodes and one node has a message in buffer",
