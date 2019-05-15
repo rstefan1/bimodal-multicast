@@ -42,6 +42,6 @@ type Config struct {
 	// Optional field
 	Logger *log.Logger
 	// Callbacks funtions
-	// Required field
+	// Optional field
 	Callbacks map[string]func(string) (bool, error)
 }
