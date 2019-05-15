@@ -87,7 +87,7 @@ var _ = Describe("BMMC", func() {
 			Expect(err).To(Not(Succeed()))
 		})
 
-		It("returns error when callback CustomRegistry is nil", func() {
+		It("doens't returns error when callback CustomRegistry is nil", func() {
 			cfg := bmmc.Config{
 				Addr:   "localhost",
 				Port:   "1999",
@@ -96,7 +96,7 @@ var _ = Describe("BMMC", func() {
 				Logger: log.New(os.Stdout, "", 0),
 			}
 			_, err := bmmc.New(&cfg)
-			Expect(err).To(Not(Succeed()))
+			Expect(err).To(Succeed())
 		})
 
 		It("set default value for beta if it is empty", func() {
@@ -125,7 +125,7 @@ var _ = Describe("BMMC", func() {
 			Expect(cfg.Logger).To(Not(BeNil()))
 		})
 
-		It("create empty peers buffer when given peers list is nil", func() {
+		It("doens't returns error when peers list is nil", func() {
 			cfg := bmmc.Config{
 				Addr:      "localhost",
 				Port:      "1999",

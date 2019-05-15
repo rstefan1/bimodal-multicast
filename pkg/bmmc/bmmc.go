@@ -61,7 +61,11 @@ func New(cfg *Config) (*Bmmc, error) {
 		cfg.Logger = log.New(os.Stdout, "", 0)
 	}
 
-	cbCustomRegistry, err := callback.NewCustomRegistry(cfg.Callbacks)
+	callbacks := cfg.Callbacks
+	if callbacks == nil {
+		callbacks = map[string]func(string) (bool, error){}
+	}
+	cbCustomRegistry, err := callback.NewCustomRegistry(callbacks)
 	if err != nil {
 		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
 	}
