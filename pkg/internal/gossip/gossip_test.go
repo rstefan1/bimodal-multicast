@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	timeout = time.Second
+	timeout = time.Second * 2
 )
 
 func getFakeEmptyCallbackRegistry() *callback.CustomRegistry {

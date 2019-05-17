@@ -181,11 +181,7 @@ var _ = Describe("BMMC", func() {
 			node1.AddMessage(msg, callbackType)
 			Eventually(getSortedBuffer(node1), time.Second).Should(Equal([]string{msg}))
 
-			// Wait 1 second before checking the buffer.
-			// In this second buffer needs to be updated.
-			time.Sleep(time.Second * 1)
-
-			Expect(getSortedBuffer(node2)()).To(Equal(expectedBuf))
+			Eventually(getSortedBuffer(node2), time.Second).Should(ConsistOf(expectedBuf))
 		},
 		Entry("sync buffers with the message",
 			map[string]func(string, *log.Logger) (bool, error){},
@@ -244,6 +240,8 @@ var _ = Describe("BMMC", func() {
 			var expectedBuf []string
 
 			BeforeEach(func() {
+				expectedBuf = []string{}
+
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 				randomNode := rand.Intn(len)
@@ -267,6 +265,8 @@ var _ = Describe("BMMC", func() {
 			var expectedBuf []string
 
 			BeforeEach(func() {
+				expectedBuf = []string{}
+
 				randomNode := rand.Intn(len)
 				for i := 0; i < 3; i++ {
 					msg := fmt.Sprintf("awesome-message-%d", i)
@@ -293,6 +293,7 @@ var _ = Describe("BMMC", func() {
 			var expectedBuf []string
 
 			BeforeEach(func() {
+				expectedBuf = []string{}
 				randomNodes := [3]int{2, 4, 6}
 
 				for i := 0; i < 3; i++ {
