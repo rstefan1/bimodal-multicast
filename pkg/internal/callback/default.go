@@ -35,14 +35,26 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
 	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error){
 		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
-			host := strings.Split("localhost/19999", "/")
+			host := strings.Split(msg.Msg, "/")
 			addr := host[0]
 			port := host[1]
 
 			ok := peersBuf.(*peer.PeerBuffer).AddPeer(peer.NewPeer(addr, port))
 			if !ok {
 				logger.Printf("Error at adding %s/%s peer in peers buffer in %s callback", addr, port, ADDPEER)
+			} else {
+				logger.Printf("Peer %s/%s added in peers buffer", addr, port)
 			}
+
+			return true, nil
+		},
+		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
+			host := strings.Split(msg.Msg, "/")
+			addr := host[0]
+			port := host[1]
+
+			peersBuf.(*peer.PeerBuffer).RemovePeer(peer.NewPeer(addr, port))
+			logger.Printf("Peer %s/%s removed from peers buffer", addr, port)
 
 			return true, nil
 		},
