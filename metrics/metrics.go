@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -36,8 +37,8 @@ func main() {
 
 	for loss := minLoss; loss <= maxLoss; loss = loss + 0.1 {
 		for beta := minBeta; beta <= maxBeta; beta = beta + 0.1 {
-			cbRegistry := map[string]func(string) (bool, error){
-				cbType: func(msg string) (bool, error) {
+			cbRegistry := map[string]func(string, *log.Logger) (bool, error){
+				cbType: func(msg string, logger *log.Logger) (bool, error) {
 					if rand.Float64() >= loss {
 						return true, nil
 					}
@@ -46,7 +47,7 @@ func main() {
 			}
 
 			fmt.Println("Running BMMC for loss =", loss, "and beta =", beta, "...")
-			err = bmmc.RunWithSpec(noRetries, noPeers, loss, beta, cbRegistry, cbType, timeout)
+			err := bmmc.RunWithSpec(noRetries, noPeers, loss, beta, cbRegistry, cbType, timeout)
 			if err != nil {
 				fmt.Println(err)
 				continue
