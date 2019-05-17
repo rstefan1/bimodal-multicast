@@ -48,7 +48,7 @@ func runCustomCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string)
 	}
 
 	// run callback function
-	ok, err := callbackFn(m.Msg)
+	ok, err := callbackFn(m.Msg, cfg.Logger)
 	if err != nil {
 		cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
 	}

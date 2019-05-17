@@ -43,5 +43,5 @@ type Config struct {
 	Logger *log.Logger
 	// Callbacks funtions
 	// Optional field
-	Callbacks map[string]func(string) (bool, error)
+	Callbacks map[string]func(string, *log.Logger) (bool, error)
 }

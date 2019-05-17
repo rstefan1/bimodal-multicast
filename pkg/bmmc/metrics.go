@@ -30,7 +30,7 @@ func RunWithSpec(retries int,
 	noPeers int,
 	loss float64,
 	beta float64,
-	cbRegistry map[string]func(string) (bool, error),
+	cbRegistry map[string]func(string, *log.Logger) (bool, error),
 	cbType string,
 	timeout time.Duration) error {
 
