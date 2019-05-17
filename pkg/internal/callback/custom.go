@@ -18,15 +18,16 @@ package callback
 
 import (
 	"fmt"
+	"log"
 )
 
 // CustomRegistry is a custom callbacks registry
 type CustomRegistry struct {
-	callbacks map[string]func(string) (bool, error)
+	callbacks map[string]func(string, *log.Logger) (bool, error)
 }
 
 // NewCustomRegistry creates a custom callback registry
-func NewCustomRegistry(cb map[string]func(string) (bool, error)) (*CustomRegistry, error) {
+func NewCustomRegistry(cb map[string]func(string, *log.Logger) (bool, error)) (*CustomRegistry, error) {
 	r := &CustomRegistry{}
 
 	if cb == nil {
@@ -38,7 +39,7 @@ func NewCustomRegistry(cb map[string]func(string) (bool, error)) (*CustomRegistr
 }
 
 // GetCustomCallback returns a custom callback from registry
-func (r *CustomRegistry) GetCustomCallback(t string) (func(string) (bool, error), error) {
+func (r *CustomRegistry) GetCustomCallback(t string) (func(string, *log.Logger) (bool, error), error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}

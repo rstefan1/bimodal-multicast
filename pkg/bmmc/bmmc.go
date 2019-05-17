@@ -63,7 +63,7 @@ func New(cfg *Config) (*Bmmc, error) {
 
 	callbacks := cfg.Callbacks
 	if callbacks == nil {
-		callbacks = map[string]func(string) (bool, error){}
+		callbacks = map[string]func(string, *log.Logger) (bool, error){}
 	}
 	cbCustomRegistry, err := callback.NewCustomRegistry(callbacks)
 	if err != nil {
