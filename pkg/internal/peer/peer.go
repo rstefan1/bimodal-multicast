@@ -17,6 +17,7 @@ limitations under the License.
 package peer
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 )
@@ -100,6 +101,19 @@ func (peerBuffer *PeerBuffer) RemovePeer(peer Peer) {
 		peerBuffer.peers[len(peerBuffer.peers)-1] = Peer{}                // Erase last element (write zero value).
 		peerBuffer.peers = peerBuffer.peers[:len(peerBuffer.peers)-1]     // Truncate slice.
 	}
+}
+
+// GetPeers returns a list of strings that contains peers
+func (peerBuffer *PeerBuffer) GetPeers() []string {
+	peerBuffer.mux.Lock()
+	defer peerBuffer.mux.Unlock()
+
+	p := make([]string, len(peerBuffer.peers))
+	for i := range peerBuffer.peers {
+		p[i] = fmt.Sprintf("%s/%s", peerBuffer.peers[i].addr, peerBuffer.peers[i].port)
+	}
+
+	return p
 }
 
 // GetRandom() returns random peer from peers buffer

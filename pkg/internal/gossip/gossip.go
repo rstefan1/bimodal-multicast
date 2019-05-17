@@ -74,8 +74,14 @@ func (g *Gossip) gossipRound(stop <-chan struct{}) {
 		default:
 			g.gossipRoundNumber.Increment()
 
-			// gossipLen is number of nodes which will receive gossip message
-			gossipLen := int(g.beta*float64(g.peerBuffer.Length())/float64(g.gossipRoundNumber.GetNumber())) + 1
+			// gossipLen is number of nodes which will receive gossip message.
+			// It will be 0 if the node has empty peers list.
+			var gossipLen int
+			if g.peerBuffer.Length() == 0 {
+				gossipLen = 0
+			} else {
+				gossipLen = int(g.beta*float64(g.peerBuffer.Length())/float64(g.gossipRoundNumber.GetNumber())) + 1
+			}
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
