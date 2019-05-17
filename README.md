@@ -44,9 +44,9 @@ import (
                 Port: port,
             },
         },
-        Callbacks: map[string]func (string) (bool, error) {
+        Callbacks: map[string]func (string, *log.Logger) (bool, error) {
             "awesome-callback":
-            func (msg string) (bool, error) {
+            func (msg string logger *log.Logger) (bool, error) {
                 fmt.Println("The message is:", msg)
                 return true, nil
             },
