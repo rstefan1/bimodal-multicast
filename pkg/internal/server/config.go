@@ -39,6 +39,8 @@ type Config struct {
 	GossipRound *round.GossipRound
 	// Logger
 	Logger *log.Logger
-	// Callbacks Registry
-	Callbacks *callback.CustomRegistry
+	// Customo Callbacks Registry
+	CustomCallbacks *callback.CustomRegistry
+	// Default Callback Registry
+	DefaultCallbacks *callback.DefaultRegistry
 }

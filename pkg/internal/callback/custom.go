@@ -42,5 +42,5 @@ func (r *CustomRegistry) GetCustomCallback(t string) (func(string) (bool, error)
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
-	return nil, fmt.Errorf("callback type doesn't exist in registry")
+	return nil, fmt.Errorf("callback type doesn't exist in custom registry")
 }

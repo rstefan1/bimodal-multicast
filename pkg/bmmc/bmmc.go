@@ -69,6 +69,10 @@ func New(cfg *Config) (*Bmmc, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
 	}
+	cbDefaultRegistry, err := callback.NewDefaultRegistry()
+	if err != nil {
+		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
+	}
 
 	peerBuf := peer.NewPeerBuffer()
 	if cfg.Peers != nil {
@@ -85,13 +89,14 @@ func New(cfg *Config) (*Bmmc, error) {
 	}
 
 	p.httpServer = server.New(server.Config{
-		Addr:        cfg.Addr,
-		Port:        cfg.Port,
-		PeerBuf:     p.peerBuffer,
-		MsgBuf:      p.msgBuffer,
-		GossipRound: p.gossipRound,
-		Logger:      cfg.Logger,
-		Callbacks:   cbCustomRegistry,
+		Addr:             cfg.Addr,
+		Port:             cfg.Port,
+		PeerBuf:          p.peerBuffer,
+		MsgBuf:           p.msgBuffer,
+		GossipRound:      p.gossipRound,
+		Logger:           cfg.Logger,
+		CustomCallbacks:  cbCustomRegistry,
+		DefaultCallbacks: cbDefaultRegistry,
 	})
 
 	p.gossipServer = gossip.New(gossip.Config{

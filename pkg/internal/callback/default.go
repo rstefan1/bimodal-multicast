@@ -18,26 +18,42 @@ package callback
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 // DefaultRegistry is a default callbacks registry
 type DefaultRegistry struct {
-	callbacks map[string]func(buffer.Message) (bool, error)
+	callbacks map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error)
 }
 
 // NewDefaultRegistry creates a default callback registry
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
-	r.callbacks = make(map[string]func(buffer.Message) (bool, error))
+	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error){
+		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
+			host := strings.Split("localhost/19999", "/")
+			addr := host[0]
+			port := host[1]
+
+			ok := peersBuf.(*peer.PeerBuffer).AddPeer(peer.NewPeer(addr, port))
+			if !ok {
+				logger.Printf("Error at adding %s/%s peer in peers buffer in %s callback", addr, port, ADDPEER)
+			}
+
+			return true, nil
+		},
+	}
 	return r, nil
 }
 
 // GetDefaultCallback returns a default callback from registry
-func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message) (bool, error), error) {
+func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, interface{}, *log.Logger) (bool, error), error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
-	return nil, fmt.Errorf("callback type doesn't exist in registry")
+	return nil, fmt.Errorf("callback type doesn't exist in default registry")
 }
