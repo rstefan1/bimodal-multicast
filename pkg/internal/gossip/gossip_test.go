@@ -88,6 +88,9 @@ var _ = Describe("Gossiper", func() {
 		))
 		mockMsgBuf = buffer.NewMessageBuffer()
 
+		cbDefaultRegistry, err := callback.NewDefaultRegistry()
+		Expect(err).To(Succeed())
+
 		gossipCfg = Config{
 			Addr:        "localhost",
 			Port:        gossipPort,
@@ -97,20 +100,22 @@ var _ = Describe("Gossiper", func() {
 			Logger:      log.New(os.Stdout, "", 0),
 		}
 		httpCfg = server.Config{
-			Addr:        "localhost",
-			Port:        gossipPort,
-			PeerBuf:     gossipPeers,
-			MsgBuf:      gossipMsgBuf,
-			GossipRound: gossipRound,
-			Callbacks:   getFakeEmptyCallbackRegistry(),
+			Addr:             "localhost",
+			Port:             gossipPort,
+			PeerBuf:          gossipPeers,
+			MsgBuf:           gossipMsgBuf,
+			GossipRound:      gossipRound,
+			CustomCallbacks:  getFakeEmptyCallbackRegistry(),
+			DefaultCallbacks: cbDefaultRegistry,
 		}
 		mockCfg = server.Config{
-			Addr:        "localhost",
-			Port:        mockPort,
-			PeerBuf:     mockPeers,
-			MsgBuf:      mockMsgBuf,
-			GossipRound: mockRound,
-			Callbacks:   getFakeEmptyCallbackRegistry(),
+			Addr:             "localhost",
+			Port:             mockPort,
+			PeerBuf:          mockPeers,
+			MsgBuf:           mockMsgBuf,
+			GossipRound:      mockRound,
+			CustomCallbacks:  getFakeEmptyCallbackRegistry(),
+			DefaultCallbacks: cbDefaultRegistry,
 		}
 
 		gossipStop = make(chan struct{})

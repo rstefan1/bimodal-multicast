@@ -39,7 +39,60 @@ type HTTP struct {
 	logger            *log.Logger
 }
 
-func getGossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+// runCustomCallbacks runs custom callbacks
+func runCustomCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string) {
+	// get callback from callbacks registry
+	callbackFn, err := cfg.CustomCallbacks.GetCustomCallback(m.CallbackType)
+	if err != nil {
+		return
+	}
+
+	// run callback function
+	ok, err := callbackFn(m.Msg)
+	if err != nil {
+		cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+	}
+
+	// add message in buffer only if callback call returns true
+	if ok {
+		cfg.MsgBuf.AddMessage(m)
+		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+	}
+}
+
+// runDefaultCallbacks runs default callbacks
+func runDefaultCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string) {
+	// get callback from callbacks registry
+	callbackFn, err := cfg.DefaultCallbacks.GetDefaultCallback(m.CallbackType)
+	if err != nil {
+		return
+	}
+
+	// TODO find a way to remove the following switch
+	var p interface{}
+	switch m.CallbackType {
+	case callback.ADDPEER:
+		p = cfg.PeerBuf
+	case callback.REMOVEPEER:
+		p = cfg.PeerBuf
+	default:
+		p = nil
+	}
+
+	// run callback function
+	ok, err := callbackFn(m, p, cfg.Logger)
+	if err != nil {
+		cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+	}
+
+	// add message in buffer only if callback call returns true
+	if ok {
+		cfg.MsgBuf.AddMessage(m)
+		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+	}
+}
+
+func gossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
 	if err != nil {
 		cfg.Logger.Printf("%s", err)
@@ -69,7 +122,7 @@ func getGossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	}
 }
 
-func getSolicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+func solicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	missingDigestBuffer, tAddr, tPort, _, err := httputil.ReceiveSolicitation(r)
 	if err != nil {
 		cfg.Logger.Printf("%s", err)
@@ -94,7 +147,7 @@ func getSolicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) 
 	}
 }
 
-func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+func synchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
 	hostPort := host[1]
@@ -108,24 +161,8 @@ func getSynchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Confi
 	for _, m := range rcvMsgBuf.Messages {
 		// run callback function for messages with a callback registered
 		if m.CallbackType != callback.NOCALLBACK {
-			// get callback from callbacks registry
-			callbackFn, err := cfg.Callbacks.GetCustomCallback(m.CallbackType)
-			if err != nil {
-				cfg.Logger.Printf("BMMC %s:%s: Error at getting callback function: %s", hostAddr, hostPort, err)
-				continue
-			}
-
-			// run callback function
-			ok, err := callbackFn(m.Msg)
-			if err != nil {
-				cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-			}
-
-			// add message in buffer only if callback call returns true
-			if ok {
-				cfg.MsgBuf.AddMessage(m)
-				cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
-			}
+			runDefaultCallbacks(m, cfg, hostAddr, hostPort)
+			runCustomCallbacks(m, cfg, hostAddr, hostPort)
 		} else {
 			cfg.MsgBuf.AddMessage(m)
 			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
@@ -159,11 +196,11 @@ func New(cfg Config) *HTTP {
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
-					getGossipHandler(w, r, cfg)
+					gossipHandler(w, r, cfg)
 				case "/solicitation":
-					getSolicitationHandler(w, r, cfg)
+					solicitationHandler(w, r, cfg)
 				case "/synchronization":
-					getSynchronizationHandler(w, r, cfg)
+					synchronizationHandler(w, r, cfg)
 				}
 			}),
 		},
