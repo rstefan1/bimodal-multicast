@@ -64,12 +64,12 @@ func newBMMC(addr, port string, peerBuffer *peer.PeerBuffer, msgBuffer *buffer.M
 	})
 
 	return &Bmmc{
-		peerBuffer:   peerBuffer,
-		msgBuffer:    msgBuffer,
-		gossipRound:  gossipRound,
-		httpServer:   server,
-		gossipServer: gossiper,
-		stop:         make(chan struct{}),
+		peerBuffer:  peerBuffer,
+		msgBuffer:   msgBuffer,
+		gossipRound: gossipRound,
+		server:      server,
+		gossiper:    gossiper,
+		stop:        make(chan struct{}),
 	}
 }
 

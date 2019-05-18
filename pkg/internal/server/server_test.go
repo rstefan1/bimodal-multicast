@@ -54,50 +54,50 @@ func (r *receivedMessages) GetMessage() interface{} {
 	return m
 }
 
-var _ = Describe("HTTP Server", func() {
+var _ = Describe("Server", func() {
 	var (
-		httpServerPort      string
-		mockServerPort      string
-		httpServerCfg       Config
-		gossipRound         *round.GossipRound
-		peerBuffer          *peer.PeerBuffer
-		httpServerMsgBuffer *buffer.MessageBuffer
-		httpServerStop      chan struct{}
-		rcvMsg              receivedMessages
-		mockServer          *http.Server
+		serverPort      string
+		mockServerPort  string
+		serverCfg       Config
+		gossipRound     *round.GossipRound
+		peerBuffer      *peer.PeerBuffer
+		serverMsgBuffer *buffer.MessageBuffer
+		serverStop      chan struct{}
+		rcvMsg          receivedMessages
+		mockServer      *http.Server
 	)
 
 	BeforeEach(func() {
-		httpServerPort = testutil.SuggestPort()
+		serverPort = testutil.SuggestPort()
 		mockServerPort = testutil.SuggestPort()
 
-		httpServerMsgBuffer = buffer.NewMessageBuffer()
+		serverMsgBuffer = buffer.NewMessageBuffer()
 		peerBuffer = peer.NewPeerBuffer()
 
 		gossipRound = round.NewGossipRound()
 
-		httpServerCfg = Config{
+		serverCfg = Config{
 			Addr:        "",
-			Port:        httpServerPort,
+			Port:        serverPort,
 			PeerBuf:     peerBuffer,
-			MsgBuf:      httpServerMsgBuffer,
+			MsgBuf:      serverMsgBuffer,
 			GossipRound: gossipRound,
 		}
 
-		httpServerStop = make(chan struct{})
+		serverStop = make(chan struct{})
 
 		rcvMsg = receivedMessages{
 			mux: sync.Mutex{},
 		}
 
 		// start http server
-		srv := New(httpServerCfg)
-		err := srv.Start(httpServerStop)
+		srv := New(serverCfg)
+		err := srv.Start(serverStop)
 		Expect(err).To(Succeed())
 	})
 
 	AfterEach(func() {
-		close(httpServerStop)
+		close(serverStop)
 	})
 
 	Describe("at gossip request", func() {
@@ -143,7 +143,7 @@ var _ = Describe("HTTP Server", func() {
 				Digests:     *gossipDigest,
 			}
 
-			err := httputil.SendGossip(gossipMsg, "localhost", httpServerPort)
+			err := httputil.SendGossip(gossipMsg, "localhost", serverPort)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
@@ -152,7 +152,7 @@ var _ = Describe("HTTP Server", func() {
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
-			httpServerMsgBuffer.AddMessage(buffer.NewMessage(
+			serverMsgBuffer.AddMessage(buffer.NewMessage(
 				fmt.Sprintf("%d", rand.Int31()),
 				callback.NOCALLBACK,
 			))
@@ -161,10 +161,10 @@ var _ = Describe("HTTP Server", func() {
 				Addr:        "localhost",
 				Port:        mockServerPort,
 				RoundNumber: round.NewGossipRound(),
-				Digests:     *httpServerMsgBuffer.DigestBuffer(),
+				Digests:     *serverMsgBuffer.DigestBuffer(),
 			}
 
-			err := httputil.SendGossip(gossipMsg, "localhost", httpServerPort)
+			err := httputil.SendGossip(gossipMsg, "localhost", serverPort)
 			Expect(err).To(Succeed())
 
 			// wait 1 second for solicitation message
@@ -207,7 +207,7 @@ var _ = Describe("HTTP Server", func() {
 			messageID := fmt.Sprintf("%d", rand.Int31())
 
 			// add a message in buffer
-			httpServerMsgBuffer.AddMessage(buffer.Message{
+			serverMsgBuffer.AddMessage(buffer.Message{
 				ID:           messageID,
 				Msg:          fmt.Sprintf("%d", rand.Int31()),
 				GossipCount:  0,
@@ -227,12 +227,12 @@ var _ = Describe("HTTP Server", func() {
 				Digests:     *solicitationDigest,
 			}
 
-			err := httputil.SendSolicitation(solicitationMsg, "localhost", httpServerPort)
+			err := httputil.SendSolicitation(solicitationMsg, "localhost", serverPort)
 			Expect(err).To(Succeed())
 
 			// wait for receiving response from http server
 			msg := rcvMsg.GetMessage()
-			Expect(msg.(httputil.HTTPSynchronization).Messages).To(Equal(*httpServerMsgBuffer))
+			Expect(msg.(httputil.HTTPSynchronization).Messages).To(Equal(*serverMsgBuffer))
 		})
 	})
 
@@ -250,11 +250,11 @@ var _ = Describe("HTTP Server", func() {
 				Messages: *syncMsgBuffer,
 			}
 
-			err := httputil.SendSynchronization(synchronizationMsg, "localhost", httpServerPort)
+			err := httputil.SendSynchronization(synchronizationMsg, "localhost", serverPort)
 			Expect(err).To(Succeed())
 
 			// wait for synchronization of shared message buffer
-			Expect(httpServerMsgBuffer.Messages).To(Equal(syncMsgBuffer.Messages))
+			Expect(serverMsgBuffer.Messages).To(Equal(syncMsgBuffer.Messages))
 		})
 	})
 })

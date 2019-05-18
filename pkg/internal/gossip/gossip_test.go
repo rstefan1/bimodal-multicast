@@ -46,7 +46,7 @@ func getFakeEmptyCallbackRegistry() *callback.CustomRegistry {
 
 var _ = Describe("Gossiper", func() {
 	var (
-		gossip       *Gossip
+		gossip       *Gossiper
 		gossipPort   string
 		mockPort     string
 		gossipPeers  *peer.PeerBuffer

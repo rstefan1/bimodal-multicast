@@ -31,7 +31,7 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
-type HTTP struct {
+type Server struct {
 	server            *http.Server
 	peerBuffer        *peer.PeerBuffer
 	msgBuffer         *buffer.MessageBuffer
@@ -170,27 +170,27 @@ func synchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) 
 	}
 }
 
-func startHTTPServer(s *HTTP) error {
-	s.logger.Printf("HTTP Server listening at %s", s.server.Addr)
+func startServer(s *Server) error {
+	s.logger.Printf("Server listening at %s", s.server.Addr)
 	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
-		s.logger.Printf("Unable to start HTTP server: %s", err)
+		s.logger.Printf("Unable to start  server: %s", err)
 		return err
 	}
 	return nil
 }
 
-func gracefullyShutdown(s *HTTP) {
+func gracefullyShutdown(s *Server) {
 	if err := s.server.Shutdown(context.TODO()); err != nil {
-		s.logger.Printf("Unable to shutdown HTTP server properly: %s", err)
+		s.logger.Printf("Unable to shutdown server properly: %s", err)
 	}
 }
 
-func New(cfg Config) *HTTP {
+func New(cfg Config) *Server {
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
 	}
 
-	return &HTTP{
+	return &Server{
 		server: &http.Server{
 			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -211,17 +211,17 @@ func New(cfg Config) *HTTP {
 	}
 }
 
-func (h *HTTP) Start(stop <-chan struct{}) error {
+func (s *Server) Start(stop <-chan struct{}) error {
 	errChan := make(chan error)
 
 	go func() {
-		err := startHTTPServer(h)
+		err := startServer(s)
 		errChan <- err
 	}()
 
 	go func() {
 		<-stop
-		gracefullyShutdown(h)
+		gracefullyShutdown(s)
 	}()
 
 	// return <-errChan
