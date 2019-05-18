@@ -39,9 +39,9 @@ type Bmmc struct {
 	// gossip round number
 	gossipRound *round.GossipRound
 	// http server
-	httpServer *server.HTTP
-	// gossip server
-	gossipServer *gossip.Gossip
+	server *server.Server
+	// gossiper
+	gossiper *gossip.Gossiper
 	// stop channel
 	stop chan struct{}
 }
@@ -88,7 +88,7 @@ func New(cfg *Config) (*Bmmc, error) {
 		gossipRound: round.NewGossipRound(),
 	}
 
-	p.httpServer = server.New(server.Config{
+	p.server = server.New(server.Config{
 		Addr:             cfg.Addr,
 		Port:             cfg.Port,
 		PeerBuf:          p.peerBuffer,
@@ -99,7 +99,7 @@ func New(cfg *Config) (*Bmmc, error) {
 		DefaultCallbacks: cbDefaultRegistry,
 	})
 
-	p.gossipServer = gossip.New(gossip.Config{
+	p.gossiper = gossip.New(gossip.Config{
 		Addr:        cfg.Addr,
 		Port:        cfg.Port,
 		PeerBuf:     p.peerBuffer,
@@ -117,13 +117,13 @@ func (b *Bmmc) Start() error {
 	b.stop = make(chan struct{})
 
 	// start http server
-	if err := b.httpServer.Start(b.stop); err != nil {
+	if err := b.server.Start(b.stop); err != nil {
 		return err
 	}
 
-	// start gossip server
+	// start gossiper
 	go func() {
-		b.gossipServer.Start(b.stop)
+		b.gossiper.Start(b.stop)
 	}()
 
 	return nil
