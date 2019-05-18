@@ -53,7 +53,11 @@ func NewPeerBuffer() *PeerBuffer {
 
 // Length returns lenght of peers buffer
 func (peerBuffer *PeerBuffer) Length() int {
-	return len(peerBuffer.peers)
+	peerBuffer.mux.Lock()
+	defer peerBuffer.mux.Unlock()
+
+	l := len(peerBuffer.peers)
+	return l
 }
 
 // alreadyExists return true if the peer already exists in peers buffer
@@ -76,9 +80,11 @@ func (peerBuffer *PeerBuffer) AddPeer(peer Peer) bool {
 		return false
 	}
 
-	if !peerBuffer.alreadyExists(peer) {
-		peerBuffer.peers = append(peerBuffer.peers, peer)
+	if peerBuffer.alreadyExists(peer) {
+		return false
 	}
+
+	peerBuffer.peers = append(peerBuffer.peers, peer)
 	return true
 }
 
