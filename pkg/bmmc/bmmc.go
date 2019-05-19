@@ -143,7 +143,7 @@ func (b *Bmmc) AddPeer(addr, port string) error {
 		peer.NewPeer(addr, port),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at adding the peer %s%s: %s", addr, port, err)
+		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
 	}
 
 	err = b.msgBuffer.AddMessage(
@@ -153,13 +153,17 @@ func (b *Bmmc) AddPeer(addr, port string) error {
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at adding the peer %s%s: %s", addr, port, err)
+		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
 	}
 
 	return nil
 }
 
 func (b *Bmmc) RemovePeer(addr, port string) error {
+	b.peerBuffer.RemovePeer(
+		peer.NewPeer(addr, port),
+	)
+
 	err := b.msgBuffer.AddMessage(
 		buffer.NewMessage(
 			fmt.Sprintf("%s/%s", addr, port),
@@ -167,7 +171,7 @@ func (b *Bmmc) RemovePeer(addr, port string) error {
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at removing the peer (%s/%s): %s", addr, port, err)
+		return fmt.Errorf("Error at removing the peer %s/%s: %s", addr, port, err)
 	}
 
 	return nil
