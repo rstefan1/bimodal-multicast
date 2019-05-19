@@ -82,10 +82,10 @@ var _ = Describe("Gossiper", func() {
 		Expect(ok).To(BeTrue())
 
 		gossipMsgBuf = buffer.NewMessageBuffer()
-		gossipMsgBuf.AddMessage(buffer.NewMessage(
+		Expect(gossipMsgBuf.AddMessage(buffer.NewMessage(
 			fmt.Sprintf("%d", rand.Int31()),
 			callback.NOCALLBACK,
-		))
+		))).To(Succeed())
 		mockMsgBuf = buffer.NewMessageBuffer()
 
 		cbDefaultRegistry, err := callback.NewDefaultRegistry()

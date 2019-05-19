@@ -152,10 +152,10 @@ var _ = Describe("Server", func() {
 		})
 
 		It("does not respond with solicitation request when nodes have same digests", func() {
-			serverMsgBuffer.AddMessage(buffer.NewMessage(
+			Expect(serverMsgBuffer.AddMessage(buffer.NewMessage(
 				fmt.Sprintf("%d", rand.Int31()),
 				callback.NOCALLBACK,
-			))
+			))).To(Succeed())
 
 			gossipMsg := httputil.HTTPGossip{
 				Addr:        "localhost",
@@ -207,12 +207,12 @@ var _ = Describe("Server", func() {
 			messageID := fmt.Sprintf("%d", rand.Int31())
 
 			// add a message in buffer
-			serverMsgBuffer.AddMessage(buffer.Message{
+			Expect(serverMsgBuffer.AddMessage(buffer.Message{
 				ID:           messageID,
 				Msg:          fmt.Sprintf("%d", rand.Int31()),
 				GossipCount:  0,
 				CallbackType: callback.NOCALLBACK,
-			})
+			})).To(Succeed())
 
 			solicitationDigest := &buffer.DigestBuffer{
 				Digests: []buffer.Digest{
@@ -239,10 +239,10 @@ var _ = Describe("Server", func() {
 	Describe("at synchronization request", func() {
 		It("updates the message buffer", func() {
 			syncMsgBuffer := buffer.NewMessageBuffer()
-			syncMsgBuffer.AddMessage(buffer.NewMessage(
+			Expect(syncMsgBuffer.AddMessage(buffer.NewMessage(
 				fmt.Sprintf("%d", rand.Int31()),
 				callback.NOCALLBACK,
-			))
+			))).To(Succeed())
 
 			synchronizationMsg := httputil.HTTPSynchronization{
 				Addr:     "localhost",

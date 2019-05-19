@@ -178,7 +178,7 @@ var _ = Describe("BMMC", func() {
 			Expect(node2.Start())
 
 			// add a message in first node
-			node1.AddMessage(msg, callbackType)
+			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
 			Eventually(getSortedBuffer(node1), time.Second).Should(Equal([]string{msg}))
 
 			Eventually(getSortedBuffer(node2), time.Second).Should(ConsistOf(expectedBuf))
@@ -245,7 +245,7 @@ var _ = Describe("BMMC", func() {
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 				randomNode := rand.Intn(len)
-				nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+				Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
 
 				// start protocol for all nodes
@@ -271,7 +271,7 @@ var _ = Describe("BMMC", func() {
 				for i := 0; i < 3; i++ {
 					msg := fmt.Sprintf("awesome-message-%d", i)
 					expectedBuf = append(expectedBuf, msg)
-					nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+					Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 				}
 
 				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
@@ -299,7 +299,7 @@ var _ = Describe("BMMC", func() {
 				for i := 0; i < 3; i++ {
 					msg := fmt.Sprintf("awesome-message-%d", i)
 					expectedBuf = append(expectedBuf, msg)
-					nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
+					Expect(nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 
 					Eventually(getSortedBuffer(nodes[randomNodes[i]]), time.Second).Should(Equal([]string{msg}))
 				}

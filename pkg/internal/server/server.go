@@ -55,8 +55,12 @@ func runCustomCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string)
 
 	// add message in buffer only if callback call returns true
 	if ok {
-		cfg.MsgBuf.AddMessage(m)
-		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+		err = cfg.MsgBuf.AddMessage(m)
+		if err != nil {
+			cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
+		} else {
+			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+		}
 	}
 }
 
@@ -87,8 +91,12 @@ func runDefaultCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string
 
 	// add message in buffer only if callback call returns true
 	if ok {
-		cfg.MsgBuf.AddMessage(m)
-		cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+		err = cfg.MsgBuf.AddMessage(m)
+		if err != nil {
+			cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
+		} else {
+			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+		}
 	}
 }
 
@@ -164,8 +172,12 @@ func synchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) 
 			runDefaultCallbacks(m, cfg, hostAddr, hostPort)
 			runCustomCallbacks(m, cfg, hostAddr, hostPort)
 		} else {
-			cfg.MsgBuf.AddMessage(m)
-			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+			err = cfg.MsgBuf.AddMessage(m)
+			if err != nil {
+				cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
+			} else {
+				cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+			}
 		}
 	}
 }

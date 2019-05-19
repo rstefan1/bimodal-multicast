@@ -134,26 +134,36 @@ func (b *Bmmc) Stop() {
 	close(b.stop)
 }
 
-func (b *Bmmc) AddMessage(msg, callbackType string) {
-	b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
+func (b *Bmmc) AddMessage(msg, callbackType string) error {
+	return b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 
-func (b *Bmmc) AddPeer(addr, port string) {
-	b.msgBuffer.AddMessage(
+func (b *Bmmc) AddPeer(addr, port string) error {
+	err := b.msgBuffer.AddMessage(
 		buffer.NewMessage(
 			fmt.Sprintf("%s/%s", addr, port),
 			callback.ADDPEER,
 		),
 	)
+	if err != nil {
+		return fmt.Errorf("Error at adding the peer (%s%s): %s", addr, port, err)
+	}
+
+	return nil
 }
 
-func (b *Bmmc) RemovePeer(addr, port string) {
-	b.msgBuffer.AddMessage(
+func (b *Bmmc) RemovePeer(addr, port string) error {
+	err := b.msgBuffer.AddMessage(
 		buffer.NewMessage(
 			fmt.Sprintf("%s/%s", addr, port),
 			callback.REMOVEPEER,
 		),
 	)
+	if err != nil {
+		return fmt.Errorf("Error at removing the peer (%s/%s): %s", addr, port, err)
+	}
+
+	return nil
 }
 
 func (b *Bmmc) GetMessages() []string {

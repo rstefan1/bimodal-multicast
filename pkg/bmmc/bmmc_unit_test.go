@@ -116,7 +116,7 @@ var _ = Describe("BMMC", func() {
 			msg := "awesome-message"
 			expectedBuffer := []string{msg}
 
-			bmmc1.AddMessage(msg, callback.NOCALLBACK)
+			Expect(bmmc1.AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 
 			Eventually(func() []string {
 				return bmmc1.GetMessages()
@@ -133,7 +133,7 @@ var _ = Describe("BMMC", func() {
 				fmt.Sprintf("%s/%s", addr1, port1),
 			}
 
-			bmmc1.AddPeer(newAddr, newPort)
+			Expect(bmmc1.AddPeer(newAddr, newPort)).To(Succeed())
 
 			Eventually(func() []string {
 				return peerBuffer2.GetPeers()
@@ -150,7 +150,7 @@ var _ = Describe("BMMC", func() {
 				fmt.Sprintf("%s/%s", addr1, port1),
 			}
 
-			bmmc1.RemovePeer(newAddr, newPort)
+			Expect(bmmc1.RemovePeer(newAddr, newPort)).To(Succeed())
 
 			Eventually(func() []string {
 				return peerBuffer2.GetPeers()

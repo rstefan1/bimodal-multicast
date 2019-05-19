@@ -38,7 +38,7 @@ func RunWithSpec(retries int,
 	logPath := "metrics/logs"
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		if err := os.Mkdir(logPath, 0777); err != nil {
-			return nil
+			return err
 		}
 	}
 
@@ -85,12 +85,15 @@ func RunWithSpec(retries int,
 		// add a message
 		msg := "another-awesome-message"
 		randomNode := rand.Intn(noPeers)
-		nodes[randomNode].AddMessage(msg, cbType)
+		err = nodes[randomNode].AddMessage(msg, cbType)
+		if err != nil {
+			return err
+		}
 
 		// start nodes
 		for i := 0; i < noPeers; i++ {
 			if err := nodes[i].Start(); err != nil {
-				return nil
+				return err
 			}
 		}
 

@@ -78,13 +78,16 @@ func (msgBuffer *MessageBuffer) alreadyExists(msg Message) bool {
 }
 
 // AddMessage adds message in message buffer
-func (msgBuffer *MessageBuffer) AddMessage(msg Message) {
+func (msgBuffer *MessageBuffer) AddMessage(msg Message) error {
 	msgBuffer.Mux.Lock()
 	defer msgBuffer.Mux.Unlock()
 
-	if !msgBuffer.alreadyExists(msg) {
-		msgBuffer.Messages = append(msgBuffer.Messages, msg)
+	if msgBuffer.alreadyExists(msg) {
+		return fmt.Errorf("Message %s already exists in buffer message", msg.Msg)
 	}
+
+	msgBuffer.Messages = append(msgBuffer.Messages, msg)
+	return nil
 }
 
 // TODO write a test for this function

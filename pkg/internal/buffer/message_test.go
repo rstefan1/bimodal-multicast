@@ -78,11 +78,11 @@ var _ = Describe("MessageBuffer interface", func() {
 		for i := 0; i < msgCount; i++ {
 			_msgID := fmt.Sprintf("%s-%02d", msgID, i)
 			_msgMsg := fmt.Sprintf("%s-%02d", msgMsg, i)
-			msgBuffer.AddMessage(Message{
+			Expect(msgBuffer.AddMessage(Message{
 				ID:          _msgID,
 				Msg:         _msgMsg,
 				GossipCount: msgGossipCount,
-			})
+			})).To(Succeed())
 		}
 	})
 
@@ -95,7 +95,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			}
 			msgBuffer := NewMessageBuffer()
 
-			msgBuffer.AddMessage(msg)
+			Expect(msgBuffer.AddMessage(msg)).To(Succeed())
 			Expect(msgBuffer.Messages).To(HaveLen(1))
 			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
 		})
@@ -110,7 +110,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			msgBuffer.Messages = append(msgBuffer.Messages, msg)
 
 			// try to add same message in buffer
-			msgBuffer.AddMessage(msg)
+			Expect(msgBuffer.AddMessage(msg)).To(Not(Succeed()))
 			Expect(msgBuffer.Messages).To(HaveLen(1))
 			expectProperMessage(msgBuffer.Messages[0], msgID, msgMsg, msgGossipCount)
 		})
