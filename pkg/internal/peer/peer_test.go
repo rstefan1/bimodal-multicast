@@ -83,13 +83,18 @@ var _ = Describe("Peer Buffer Interface", func() {
 	)
 
 	DescribeTable("when AddPeer() is called",
-		func(peers []Peer, p Peer, expected bool, expectedPeers []Peer) {
+		func(peers []Peer, p Peer, expectError bool, expectedPeers []Peer) {
 			pBuf := &PeerBuffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
 
-			Expect(pBuf.AddPeer(p)).To(Equal(expected))
+			err := pBuf.AddPeer(p)
+			if expectError {
+				Expect(err).To(Succeed())
+			} else {
+				Expect(err).To(Not(Succeed()))
+			}
 			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
 		},
 

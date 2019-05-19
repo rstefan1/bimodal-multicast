@@ -91,13 +91,13 @@ var _ = Describe("BMMC", func() {
 		port2 = testutil.SuggestPort()
 
 		peerBuffer1 = peer.NewPeerBuffer()
-		Expect(peerBuffer1.AddPeer(peer.NewPeer(addr2, port2))).To(BeTrue())
+		Expect(peerBuffer1.AddPeer(peer.NewPeer(addr2, port2))).To(Succeed())
 		msgBuffer1 = buffer.NewMessageBuffer()
 		bmmc1 = newBMMC(addr1, port1, peerBuffer1, msgBuffer1)
 		Expect(bmmc1.Start()).To(Succeed())
 
 		peerBuffer2 = peer.NewPeerBuffer()
-		Expect(peerBuffer2.AddPeer(peer.NewPeer(addr1, port1))).To(BeTrue())
+		Expect(peerBuffer2.AddPeer(peer.NewPeer(addr1, port1))).To(Succeed())
 		msgBuffer2 = buffer.NewMessageBuffer()
 		bmmc2 = newBMMC(addr2, port2, peerBuffer2, msgBuffer2)
 		Expect(bmmc2.Start()).To(Succeed())
@@ -145,7 +145,7 @@ var _ = Describe("BMMC", func() {
 		It("removes given peer from peers list", func() {
 			newAddr := "localhost"
 			newPort := "49999"
-			peerBuffer2.AddPeer(peer.NewPeer(newAddr, newPort))
+			Expect(peerBuffer2.AddPeer(peer.NewPeer(newAddr, newPort))).To(Succeed())
 			expectedBuffer := []string{
 				fmt.Sprintf("%s/%s", addr1, port1),
 			}

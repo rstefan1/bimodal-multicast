@@ -72,20 +72,20 @@ func (peerBuffer *PeerBuffer) alreadyExists(peer Peer) bool {
 }
 
 // AddPeer adds a peer in peers buffer
-func (peerBuffer *PeerBuffer) AddPeer(peer Peer) bool {
+func (peerBuffer *PeerBuffer) AddPeer(peer Peer) error {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
 	if len(peerBuffer.peers)+1 >= MAXPEERS {
-		return false
+		return fmt.Errorf("The buffer is full. Can add up to %d peers.", MAXPEERS)
 	}
 
 	if peerBuffer.alreadyExists(peer) {
-		return false
+		return fmt.Errorf("Peer %s/%s already exists in peer buffer.", peer.addr, peer.port)
 	}
 
 	peerBuffer.peers = append(peerBuffer.peers, peer)
-	return true
+	return nil
 }
 
 // RemovePeer removes a peer from peers buffer

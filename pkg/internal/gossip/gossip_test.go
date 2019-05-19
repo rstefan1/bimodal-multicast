@@ -74,12 +74,10 @@ var _ = Describe("Gossiper", func() {
 		gossipPeer := peer.NewPeer("localhost", gossipPort)
 
 		mockPeers = peer.NewPeerBuffer()
-		ok := mockPeers.AddPeer(gossipPeer)
-		Expect(ok).To(BeTrue())
+		Expect(mockPeers.AddPeer(gossipPeer)).To(Succeed())
 
 		gossipPeers = peer.NewPeerBuffer()
-		ok = gossipPeers.AddPeer(mockPeer)
-		Expect(ok).To(BeTrue())
+		Expect(gossipPeers.AddPeer(mockPeer)).To(Succeed())
 
 		gossipMsgBuf = buffer.NewMessageBuffer()
 		Expect(gossipMsgBuf.AddMessage(buffer.NewMessage(
