@@ -4,8 +4,7 @@
 
 This is an implementation of the Bimodal Multicast Protocol written in GO.
 
-Currently can only sync string messages. This will be improved in the following
-versions.
+Currently can only sync string messages. This will be improved in v0.2.
 
 ## Overview
 
@@ -46,7 +45,7 @@ import (
         },
         Callbacks: map[string]func (string, *log.Logger) (bool, error) {
             "awesome-callback":
-            func (msg string logger *log.Logger) (bool, error) {
+            func (msg string logger, *log.Logger) (bool, error) {
                 fmt.Println("The message is:", msg)
                 return true, nil
             },
@@ -77,7 +76,7 @@ import (
 * Add a new string message in buffer
 
 ```golang
-    p.AddMessage("awesome message", "awesome-callback")
+    err := p.AddMessage("awesome message", "awesome-callback")
 ```
 
 * Get all messages from the buffer
@@ -89,13 +88,13 @@ import (
 * Add a new peer in peers buffer
 
 ```golang
-    p.AddPeer("localhost", "18999")
+    err := p.AddPeer("localhost", "18999")
 ```
 
 * Remove a peer from peers buffer
 
 ```golang
-    p.RemovePeer("localhost", "18999")
+    err := p.RemovePeer("localhost", "18999")
 ```
 
 
@@ -112,8 +111,7 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  - [x] metrics
  - [x] register callbacks for each messages
  - [x] add and remove peers via protocol
- - [ ] circular message buffer
- - [ ] more details about protocol in readme
+ - [ ] synchronize all types of messages (bool, string, int, complex structs, etc.)
  
 ## Contributing
 
