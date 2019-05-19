@@ -128,7 +128,12 @@ var _ = Describe("BMMC", func() {
 		It("adds given peer in peers list", func() {
 			newAddr := "localhost"
 			newPort := "49999"
-			expectedBuffer := []string{
+
+			expectedBuffer1 := []string{
+				fmt.Sprintf("%s/%s", newAddr, newPort),
+				fmt.Sprintf("%s/%s", addr2, port2),
+			}
+			expectedBuffer2 := []string{
 				fmt.Sprintf("%s/%s", newAddr, newPort),
 				fmt.Sprintf("%s/%s", addr1, port1),
 			}
@@ -136,8 +141,11 @@ var _ = Describe("BMMC", func() {
 			Expect(bmmc1.AddPeer(newAddr, newPort)).To(Succeed())
 
 			Eventually(func() []string {
+				return peerBuffer1.GetPeers()
+			}).Should(ConsistOf(expectedBuffer1))
+			Eventually(func() []string {
 				return peerBuffer2.GetPeers()
-			}).Should(ConsistOf(expectedBuffer))
+			}).Should(ConsistOf(expectedBuffer2))
 		})
 	})
 

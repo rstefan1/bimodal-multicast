@@ -139,14 +139,21 @@ func (b *Bmmc) AddMessage(msg, callbackType string) error {
 }
 
 func (b *Bmmc) AddPeer(addr, port string) error {
-	err := b.msgBuffer.AddMessage(
+	err := b.peerBuffer.AddPeer(
+		peer.NewPeer(addr, port),
+	)
+	if err != nil {
+		return fmt.Errorf("Error at adding the peer %s%s: %s", addr, port, err)
+	}
+
+	err = b.msgBuffer.AddMessage(
 		buffer.NewMessage(
 			fmt.Sprintf("%s/%s", addr, port),
 			callback.ADDPEER,
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at adding the peer (%s%s): %s", addr, port, err)
+		return fmt.Errorf("Error at adding the peer %s%s: %s", addr, port, err)
 	}
 
 	return nil
