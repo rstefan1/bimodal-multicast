@@ -53,7 +53,7 @@ import (
     }
 ```
 
-#### Note! The buffer will be updated only if the callback function call returns true.
+The buffer will be updated only if the callback function call returns true.
 
 * Create an instance for protocol
 
@@ -78,6 +78,8 @@ import (
 ```golang
     err := p.AddMessage("awesome message", "awesome-callback")
 ```
+
+For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
 
 * Get all messages from the buffer
 

@@ -29,7 +29,11 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 )
 
-const defaultBeta = 0.3
+const (
+	defaultBeta = 0.3
+	// NOCALLBACK is callback type for messages without callback
+	NOCALLBACK = callback.NOCALLBACK
+)
 
 type Bmmc struct {
 	// shared buffer with addresses of nodes in system
