@@ -41,7 +41,6 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 
 			err := peersBuf.(*peer.PeerBuffer).AddPeer(peer.NewPeer(addr, port))
 			if err != nil {
-				logger.Printf("Error at adding %s/%s peer in peers buffer in %s callback: %s", addr, port, ADDPEER, err)
 				return false, err
 			} else {
 				logger.Printf("Peer %s/%s added in peers buffer", addr, port)

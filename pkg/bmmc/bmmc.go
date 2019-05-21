@@ -78,16 +78,8 @@ func New(cfg *Config) (*Bmmc, error) {
 		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
 	}
 
-	peerBuf := peer.NewPeerBuffer()
-	if cfg.Peers != nil {
-		for _, p := range cfg.Peers {
-			pp := peer.NewPeer(p.Addr, p.Port)
-			_ = peerBuf.AddPeer(pp)
-		}
-	}
-
 	p := &Bmmc{
-		peerBuffer:  peerBuf,
+		peerBuffer:  peer.NewPeerBuffer(),
 		msgBuffer:   buffer.NewMessageBuffer(),
 		gossipRound: round.NewGossipRound(),
 	}

@@ -37,12 +37,6 @@ import (
     cfg := bmmc.Config{
         Addr:   host,
         Port:   port,
-        Peers: []bmmc.Peer{
-            {
-                Addr: host,
-                Port: port,
-            },
-        },
         Callbacks: map[string]func (string, *log.Logger) (bool, error) {
             "awesome-callback":
             func (msg string, logger *log.Logger) (bool, error) {

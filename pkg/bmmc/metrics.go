@@ -44,7 +44,8 @@ func RunWithSpec(retries int,
 
 	// run the protocol `retries` times
 	for r := 0; r < retries; r++ {
-		peers := []Peer{}
+		peersAddr := []string{}
+		peersPort := []string{}
 		nodes := []*Bmmc{}
 
 		// create file for logs
@@ -58,18 +59,18 @@ func RunWithSpec(retries int,
 		logger := log.New(f, "", 0)
 
 		// set random ports for peers
-		for i := 0; i < noPeers; i++ {
+		for p := 0; p < noPeers; p++ {
 			suggestedPort := testutil.SuggestPort()
-			peers = append(peers, Peer{Addr: "localhost", Port: suggestedPort})
+			peersAddr = append(peersAddr, "localhost")
+			peersPort = append(peersPort, suggestedPort)
 		}
 
 		// create nodes
-		for i := 0; i < noPeers; i++ {
+		for p := 0; p < noPeers; p++ {
 			n, err := New(
 				&Config{
-					Addr:      peers[i].Addr,
-					Port:      peers[i].Port,
-					Peers:     peers,
+					Addr:      peersAddr[p],
+					Port:      peersPort[p],
 					Beta:      beta,
 					Logger:    logger,
 					Callbacks: cbRegistry,
@@ -88,6 +89,13 @@ func RunWithSpec(retries int,
 		err = nodes[randomNode].AddMessage(msg, cbType)
 		if err != nil {
 			return err
+		}
+
+		// add peers in buffer
+		for p := 0; p < noPeers; p++ {
+			for i := 0; i < noPeers; i++ {
+				_ = nodes[p].AddPeer(peersAddr[i], peersPort[i])
+			}
 		}
 
 		// start nodes

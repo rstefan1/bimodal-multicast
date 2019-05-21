@@ -20,28 +20,20 @@ import (
 	"log"
 )
 
-type Peer struct {
-	Addr string
-	Port string
-}
-
 type Config struct {
 	// Addr is HTTP address for node which runs gossip and http servers
-	// Required field
+	// Required
 	Addr string
 	// Port is HTTP port for node which runs gossip  and http servers
-	// Required field
+	// Required
 	Port string
-	// PeerBuf is the list of peers
-	// Optional field
-	Peers []Peer
 	// Beta is the expected fanout for gossip rounds
-	// Optional field
+	// Optional
 	Beta float64
 	// Logger
-	// Optional field
+	// Optional
 	Logger *log.Logger
 	// Callbacks funtions
-	// Optional field
+	// Optional
 	Callbacks map[string]func(string, *log.Logger) (bool, error)
 }
