@@ -35,7 +35,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
 	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error){
 		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
-			host := strings.Split(msg.Msg, "/")
+			host := strings.Split(msg.Msg.(string), "/")
 			addr := host[0]
 			port := host[1]
 
@@ -49,7 +49,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			return true, nil
 		},
 		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
-			host := strings.Split(msg.Msg, "/")
+			host := strings.Split(msg.Msg.(string), "/")
 			addr := host[0]
 			port := host[1]
 

@@ -37,14 +37,20 @@ import (
 func getSortedBuffer(node *bmmc.Bmmc) func() []string {
 	return func() []string {
 		buf := node.GetMessages()
-		sort.Strings(buf)
-		return buf
+
+		sbuf := make([]string, len(buf))
+		for i, v := range buf {
+			sbuf[i] = fmt.Sprint(v)
+		}
+
+		sort.Strings(sbuf)
+		return sbuf
 	}
 }
 
-func fakeRegistry(cbType string, b bool, e error) map[string]func(string, *log.Logger) (bool, error) {
-	return map[string]func(string, *log.Logger) (bool, error){
-		cbType: func(msg string, logger *log.Logger) (bool, error) {
+func fakeRegistry(cbType string, b bool, e error) map[string]func(interface{}, *log.Logger) (bool, error) {
+	return map[string]func(interface{}, *log.Logger) (bool, error){
+		cbType: func(msg interface{}, logger *log.Logger) (bool, error) {
 			return b, e
 		},
 	}
@@ -57,7 +63,7 @@ var _ = Describe("BMMC", func() {
 				Port:      "1999",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -67,7 +73,7 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -88,7 +94,7 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Port:      "1999",
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -100,7 +106,7 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Port:      "1999",
 				Beta:      0.5,
-				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -109,7 +115,7 @@ var _ = Describe("BMMC", func() {
 	})
 
 	DescribeTable("when system has two nodes and one node has a message in buffer",
-		func(cbCustomRegistry map[string]func(string, *log.Logger) (bool, error),
+		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) (bool, error),
 			msg, callbackType string,
 			expectedBuf []string) {
 
@@ -152,7 +158,7 @@ var _ = Describe("BMMC", func() {
 				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
 		},
 		Entry("sync buffers with the message",
-			map[string]func(string, *log.Logger) (bool, error){},
+			map[string]func(interface{}, *log.Logger) (bool, error){},
 			"awesome-message",
 			callback.NOCALLBACK,
 			[]string{"awesome-message"}),
@@ -191,7 +197,7 @@ var _ = Describe("BMMC", func() {
 				nodes[i], err = bmmc.New(&bmmc.Config{
 					Addr:      "localhost",
 					Port:      ports[i],
-					Callbacks: map[string]func(string, *log.Logger) (bool, error){},
+					Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 				})
 				Expect(err).To(Succeed())
 			}

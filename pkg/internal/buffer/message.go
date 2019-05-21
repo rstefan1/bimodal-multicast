@@ -25,10 +25,10 @@ import (
 )
 
 type Message struct {
-	ID           string `json:"message_ID"`
-	Msg          string `json:"message_msg"`
-	CallbackType string `json:"message_callback_type"`
-	GossipCount  int    `json:"message_gossip_count"`
+	ID           string      `json:"message_ID"`
+	Msg          interface{} `json:"message_msg"`
+	CallbackType string      `json:"message_callback_type"`
+	GossipCount  int         `json:"message_gossip_count"`
 }
 
 type MessageBuffer struct {
@@ -101,11 +101,11 @@ func (msgBuffer *MessageBuffer) AddMessage(msg Message) error {
 
 // TODO write a test for this function
 // UnwrapMessageBuffer wraps a message buffer
-func (msgBuffer *MessageBuffer) UnwrapMessageBuffer() []string {
+func (msgBuffer *MessageBuffer) UnwrapMessageBuffer() []interface{} {
 	msgBuffer.Mux.Lock()
 	defer msgBuffer.Mux.Unlock()
 
-	messages := make([]string, len(msgBuffer.Messages))
+	messages := make([]interface{}, len(msgBuffer.Messages))
 	for i := range msgBuffer.Messages {
 		messages[i] = msgBuffer.Messages[i].Msg
 	}

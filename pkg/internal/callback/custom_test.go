@@ -26,18 +26,18 @@ import (
 
 var _ = Describe("CustomCallbackRegistry interface", func() {
 	It("creates new registry when given callbacks map is empty", func() {
-		cb := map[string]func(string, *log.Logger) (bool, error){}
+		cb := map[string]func(interface{}, *log.Logger) (bool, error){}
 		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 		Expect(r.callbacks).To(Equal(cb))
 	})
 
 	It("creates new registry when given callbacks map has more callbacks", func() {
-		cb := map[string]func(string, *log.Logger) (bool, error){
-			"first-callback": func(msg string, logger *log.Logger) (bool, error) {
+		cb := map[string]func(interface{}, *log.Logger) (bool, error){
+			"first-callback": func(msg interface{}, logger *log.Logger) (bool, error) {
 				return true, nil
 			},
-			"second-callback": func(msg string, logger *log.Logger) (bool, error) {
+			"second-callback": func(msg interface{}, logger *log.Logger) (bool, error) {
 				return false, nil
 			},
 		}
@@ -55,15 +55,15 @@ var _ = Describe("CustomCallbackRegistry interface", func() {
 	It("returns proper callback func when given callback type exists in registry", func() {
 		var (
 			cbType string
-			cbFn   func(string, *log.Logger) (bool, error)
+			cbFn   func(interface{}, *log.Logger) (bool, error)
 		)
 
 		cbType = "my-callback"
-		cbFn = func(msg string, logger *log.Logger) (bool, error) {
+		cbFn = func(msg interface{}, logger *log.Logger) (bool, error) {
 			return true, nil
 		}
 
-		cb := map[string]func(string, *log.Logger) (bool, error){
+		cb := map[string]func(interface{}, *log.Logger) (bool, error){
 			cbType: cbFn,
 		}
 		r, err := NewCustomRegistry(cb)
@@ -75,7 +75,7 @@ var _ = Describe("CustomCallbackRegistry interface", func() {
 	})
 
 	It("returns error when given callback type doesn't exist in registry", func() {
-		cb := map[string]func(string, *log.Logger) (bool, error){}
+		cb := map[string]func(interface{}, *log.Logger) (bool, error){}
 		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 
