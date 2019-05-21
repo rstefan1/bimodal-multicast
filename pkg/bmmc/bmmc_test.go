@@ -21,6 +21,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -32,11 +33,29 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 )
 
-// getBuffer is a helper func that returns a sorted buffer
-func getBuffer(node *bmmc.Bmmc) func() []interface{} {
-	return func() []interface{} {
-		return node.GetMessages()
+func getBuffer(node *bmmc.Bmmc) []string {
+	buf := node.GetMessages()
+
+	sbuf := make([]string, len(buf))
+	for i, v := range buf {
+		sbuf[i] = fmt.Sprint(v)
 	}
+
+	return sbuf
+}
+
+func getBufferFn(node *bmmc.Bmmc) func() []string {
+	return func() []string {
+		return getBuffer(node)
+	}
+}
+
+func interfaceToString(b []interface{}) []string {
+	s := make([]string, len(b))
+	for i, v := range b {
+		s[i] = fmt.Sprint(v)
+	}
+	return s
 }
 
 func fakeRegistry(cbType string, b bool, e error) map[string]func(interface{}, *log.Logger) (bool, error) {
@@ -142,10 +161,10 @@ var _ = Describe("BMMC", func() {
 
 			// add a message in first node
 			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
-			Eventually(getBuffer(node1), time.Second).Should(
+			Eventually(getBufferFn(node1), time.Second).Should(
 				ConsistOf(append(extraMsgBuffer, msg)))
 
-			Eventually(getBuffer(node2), time.Second).Should(
+			Eventually(getBufferFn(node2), time.Second).Should(
 				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
 		},
 		Entry("sync buffers with the message",
@@ -211,7 +230,7 @@ var _ = Describe("BMMC", func() {
 
 				randomNode := rand.Intn(len)
 				Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
-				Eventually(getBuffer(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
+				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
 
 				// start protocol for all nodes
 				for p := 0; p < len; p++ {
@@ -224,7 +243,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with the message", func() {
 				for i := range nodes {
-					Eventually(getBuffer(nodes[i]), time.Second*3).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+					Eventually(getBufferFn(nodes[i]), time.Second*3).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 				}
 			})
 		})
@@ -237,12 +256,13 @@ var _ = Describe("BMMC", func() {
 
 				randomNode := rand.Intn(len)
 				for i := 0; i < 3; i++ {
-					msg := fmt.Sprintf("%d", i)
+					msg := i
 					expectedBuf = append(expectedBuf, msg)
 					Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 				}
 
-				Eventually(getBuffer(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
+				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
+					ConsistOf(interfaceToString(expectedBuf)))
 
 				// start protocol for all nodes
 				for p := 0; p < len; p++ {
@@ -255,7 +275,8 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getBuffer(nodes[i]), time.Second*5).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
 		})
@@ -268,11 +289,13 @@ var _ = Describe("BMMC", func() {
 				randomNodes := [3]int{2, 4, 6}
 
 				for i := 0; i < 3; i++ {
-					msg := fmt.Sprintf("%d", i)
+					msg := i
+
 					expectedBuf = append(expectedBuf, msg)
 					Expect(nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 
-					Eventually(getBuffer(nodes[randomNodes[i]]), time.Second).Should(ConsistOf([]interface{}{msg}))
+					Eventually(getBufferFn(nodes[randomNodes[i]]), time.Second).Should(
+						ConsistOf([]string{strconv.Itoa(msg)}))
 				}
 
 				// start protocol for all nodes
@@ -286,7 +309,8 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getBuffer(nodes[i]), time.Second*5).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
 		})
