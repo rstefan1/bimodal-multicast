@@ -4,7 +4,8 @@
 
 This is an implementation of the Bimodal Multicast Protocol written in GO.
 
-Currently can only sync string messages. This will be improved in v0.2.
+You can synchronize all types of messages: bool, string, int, 
+complex structs, etc.
 
 ## Overview
 
@@ -31,15 +32,12 @@ import (
 * Configure the protocol
 
 ```golang
-    host := "localhost"
-    port := "14999"
-
     cfg := bmmc.Config{
-        Addr:   host,
-        Port:   port,
-        Callbacks: map[string]func (string, *log.Logger) (bool, error) {
+        Addr:      "localhost",
+        Port:      "14999",
+        Callbacks: map[string]func (interface{}, *log.Logger) (bool, error) {
             "awesome-callback":
-            func (msg string, logger *log.Logger) (bool, error) {
+            func (msg interface{}, logger *log.Logger) (bool, error) {
                 fmt.Println("The message is:", msg)
                 return true, nil
             },
@@ -71,6 +69,8 @@ The buffer will be updated only if the callback function call returns true.
 
 ```golang
     err := p.AddMessage("awesome message", "awesome-callback")
+    
+    err := p.AddMessage(12345, "awesome-callback")
 ```
 
 For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
