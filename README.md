@@ -107,7 +107,7 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  - [x] metrics
  - [x] register callbacks for each messages
  - [x] add and remove peers via protocol
- - [ ] synchronize all types of messages (bool, string, int, complex structs, etc.)
+ - [x] synchronize all types of messages (bool, string, int, complex structs, etc.)
  
 ## Contributing
 
