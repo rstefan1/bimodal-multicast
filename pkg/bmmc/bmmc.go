@@ -130,7 +130,7 @@ func (b *Bmmc) Stop() {
 	close(b.stop)
 }
 
-func (b *Bmmc) AddMessage(msg, callbackType string) error {
+func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
 	return b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 

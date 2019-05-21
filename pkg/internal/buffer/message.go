@@ -36,7 +36,7 @@ type MessageBuffer struct {
 	Mux      *sync.Mutex `json:"message_buffer_mux"`
 }
 
-func NewMessage(m, callbackType string) Message {
+func NewMessage(m interface{}, callbackType string) Message {
 	return Message{
 		ID:           fmt.Sprintf("%s%d", time.Now().Format("20060102150405"), rand.Int31()),
 		Msg:          m,
