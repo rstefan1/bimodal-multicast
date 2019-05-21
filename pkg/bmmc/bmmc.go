@@ -67,7 +67,7 @@ func New(cfg *Config) (*Bmmc, error) {
 
 	callbacks := cfg.Callbacks
 	if callbacks == nil {
-		callbacks = map[string]func(string, *log.Logger) (bool, error){}
+		callbacks = map[string]func(interface{}, *log.Logger) (bool, error){}
 	}
 	cbCustomRegistry, err := callback.NewCustomRegistry(callbacks)
 	if err != nil {
@@ -173,6 +173,6 @@ func (b *Bmmc) RemovePeer(addr, port string) error {
 	return nil
 }
 
-func (b *Bmmc) GetMessages() []string {
+func (b *Bmmc) GetMessages() []interface{} {
 	return b.msgBuffer.UnwrapMessageBuffer()
 }

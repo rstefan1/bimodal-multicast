@@ -37,7 +37,7 @@ import (
 func newBMMC(addr, port string, peerBuffer *peer.PeerBuffer, msgBuffer *buffer.MessageBuffer) *Bmmc {
 	gossipRound := round.NewGossipRound()
 
-	cbCustomRegistry, err := callback.NewCustomRegistry(map[string]func(string, *log.Logger) (bool, error){})
+	cbCustomRegistry, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) (bool, error){})
 	Expect(err).To(Succeed())
 	cbDefaultRegistry, err := callback.NewDefaultRegistry()
 	Expect(err).To(Succeed())
@@ -119,7 +119,13 @@ var _ = Describe("BMMC", func() {
 			Expect(bmmc1.AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 
 			Eventually(func() []string {
-				return bmmc1.GetMessages()
+				buf := bmmc1.GetMessages()
+
+				sbuf := make([]string, len(buf))
+				for i, v := range buf {
+					sbuf[i] = fmt.Sprint(v)
+				}
+				return sbuf
 			}).Should(ConsistOf(expectedBuffer))
 		})
 	})
