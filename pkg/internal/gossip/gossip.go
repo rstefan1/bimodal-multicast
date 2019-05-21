@@ -75,9 +75,10 @@ func (g *Gossiper) gossipRound(stop <-chan struct{}) {
 			g.gossipRoundNumber.Increment()
 
 			// gossipLen is number of nodes which will receive gossip message.
-			// It will be 0 if the node has empty peers list.
+			// It will be 0 if the node has empty peers buffer or if the node has
+			// empty message buffer.
 			var gossipLen int
-			if g.peerBuffer.Length() == 0 {
+			if g.peerBuffer.Length() == 0 || g.msgBuffer.Length() == 0 {
 				gossipLen = 0
 			} else {
 				gossipLen = int(g.beta*float64(g.peerBuffer.Length())/float64(g.gossipRoundNumber.GetNumber())) + 1
