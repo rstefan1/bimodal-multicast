@@ -225,7 +225,7 @@ var _ = Describe("BMMC", func() {
 				// start protocol for all nodes
 				for p := 0; p < len; p++ {
 					for i := 0; i < len; i++ {
-						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+						_ = nodes[p].AddPeer(addrs[i], ports[i])
 					}
 					Expect(nodes[p].Start())
 				}
@@ -256,7 +256,7 @@ var _ = Describe("BMMC", func() {
 				// start protocol for all nodes
 				for p := 0; p < len; p++ {
 					for i := 0; i < len; i++ {
-						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+						_ = nodes[p].AddPeer(addrs[i], ports[i])
 					}
 					Expect(nodes[p].Start())
 				}
@@ -287,7 +287,7 @@ var _ = Describe("BMMC", func() {
 				// start protocol for all nodes
 				for p := 0; p < len; p++ {
 					for i := 0; i < len; i++ {
-						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+						_ = nodes[p].AddPeer(addrs[i], ports[i])
 					}
 					Expect(nodes[p].Start())
 				}
