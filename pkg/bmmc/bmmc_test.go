@@ -52,23 +52,9 @@ func fakeRegistry(cbType string, b bool, e error) map[string]func(string, *log.L
 
 var _ = Describe("BMMC", func() {
 	When("creates new protocol instance with broken config", func() {
-		var (
-			peers []bmmc.Peer
-		)
-
-		BeforeEach(func() {
-			peers = []bmmc.Peer{
-				{
-					Addr: "localhost",
-					Port: "1999",
-				},
-			}
-		})
-
 		It("returns error when address is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
 				Port:      "1999",
-				Peers:     peers,
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
 				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
@@ -79,7 +65,6 @@ var _ = Describe("BMMC", func() {
 		It("returns error when port is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
 				Addr:      "localhost",
-				Peers:     peers,
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
 				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
@@ -92,7 +77,6 @@ var _ = Describe("BMMC", func() {
 				Addr:   "localhost",
 				Port:   "1999",
 				Beta:   0.5,
-				Peers:  peers,
 				Logger: log.New(os.Stdout, "", 0),
 			}
 			_, err := bmmc.New(&cfg)
@@ -103,7 +87,6 @@ var _ = Describe("BMMC", func() {
 			cfg := bmmc.Config{
 				Addr:      "localhost",
 				Port:      "1999",
-				Peers:     peers,
 				Logger:    log.New(os.Stdout, "", 0),
 				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
 			}
@@ -116,24 +99,12 @@ var _ = Describe("BMMC", func() {
 			cfg := bmmc.Config{
 				Addr:      "localhost",
 				Port:      "1999",
-				Peers:     peers,
 				Beta:      0.5,
 				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
 			Expect(cfg.Logger).To(Not(BeNil()))
-		})
-
-		It("doens't returns error when peers list is nil", func() {
-			cfg := bmmc.Config{
-				Addr:      "localhost",
-				Port:      "1999",
-				Beta:      0.5,
-				Callbacks: map[string]func(string, *log.Logger) (bool, error){},
-			}
-			_, err := bmmc.New(&cfg)
-			Expect(err).To(Succeed())
 		})
 	})
 
@@ -145,21 +116,9 @@ var _ = Describe("BMMC", func() {
 			port1 := testutil.SuggestPort()
 			port2 := testutil.SuggestPort()
 
-			peers := []bmmc.Peer{
-				{
-					Addr: "localhost",
-					Port: port1,
-				},
-				{
-					Addr: "localhost",
-					Port: port2,
-				},
-			}
-
 			node1, err := bmmc.New(&bmmc.Config{
 				Addr:      "localhost",
 				Port:      port1,
-				Peers:     peers,
 				Beta:      0.5,
 				Callbacks: cbCustomRegistry,
 			})
@@ -168,7 +127,6 @@ var _ = Describe("BMMC", func() {
 			node2, err := bmmc.New(&bmmc.Config{
 				Addr:      "localhost",
 				Port:      port2,
-				Peers:     peers,
 				Beta:      0.5,
 				Callbacks: cbCustomRegistry,
 			})
@@ -177,11 +135,21 @@ var _ = Describe("BMMC", func() {
 			Expect(node1.Start())
 			Expect(node2.Start())
 
+			Expect(node1.AddPeer("localhost", port2)).To(Succeed())
+			Expect(node2.AddPeer("localhost", port1)).To(Succeed())
+
+			extraMsgBuffer := []string{
+				fmt.Sprintf("localhost/%s", port1),
+				fmt.Sprintf("localhost/%s", port2),
+			}
+
 			// add a message in first node
 			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
-			Eventually(getSortedBuffer(node1), time.Second).Should(Equal([]string{msg}))
+			Eventually(getSortedBuffer(node1), time.Second).Should(
+				ConsistOf(append(extraMsgBuffer, msg)))
 
-			Eventually(getSortedBuffer(node2), time.Second).Should(ConsistOf(expectedBuf))
+			Eventually(getSortedBuffer(node2), time.Second).Should(
+				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
 		},
 		Entry("sync buffers with the message",
 			map[string]func(string, *log.Logger) (bool, error){},
@@ -202,28 +170,27 @@ var _ = Describe("BMMC", func() {
 
 	When("system has ten nodes", func() {
 		const len = 10
-		var nodes [len]*bmmc.Bmmc
+		var (
+			nodes          [len]*bmmc.Bmmc
+			ports          [len]string
+			addrs          [len]string
+			extraMsgBuffer []string
+		)
 
 		BeforeEach(func() {
-			var (
-				ports [len]string
-				peers []bmmc.Peer
-				err   error
-			)
+			var err error
+			extraMsgBuffer = make([]string, len)
 
 			for i := 0; i < len; i++ {
 				ports[i] = testutil.SuggestPort()
-				peers = append(peers, bmmc.Peer{
-					Addr: "localhost",
-					Port: ports[i],
-				})
+				addrs[i] = "localhost"
+				extraMsgBuffer[i] = fmt.Sprintf("%s/%s", addrs[i], ports[i])
 			}
 
 			for i := 0; i < len; i++ {
 				nodes[i], err = bmmc.New(&bmmc.Config{
 					Addr:      "localhost",
 					Port:      ports[i],
-					Peers:     peers,
 					Callbacks: map[string]func(string, *log.Logger) (bool, error){},
 				})
 				Expect(err).To(Succeed())
@@ -244,19 +211,23 @@ var _ = Describe("BMMC", func() {
 
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
+
 				randomNode := rand.Intn(len)
 				Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
-				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
 
 				// start protocol for all nodes
-				for i := 0; i < len; i++ {
-					Expect(nodes[i].Start())
+				for p := 0; p < len; p++ {
+					for i := 0; i < len; i++ {
+						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+					}
+					Expect(nodes[p].Start())
 				}
 			})
 
 			It("sync all nodes with the message", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second).Should(Equal(expectedBuf))
+					Eventually(getSortedBuffer(nodes[i]), time.Second*3).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 				}
 			})
 		})
@@ -274,17 +245,20 @@ var _ = Describe("BMMC", func() {
 					Expect(nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 				}
 
-				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(Equal(expectedBuf))
+				Eventually(getSortedBuffer(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
 
 				// start protocol for all nodes
-				for i := 0; i < len; i++ {
-					Expect(nodes[i].Start())
+				for p := 0; p < len; p++ {
+					for i := 0; i < len; i++ {
+						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+					}
+					Expect(nodes[p].Start())
 				}
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second*2).Should(Equal(expectedBuf))
+					Eventually(getSortedBuffer(nodes[i]), time.Second*5).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 				}
 			})
 		})
@@ -301,18 +275,21 @@ var _ = Describe("BMMC", func() {
 					expectedBuf = append(expectedBuf, msg)
 					Expect(nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
 
-					Eventually(getSortedBuffer(nodes[randomNodes[i]]), time.Second).Should(Equal([]string{msg}))
+					Eventually(getSortedBuffer(nodes[randomNodes[i]]), time.Second).Should(ConsistOf([]string{msg}))
 				}
 
 				// start protocol for all nodes
-				for i := 0; i < len; i++ {
-					Expect(nodes[i].Start())
+				for p := 0; p < len; p++ {
+					for i := 0; i < len; i++ {
+						Expect(nodes[p].AddPeer(addrs[i], ports[i])).To(Succeed())
+					}
+					Expect(nodes[p].Start())
 				}
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getSortedBuffer(nodes[i]), time.Second*3).Should(Equal(expectedBuf))
+					Eventually(getSortedBuffer(nodes[i]), time.Second*5).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 				}
 			})
 		})

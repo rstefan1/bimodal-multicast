@@ -52,6 +52,15 @@ func NewMessageBuffer() *MessageBuffer {
 	}
 }
 
+// Length return the length of message buffer
+func (msgBuffer *MessageBuffer) Length() int {
+	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
+	l := len(msgBuffer.Messages)
+	return l
+}
+
 // Digest returns a slice with ID of messages from given buffer
 func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 	digestBuffer := &DigestBuffer{}
@@ -66,7 +75,7 @@ func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 	return digestBuffer
 }
 
-// AlreadyExists return true if the message already exists in message buffer
+// alreadyExists return true if the message already exists in message buffer
 func (msgBuffer *MessageBuffer) alreadyExists(msg Message) bool {
 	// Important! Whoever calls this function must LOCK the buffer
 	for i := range msgBuffer.Messages {
