@@ -20,6 +20,7 @@ import (
 	"log"
 )
 
+// Config is the config for the protocol
 type Config struct {
 	// Addr is HTTP address for node which runs gossip and http servers
 	// Required

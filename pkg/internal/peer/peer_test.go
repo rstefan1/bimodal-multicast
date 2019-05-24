@@ -31,7 +31,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 				{addr: "localhost", port: "10000"},
 				{addr: "localhost", port: "20000"},
 			}
-			pBuf := &PeerBuffer{
+			pBuf := &Buffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
@@ -42,7 +42,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 
 	DescribeTable("when alreadyExists() is called",
 		func(peers []Peer, p Peer, expected bool) {
-			pBuf := &PeerBuffer{
+			pBuf := &Buffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
@@ -84,7 +84,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 
 	DescribeTable("when AddPeer() is called",
 		func(peers []Peer, p Peer, expectError bool, expectedPeers []Peer) {
-			pBuf := &PeerBuffer{
+			pBuf := &Buffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
@@ -131,7 +131,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 				{addr: "localhost", port: "10000"},
 				{addr: "localhost", port: "20000"},
 			}
-			pBuf := &PeerBuffer{
+			pBuf := &Buffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
@@ -146,7 +146,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 
 	DescribeTable("when RemovePeer() is called",
 		func(peers []Peer, p Peer, expectedPeers []Peer) {
-			pBuf := &PeerBuffer{
+			pBuf := &Buffer{
 				peers: peers,
 				mux:   &sync.Mutex{},
 			}
@@ -198,21 +198,4 @@ var _ = Describe("Peer Buffer Interface", func() {
 				{addr: "localhost", port: "20000"},
 			}),
 	)
-
-	// When("Add() is called", func() {
-	// 	It("adds given peer in the peers buffer", func() {
-	// 		peers := []Peer{
-	// 			{addr: "localhost", port: "10000"},
-	// 			{addr: "localhost", port: "20000"},
-	// 		}
-	// 		expectedPeers := append(peers, Peer{addr: "localhost", port: "30000"})
-
-	// 		pBuf := &PeerBuffer{
-	// 			peers: peers,
-	// 			mux:   &sync.Mutex{},
-	// 		}
-
-	// 		Expect(pBuf.Length()).To(Equal(len(peers)))
-	// 	})
-	// })
 })

@@ -18,6 +18,7 @@ package round
 
 import "sync"
 
+// GossipRound is the number of gossiper rounds
 type GossipRound struct {
 	Number int64       `json:"gossip_round_number"`
 	Mux    *sync.Mutex `json:"gossip_round_mux"`

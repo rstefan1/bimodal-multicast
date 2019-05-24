@@ -31,7 +31,7 @@ type Config struct {
 	// Port is the port for node which runs gossip round
 	Port string
 	// PeerBuf is the list of peers
-	PeerBuf *peer.PeerBuffer
+	PeerBuf *peer.Buffer
 	// MsgBuf is the list of messages
 	MsgBuf *buffer.MessageBuffer
 	// GossipRound is the gossip round number

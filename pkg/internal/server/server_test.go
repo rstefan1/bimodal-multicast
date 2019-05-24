@@ -60,7 +60,7 @@ var _ = Describe("Server", func() {
 		mockServerPort  string
 		serverCfg       Config
 		gossipRound     *round.GossipRound
-		peerBuffer      *peer.PeerBuffer
+		peerBuffer      *peer.Buffer
 		serverMsgBuffer *buffer.MessageBuffer
 		serverStop      chan struct{}
 		rcvMsg          receivedMessages

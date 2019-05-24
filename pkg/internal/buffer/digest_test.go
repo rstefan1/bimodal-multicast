@@ -161,7 +161,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns true when the buffer contains the given digest at the beginning", func() {
-			digestBuffer := &DigestBuffer{}
+			digestBuffer = &DigestBuffer{}
 			digestBuffer.Digests = append(digestBuffer.Digests, digest)
 			digestBuffer = createDigestFromInitialBuffer(digestID, 0, digestCount, digestBuffer)
 
@@ -174,7 +174,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returs true when the buffer contains the given digest in the mIDdle", func() {
-			_, digestBuffer := createDigest(digestID, digestCount/2)
+			_, digestBuffer = createDigest(digestID, digestCount/2)
 			digestBuffer.Digests = append(digestBuffer.Digests, digest)
 			digestBuffer = createDigestFromInitialBuffer(digestID, digestCount/2, digestCount, digestBuffer)
 
@@ -229,7 +229,7 @@ var _ = Describe("DigestBuffer interface", func() {
 		})
 
 		It("returns an empty message buffer if the given message buffer does not have digests anymore", func() {
-			msgBuffer := NewMessageBuffer()
+			msgBuffer = NewMessageBuffer()
 			newMsgBuffer := digestBuffer.GetMissingMessageBuffer(msgBuffer)
 			mux1 := fmt.Sprintf("%p", newMsgBuffer.Mux)
 			mux2 := fmt.Sprintf("%p", msgBuffer.Mux)

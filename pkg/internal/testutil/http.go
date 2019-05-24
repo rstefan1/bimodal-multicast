@@ -21,6 +21,7 @@ import (
 	"strconv"
 )
 
+// SuggestPort suggest an unused port
 func SuggestPort() string {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
@@ -31,6 +32,8 @@ func SuggestPort() string {
 	if err != nil {
 		panic(err)
 	}
+
+	// nolint:errcheck
 	defer l.Close()
 
 	return strconv.Itoa(l.Addr().(*net.TCPAddr).Port)

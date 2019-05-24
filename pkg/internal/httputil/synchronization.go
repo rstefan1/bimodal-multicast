@@ -25,7 +25,7 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
-// httppSynchronization is synchronization message for http server
+// HTTPSynchronization is synchronization message for http server
 type HTTPSynchronization struct {
 	Addr     string               `json:"http_synchronization_addr"`
 	Port     string               `json:"http_synchronization_port"`
