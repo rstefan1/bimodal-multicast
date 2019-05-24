@@ -34,7 +34,9 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 )
 
-func newBMMC(addr, port string, peerBuffer *peer.PeerBuffer, msgBuffer *buffer.MessageBuffer) *Bmmc {
+const localhost = "localhost"
+
+func newBMMC(addr, port string, peerBuffer *peer.Buffer, msgBuffer *buffer.MessageBuffer) *Bmmc {
 	gossipRound := round.NewGossipRound()
 
 	cbCustomRegistry, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) (bool, error){})
@@ -78,16 +80,16 @@ var _ = Describe("BMMC", func() {
 		addr1, addr2 string
 		port1, port2 string
 		bmmc1, bmmc2 *Bmmc
-		peerBuffer1  *peer.PeerBuffer
-		peerBuffer2  *peer.PeerBuffer
+		peerBuffer1  *peer.Buffer
+		peerBuffer2  *peer.Buffer
 		msgBuffer1   *buffer.MessageBuffer
 		msgBuffer2   *buffer.MessageBuffer
 	)
 
 	BeforeEach(func() {
-		addr1 = "localhost"
+		addr1 = localhost
 		port1 = testutil.SuggestPort()
-		addr2 = "localhost"
+		addr2 = localhost
 		port2 = testutil.SuggestPort()
 
 		peerBuffer1 = peer.NewPeerBuffer()
@@ -132,7 +134,7 @@ var _ = Describe("BMMC", func() {
 
 	When("add new peer", func() {
 		It("adds given peer in peers list", func() {
-			newAddr := "localhost"
+			newAddr := localhost
 			newPort := "49999"
 
 			expectedBuffer1 := []string{
@@ -157,7 +159,7 @@ var _ = Describe("BMMC", func() {
 
 	When("remove a peer", func() {
 		It("removes given peer from peers list", func() {
-			newAddr := "localhost"
+			newAddr := localhost
 			newPort := "49999"
 			Expect(peerBuffer2.AddPeer(peer.NewPeer(newAddr, newPort))).To(Succeed())
 			expectedBuffer := []string{

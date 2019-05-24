@@ -31,9 +31,10 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
+// Server is exported type for server
 type Server struct {
 	server            *http.Server
-	peerBuffer        *peer.PeerBuffer
+	peerBuffer        *peer.Buffer
 	msgBuffer         *buffer.MessageBuffer
 	gossipRoundNumber *round.GossipRound
 	logger            *log.Logger
@@ -100,7 +101,7 @@ func runDefaultCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string
 	}
 }
 
-func gossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+func gossipHandler(_ http.ResponseWriter, r *http.Request, cfg Config) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
 	if err != nil {
 		cfg.Logger.Printf("%s", err)
@@ -130,7 +131,7 @@ func gossipHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	}
 }
 
-func solicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+func solicitationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) {
 	missingDigestBuffer, tAddr, tPort, _, err := httputil.ReceiveSolicitation(r)
 	if err != nil {
 		cfg.Logger.Printf("%s", err)
@@ -155,7 +156,7 @@ func solicitationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
 	}
 }
 
-func synchronizationHandler(w http.ResponseWriter, r *http.Request, cfg Config) {
+func synchronizationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) {
 	host := strings.Split(r.Host, ":")
 	hostAddr := host[0]
 	hostPort := host[1]
@@ -197,6 +198,7 @@ func gracefullyShutdown(s *Server) {
 	}
 }
 
+// New creates new server
 func New(cfg Config) *Server {
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
@@ -223,6 +225,7 @@ func New(cfg Config) *Server {
 	}
 }
 
+// Start starts the server
 func (s *Server) Start(stop <-chan struct{}) error {
 	errChan := make(chan error)
 

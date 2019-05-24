@@ -49,8 +49,8 @@ var _ = Describe("Gossiper", func() {
 		gossip       *Gossiper
 		gossipPort   string
 		mockPort     string
-		gossipPeers  *peer.PeerBuffer
-		mockPeers    *peer.PeerBuffer
+		gossipPeers  *peer.Buffer
+		mockPeers    *peer.Buffer
 		gossipMsgBuf *buffer.MessageBuffer
 		mockMsgBuf   *buffer.MessageBuffer
 		gossipRound  *round.GossipRound

@@ -24,6 +24,7 @@ import (
 	"time"
 )
 
+// Message is a message
 type Message struct {
 	ID           string      `json:"message_ID"`
 	Msg          interface{} `json:"message_msg"`
@@ -31,11 +32,13 @@ type Message struct {
 	GossipCount  int         `json:"message_gossip_count"`
 }
 
+// MessageBuffer is the buffer with messages
 type MessageBuffer struct {
 	Messages []Message   `json:"message_buffer_list"`
 	Mux      *sync.Mutex `json:"message_buffer_mux"`
 }
 
+// NewMessage creates new message
 func NewMessage(m interface{}, callbackType string) Message {
 	return Message{
 		ID:           fmt.Sprintf("%s%d", time.Now().Format("20060102150405"), rand.Int31()),
@@ -61,7 +64,7 @@ func (msgBuffer *MessageBuffer) Length() int {
 	return l
 }
 
-// Digest returns a slice with ID of messages from given buffer
+// DigestBuffer returns a DigestBuffer from given buffer
 func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 	digestBuffer := &DigestBuffer{}
 
@@ -99,8 +102,8 @@ func (msgBuffer *MessageBuffer) AddMessage(msg Message) error {
 	return nil
 }
 
-// TODO write a test for this function
 // UnwrapMessageBuffer wraps a message buffer
+// TODO write a test for this function
 func (msgBuffer *MessageBuffer) UnwrapMessageBuffer() []interface{} {
 	msgBuffer.Mux.Lock()
 	defer msgBuffer.Mux.Unlock()
@@ -130,21 +133,22 @@ func compareMessagesFn(msg []Message) func(int, int) bool {
 	}
 }
 
-func (a *MessageBuffer) SameMessages(b *MessageBuffer) bool {
-	a.Mux.Lock()
+// SameMessages returns true if given message buffer contains same messages
+func (msgBuffer *MessageBuffer) SameMessages(b *MessageBuffer) bool {
+	msgBuffer.Mux.Lock()
 	b.Mux.Lock()
-	defer a.Mux.Unlock()
+	defer msgBuffer.Mux.Unlock()
 	defer b.Mux.Unlock()
 
-	if len(a.Messages) != len(b.Messages) {
+	if len(msgBuffer.Messages) != len(b.Messages) {
 		return false
 	}
 
-	sort.Slice(a.Messages, compareMessagesFn(a.Messages))
+	sort.Slice(msgBuffer.Messages, compareMessagesFn(msgBuffer.Messages))
 	sort.Slice(b.Messages, compareMessagesFn(b.Messages))
 
-	for i := range a.Messages {
-		if a.Messages[i].ID != b.Messages[i].ID {
+	for i := range msgBuffer.Messages {
+		if msgBuffer.Messages[i].ID != b.Messages[i].ID {
 			return false
 		}
 	}

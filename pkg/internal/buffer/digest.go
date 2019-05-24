@@ -21,10 +21,12 @@ import (
 	"sync"
 )
 
+// Digest is a digest of message
 type Digest struct {
 	ID string `json:"digest_id"`
 }
 
+// DigestBuffer is a digest buffer
 type DigestBuffer struct {
 	Digests []Digest `json:"digest_buffer_list"`
 }
@@ -45,16 +47,16 @@ func compareDigestsFn(digest []Digest) func(int, int) bool {
 }
 
 // SameDigests returns true if given digest are same
-func (a *DigestBuffer) SameDigests(b *DigestBuffer) bool {
-	if len(a.Digests) != len(b.Digests) {
+func (digestBuffer *DigestBuffer) SameDigests(b *DigestBuffer) bool {
+	if len(digestBuffer.Digests) != len(b.Digests) {
 		return false
 	}
 
-	sort.Slice(a.Digests, compareDigestsFn(a.Digests))
+	sort.Slice(digestBuffer.Digests, compareDigestsFn(digestBuffer.Digests))
 	sort.Slice(b.Digests, compareDigestsFn(b.Digests))
 
-	for i := range a.Digests {
-		if a.Digests[i].ID != b.Digests[i].ID {
+	for i := range digestBuffer.Digests {
+		if digestBuffer.Digests[i].ID != b.Digests[i].ID {
 			return false
 		}
 	}
@@ -64,12 +66,12 @@ func (a *DigestBuffer) SameDigests(b *DigestBuffer) bool {
 
 // GetMissingDigests returns the disjunction between the digest buffers
 // digestBufferA - digestBufferB
-func (a *DigestBuffer) GetMissingDigests(b *DigestBuffer) *DigestBuffer {
+func (digestBuffer *DigestBuffer) GetMissingDigests(b *DigestBuffer) *DigestBuffer {
 	missingDigestBuffer := &DigestBuffer{
 		Digests: []Digest{},
 	}
 
-	sort.Slice(a.Digests, compareDigestsFn(a.Digests))
+	sort.Slice(digestBuffer.Digests, compareDigestsFn(digestBuffer.Digests))
 	sort.Slice(b.Digests, compareDigestsFn(b.Digests))
 
 	mapB := make(map[string]bool)
@@ -77,9 +79,9 @@ func (a *DigestBuffer) GetMissingDigests(b *DigestBuffer) *DigestBuffer {
 		mapB[b.Digests[i].ID] = true
 	}
 
-	for i := range a.Digests {
-		if _, e := mapB[a.Digests[i].ID]; !e {
-			missingDigestBuffer.Digests = append(missingDigestBuffer.Digests, a.Digests[i])
+	for i := range digestBuffer.Digests {
+		if _, e := mapB[digestBuffer.Digests[i].ID]; !e {
+			missingDigestBuffer.Digests = append(missingDigestBuffer.Digests, digestBuffer.Digests[i])
 		}
 	}
 
@@ -103,17 +105,18 @@ func (digestBuffer *DigestBuffer) Length() int {
 
 // GetMissingMessageBuffer returns messages buffer from given digest buffer
 func (digestBuffer *DigestBuffer) GetMissingMessageBuffer(msgBuffer *MessageBuffer) *MessageBuffer {
+	msgBuffer.Mux.Lock()
+	defer msgBuffer.Mux.Unlock()
+
 	missingMsgBuffer := &MessageBuffer{
 		Mux: &sync.Mutex{},
 	}
 
-	msgBuffer.Mux.Lock()
 	for _, msg := range msgBuffer.Messages {
 		if digestBuffer.ContainsDigest(Digest{ID: msg.ID}) {
 			missingMsgBuffer.Messages = append(missingMsgBuffer.Messages, msg)
 		}
 	}
-	msgBuffer.Mux.Unlock()
 
 	// TODO what happens if the buffer does not have digests anymore
 	return missingMsgBuffer

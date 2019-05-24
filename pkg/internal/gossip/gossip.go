@@ -26,9 +26,10 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
+// Gossiper is the gossiper
 type Gossiper struct {
 	// buffer with addresses of nodes in system
-	peerBuffer *peer.PeerBuffer
+	peerBuffer *peer.Buffer
 	// buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// gossipAddr is the gossip server address
@@ -109,11 +110,13 @@ func (g *Gossiper) gossipRound(stop <-chan struct{}) {
 	}
 }
 
+// Start starts the gossiper
 func (g *Gossiper) Start(stop <-chan struct{}) {
 	g.logger.Printf("Starting Gossiper on %s:%s", g.gossipAddr, g.gossipPort)
 	g.gossipRound(stop)
 }
 
+// New creates new Gossiper
 func New(cfg Config) *Gossiper {
 	return &Gossiper{
 		peerBuffer:        cfg.PeerBuf,

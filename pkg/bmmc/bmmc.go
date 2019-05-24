@@ -35,9 +35,10 @@ const (
 	NOCALLBACK = callback.NOCALLBACK
 )
 
+// Bmmc is the protocol
 type Bmmc struct {
 	// shared buffer with addresses of nodes in system
-	peerBuffer *peer.PeerBuffer
+	peerBuffer *peer.Buffer
 	// shared buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
 	// gossip round number
@@ -130,10 +131,12 @@ func (b *Bmmc) Stop() {
 	close(b.stop)
 }
 
+// AddMessage adds new message in messages buffer
 func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
 	return b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 
+// AddPeer adds new peer in peers buffer
 func (b *Bmmc) AddPeer(addr, port string) error {
 	err := b.peerBuffer.AddPeer(
 		peer.NewPeer(addr, port),
@@ -155,6 +158,7 @@ func (b *Bmmc) AddPeer(addr, port string) error {
 	return nil
 }
 
+// RemovePeer removes given peer from peers buffer
 func (b *Bmmc) RemovePeer(addr, port string) error {
 	b.peerBuffer.RemovePeer(
 		peer.NewPeer(addr, port),
@@ -173,6 +177,7 @@ func (b *Bmmc) RemovePeer(addr, port string) error {
 	return nil
 }
 
+// GetMessages returns a slice with all messages from messages buffer
 func (b *Bmmc) GetMessages() []interface{} {
 	return b.msgBuffer.UnwrapMessageBuffer()
 }

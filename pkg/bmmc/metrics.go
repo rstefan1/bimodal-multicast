@@ -26,6 +26,8 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 )
 
+// RunWithSpec runs the protocol with given specification
+// nolint:gocyclo
 func RunWithSpec(retries int,
 	noPeers int,
 	loss float64,
@@ -37,7 +39,7 @@ func RunWithSpec(retries int,
 	// create path for logs
 	logPath := "metrics/logs"
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-		if err := os.Mkdir(logPath, 0777); err != nil {
+		if err := os.Mkdir(logPath, 0750); err != nil {
 			return err
 		}
 	}
@@ -50,7 +52,7 @@ func RunWithSpec(retries int,
 
 		// create file for logs
 		fName := fmt.Sprintf("%s/log_r_%d_l_%d_b_%d.log", logPath, r, int(loss*100), int(beta*100))
-		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0666)
+		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0600)
 		if err != nil {
 			return err
 		}
@@ -65,9 +67,10 @@ func RunWithSpec(retries int,
 			peersPort = append(peersPort, suggestedPort)
 		}
 
+		var n *Bmmc
 		// create nodes
 		for p := 0; p < noPeers; p++ {
-			n, err := New(
+			n, err = New(
 				&Config{
 					Addr:      peersAddr[p],
 					Port:      peersPort[p],
@@ -100,7 +103,7 @@ func RunWithSpec(retries int,
 
 		// start nodes
 		for i := 0; i < noPeers; i++ {
-			if err := nodes[i].Start(); err != nil {
+			if err = nodes[i].Start(); err != nil {
 				return err
 			}
 		}
@@ -116,7 +119,10 @@ func RunWithSpec(retries int,
 		time.Sleep(time.Millisecond * 100)
 
 		// close log file
-		f.Close()
+		err = f.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

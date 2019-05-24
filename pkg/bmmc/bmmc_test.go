@@ -60,7 +60,7 @@ func interfaceToString(b []interface{}) []string {
 
 func fakeRegistry(cbType string, b bool, e error) map[string]func(interface{}, *log.Logger) (bool, error) {
 	return map[string]func(interface{}, *log.Logger) (bool, error){
-		cbType: func(msg interface{}, logger *log.Logger) (bool, error) {
+		cbType: func(_ interface{}, _ *log.Logger) (bool, error) {
 			return b, e
 		},
 	}

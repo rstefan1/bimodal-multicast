@@ -39,21 +39,21 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			addr := host[0]
 			port := host[1]
 
-			err := peersBuf.(*peer.PeerBuffer).AddPeer(peer.NewPeer(addr, port))
+			err := peersBuf.(*peer.Buffer).AddPeer(peer.NewPeer(addr, port))
 			if err != nil {
 				return false, err
-			} else {
-				logger.Printf("Peer %s/%s added in peers buffer", addr, port)
 			}
 
+			logger.Printf("Peer %s/%s added in peers buffer", addr, port)
 			return true, nil
 		},
+		// nolint:unparam
 		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
 			host := strings.Split(msg.Msg.(string), "/")
 			addr := host[0]
 			port := host[1]
 
-			peersBuf.(*peer.PeerBuffer).RemovePeer(peer.NewPeer(addr, port))
+			peersBuf.(*peer.Buffer).RemovePeer(peer.NewPeer(addr, port))
 			logger.Printf("Peer %s/%s removed from peers buffer", addr, port)
 
 			return true, nil

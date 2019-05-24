@@ -93,7 +93,7 @@ var _ = Describe("MessageBuffer interface", func() {
 				Msg:         msgMsg,
 				GossipCount: msgGossipCount,
 			}
-			msgBuffer := NewMessageBuffer()
+			msgBuffer = NewMessageBuffer()
 
 			Expect(msgBuffer.AddMessage(msg)).To(Succeed())
 			Expect(msgBuffer.Messages).To(HaveLen(1))
@@ -106,7 +106,7 @@ var _ = Describe("MessageBuffer interface", func() {
 				Msg:         msgMsg,
 				GossipCount: msgGossipCount,
 			}
-			msgBuffer := NewMessageBuffer()
+			msgBuffer = NewMessageBuffer()
 			msgBuffer.Messages = append(msgBuffer.Messages, msg)
 
 			// try to add same message in buffer
@@ -156,7 +156,6 @@ var _ = Describe("MessageBuffer interface", func() {
 		BeforeEach(func() {
 			messageID = fmt.Sprintf("%d", rand.Int31())
 			messageMsg = fmt.Sprintf("%d", rand.Int31())
-			messageCount = rand.Int()
 
 			messageCount = 3
 
@@ -165,7 +164,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			extraMessage = Message{
 				ID:          "extra",
 				Msg:         "extra",
-				GossipCount: rand.Int(),
+				GossipCount: 1,
 			}
 		})
 
