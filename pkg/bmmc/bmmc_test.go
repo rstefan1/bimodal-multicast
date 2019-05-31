@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -32,6 +33,44 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 )
+
+// counter is helper counter for consistency tests
+type counter struct {
+	val int
+	mux *sync.Mutex
+}
+
+func newCounter() *counter {
+	return &counter{
+		val: 0,
+		mux: &sync.Mutex{},
+	}
+}
+
+func (c *counter) increment() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.val++
+}
+
+// createCounterNode create an instance of bmmc protocol with
+// increment-counter callback
+func createCounterNode(addr, port string, c *counter) *bmmc.Bmmc {
+	node, err := bmmc.New(&bmmc.Config{
+		Addr: addr,
+		Port: port,
+		Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){
+			"increment-callback": func(_ interface{}, _ *log.Logger) (bool, error) { //nolint: unparam
+				c.increment()
+				return true, nil
+			},
+		},
+	})
+	Expect(err).To(Succeed())
+
+	return node
+}
 
 func getBuffer(node *bmmc.Bmmc) []string {
 	buf := node.GetMessages()
@@ -205,7 +244,7 @@ var _ = Describe("BMMC", func() {
 
 			for i := 0; i < len; i++ {
 				nodes[i], err = bmmc.New(&bmmc.Config{
-					Addr:      "localhost",
+					Addr:      addrs[i],
 					Port:      ports[i],
 					Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 				})
@@ -313,6 +352,60 @@ var _ = Describe("BMMC", func() {
 						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
+		})
+	})
+
+	When("callbacks must increment a counter", func() {
+		const len = 10
+
+		var (
+			nodes            [len]*bmmc.Bmmc
+			ports            [len]string
+			addrs            [len]string
+			counters         [len]*counter
+			expectedCounters [len]*counter
+		)
+
+		BeforeEach(func() {
+			for i := 0; i < len; i++ {
+				ports[i] = testutil.SuggestPort()
+				addrs[i] = "localhost"
+				counters[i] = newCounter()
+				expectedCounters[i] = newCounter()
+				expectedCounters[i].increment()
+			}
+
+			for i := 0; i < len; i++ {
+				nodes[i] = createCounterNode(addrs[i], ports[i], counters[i])
+			}
+
+			// start protocol for all nodes
+			for p := 0; p < len; p++ {
+				for i := 0; i < len; i++ {
+					_ = nodes[p].AddPeer(addrs[i], ports[i])
+				}
+				Expect(nodes[p].Start())
+			}
+		})
+
+		AfterEach(func() {
+			for i := range nodes {
+				nodes[i].Stop()
+			}
+		})
+
+		It("ensures the consistency of the data", func() {
+			randNode := rand.Intn(len)
+			Expect(nodes[randNode].AddMessage("", "increment-callback")).To(Succeed())
+
+			time.Sleep(time.Second * 2)
+			Eventually(func() [len]*counter {
+				for i := range counters {
+					counters[i].mux.Lock()
+					defer counters[i].mux.Unlock()
+				}
+				return counters
+			}, time.Second).Should(ConsistOf(expectedCounters))
 		})
 	})
 })
