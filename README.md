@@ -65,12 +65,12 @@ The buffer will be updated only if the callback function call returns true.
     p.Stop()
 ```
 
-* Add a new string message in buffer
+* Add a new message in buffer
 
 ```golang
-    err := p.AddMessage("awesome message", "awesome-callback")
+    added, err := p.AddMessage("awesome message", "awesome-callback")
     
-    err := p.AddMessage(12345, "awesome-callback")
+    added, err := p.AddMessage(12345, "awesome-callback")
 ```
 
 For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
