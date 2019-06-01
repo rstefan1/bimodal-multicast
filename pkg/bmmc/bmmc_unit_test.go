@@ -44,26 +44,30 @@ func newBMMC(addr, port string, peerBuffer *peer.Buffer, msgBuffer *buffer.Messa
 	cbDefaultRegistry, err := callback.NewDefaultRegistry()
 	Expect(err).To(Succeed())
 
-	server := server.New(server.Config{
+	logger := log.New(os.Stdout, "", 0)
+
+	serverCfg := server.Config{
 		Addr:             addr,
 		Port:             port,
 		PeerBuf:          peerBuffer,
 		MsgBuf:           msgBuffer,
 		GossipRound:      gossipRound,
-		Logger:           log.New(os.Stdout, "", 0),
+		Logger:           logger,
 		CustomCallbacks:  cbCustomRegistry,
 		DefaultCallbacks: cbDefaultRegistry,
-	})
+	}
+	server := server.New(serverCfg)
 
-	gossiper := gossip.New(gossip.Config{
+	gossiperCfg := gossip.Config{
 		Addr:        addr,
 		Port:        port,
 		PeerBuf:     peerBuffer,
 		MsgBuf:      msgBuffer,
 		Beta:        defaultBeta,
 		GossipRound: gossipRound,
-		Logger:      log.New(os.Stdout, "", 0),
-	})
+		Logger:      logger,
+	}
+	gossiper := gossip.New(gossiperCfg)
 
 	return &Bmmc{
 		peerBuffer:  peerBuffer,
@@ -71,6 +75,8 @@ func newBMMC(addr, port string, peerBuffer *peer.Buffer, msgBuffer *buffer.Messa
 		gossipRound: gossipRound,
 		server:      server,
 		gossiper:    gossiper,
+		serverCfg:   serverCfg,
+		gossiperCfg: gossiperCfg,
 		stop:        make(chan struct{}),
 	}
 }
@@ -118,7 +124,9 @@ var _ = Describe("BMMC", func() {
 			msg := "awesome-message"
 			expectedBuffer := []string{msg}
 
-			Expect(bmmc1.AddMessage(msg, callback.NOCALLBACK)).To(Succeed())
+			added, err := bmmc1.AddMessage(msg, callback.NOCALLBACK)
+			Expect(err).To(BeNil())
+			Expect(added).To(BeTrue())
 
 			Eventually(func() []string {
 				buf := bmmc1.GetMessages()

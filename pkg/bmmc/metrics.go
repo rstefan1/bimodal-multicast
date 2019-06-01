@@ -89,9 +89,12 @@ func RunWithSpec(retries int,
 		// add a message
 		msg := "another-awesome-message"
 		randomNode := rand.Intn(noPeers)
-		err = nodes[randomNode].AddMessage(msg, cbType)
+		added, err := nodes[randomNode].AddMessage(msg, cbType)
 		if err != nil {
 			return err
+		}
+		if !added {
+			return fmt.Errorf("Message not added in buffer")
 		}
 
 		// add peers in buffer
