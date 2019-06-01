@@ -21,7 +21,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -206,11 +205,13 @@ var _ = Describe("BMMC", func() {
 			ports          [len]string
 			addrs          [len]string
 			extraMsgBuffer []interface{}
+			expectedBuf    []interface{}
 		)
 
 		BeforeEach(func() {
 			var err error
 			extraMsgBuffer = make([]interface{}, len)
+			expectedBuf = []interface{}{}
 
 			for i := 0; i < len; i++ {
 				ports[i] = testutil.SuggestPort()
@@ -220,11 +221,19 @@ var _ = Describe("BMMC", func() {
 
 			for i := 0; i < len; i++ {
 				nodes[i], err = bmmc.New(&bmmc.Config{
-					Addr:      "localhost",
+					Addr:      addrs[i],
 					Port:      ports[i],
 					Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
 				})
 				Expect(err).To(Succeed())
+			}
+
+			// start protocol for all nodes
+			for p := 0; p < len; p++ {
+				for i := 0; i < len; i++ {
+					_ = nodes[p].AddPeer(addrs[i], ports[i])
+				}
+				Expect(nodes[p].Start())
 			}
 		})
 
@@ -235,11 +244,7 @@ var _ = Describe("BMMC", func() {
 		})
 
 		When("one node has an message", func() {
-			var expectedBuf []interface{}
-
 			BeforeEach(func() {
-				expectedBuf = []interface{}{}
-
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 
@@ -247,15 +252,7 @@ var _ = Describe("BMMC", func() {
 				added, err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Expect(err).To(BeNil())
 				Expect(added).To(BeTrue())
-				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf))
-
-				// start protocol for all nodes
-				for p := 0; p < len; p++ {
-					for i := 0; i < len; i++ {
-						_ = nodes[p].AddPeer(addrs[i], ports[i])
-					}
-					Expect(nodes[p].Start())
-				}
+				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 			})
 
 			It("sync all nodes with the message", func() {
@@ -266,11 +263,7 @@ var _ = Describe("BMMC", func() {
 		})
 
 		When("one node has more messages", func() {
-			var expectedBuf []interface{}
-
 			BeforeEach(func() {
-				expectedBuf = []interface{}{}
-
 				randomNode := rand.Intn(len)
 				for i := 0; i < 3; i++ {
 					msg := i
@@ -282,15 +275,7 @@ var _ = Describe("BMMC", func() {
 				}
 
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
-					ConsistOf(interfaceToString(expectedBuf)))
-
-				// start protocol for all nodes
-				for p := 0; p < len; p++ {
-					for i := 0; i < len; i++ {
-						_ = nodes[p].AddPeer(addrs[i], ports[i])
-					}
-					Expect(nodes[p].Start())
-				}
+					ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 			})
 
 			It("sync all nodes with all messages", func() {
@@ -302,10 +287,7 @@ var _ = Describe("BMMC", func() {
 		})
 
 		When("three nodes have three different messages", func() {
-			var expectedBuf []interface{}
-
 			BeforeEach(func() {
-				expectedBuf = []interface{}{}
 				randomNodes := [3]int{2, 4, 6}
 
 				for i := 0; i < 3; i++ {
@@ -317,15 +299,7 @@ var _ = Describe("BMMC", func() {
 					Expect(added).To(BeTrue())
 
 					Eventually(getBufferFn(nodes[randomNodes[i]]), time.Second).Should(
-						ConsistOf([]string{strconv.Itoa(msg)}))
-				}
-
-				// start protocol for all nodes
-				for p := 0; p < len; p++ {
-					for i := 0; i < len; i++ {
-						_ = nodes[p].AddPeer(addrs[i], ports[i])
-					}
-					Expect(nodes[p].Start())
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
 
