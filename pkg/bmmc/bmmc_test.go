@@ -310,5 +310,80 @@ var _ = Describe("BMMC", func() {
 				}
 			})
 		})
+
+		When("some nodes stop for a while", func() {
+			It("ensures the consistency of the data", func() {
+				// start 10 nodes
+				// add 1 message
+				// stop 5 nodes
+				// add 1 message
+				// start 5 nodes
+				// add 1 message
+				// all nodes must have 3 messages
+
+				// add first message
+				msg := "first-message"
+				expectedBuf = append(expectedBuf, msg)
+
+				added, err := nodes[0].AddMessage(msg, callback.NOCALLBACK)
+				Expect(err).To(BeNil())
+				Expect(added).To(BeTrue())
+
+				Eventually(getBufferFn(nodes[0]), time.Second).Should(
+					ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+
+				// wait for all nodes to synchronize
+				for i := 0; i < len; i++ {
+					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+				}
+
+				// stop last 2 nodes
+				for i := len - 2; i < len; i++ {
+					nodes[i].Stop()
+				}
+
+				// add second message
+				msg = "second-message"
+				expectedBuf = append(expectedBuf, msg)
+
+				added, err = nodes[0].AddMessage(msg, callback.NOCALLBACK)
+				Expect(err).To(BeNil())
+				Expect(added).To(BeTrue())
+
+				Eventually(getBufferFn(nodes[0]), time.Second).Should(
+					ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+
+				// wait for all first nodes to synchronize
+				for i := 0; i < len-2; i++ {
+					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+				}
+
+				// restart last 2 nodes
+				for i := len - 2; i < len; i++ {
+					Expect(nodes[i].Start())
+				}
+
+				// time.Sleep(time.Second * 60)
+
+				// add third message
+				msg = "third-message"
+				expectedBuf = append(expectedBuf, msg)
+
+				added, err = nodes[0].AddMessage(msg, callback.NOCALLBACK)
+				Expect(err).To(BeNil())
+				Expect(added).To(BeTrue())
+
+				Eventually(getBufferFn(nodes[0]), time.Second).Should(
+					ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+
+				// wait for all nodes to synchronize
+				for i := 0; i < len; i++ {
+					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+				}
+			})
+		})
 	})
 })
