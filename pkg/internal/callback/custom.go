@@ -49,29 +49,36 @@ func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Log
 	return nil, fmt.Errorf("callback type doesn't exist in custom registry")
 }
 
-// RunCustomCallbacks runs custom callbacks
+// RunCustomCallbacks runs custom callbacks and adds given message in buffer.
+// RunCustomCallbacks returns true if given message was added in buffer.
 func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, hostAddr, hostPort string,
-	logger *log.Logger, msgBuf *buffer.MessageBuffer, gossipRound *round.GossipRound) {
+	logger *log.Logger, msgBuf *buffer.MessageBuffer, gossipRound *round.GossipRound) (bool, error) {
 
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCustomCallback(m.CallbackType)
 	if err != nil {
-		return
+		return false, err
 	}
 
 	// run callback function
 	ok, err := callbackFn(m.Msg, logger)
 	if err != nil {
-		logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+		e := fmt.Errorf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+		logger.Print(e)
 	}
 
 	// add message in buffer only if callback call returns true
 	if ok {
 		err = msgBuf.AddMessage(m)
 		if err != nil {
-			logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
-		} else {
-			logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+			e := fmt.Errorf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
+			logger.Print(e)
+			fmt.Println()
+			return true, e
 		}
+		logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+		return true, nil
 	}
+
+	return false, nil
 }

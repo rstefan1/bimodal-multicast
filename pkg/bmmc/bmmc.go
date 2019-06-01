@@ -137,10 +137,37 @@ func (b *Bmmc) Stop() {
 	close(b.stop)
 }
 
-// AddMessage adds new message in messages buffer
-func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
+// AddMessage adds new message in messages buffer.
+// It returns true if given message was added in buffer.
+func (b *Bmmc) AddMessage(msg interface{}, callbackType string) (bool, error) {
+	m := buffer.NewMessage(msg, callbackType)
 
-	return b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
+	if callbackType != callback.NOCALLBACK {
+		// run defautl callback
+		added, err := b.serverCfg.DefaultCallbacks.RunDefaultCallbacks(m, b.serverCfg.Addr, b.serverCfg.Port,
+			b.serverCfg.Logger, b.msgBuffer, b.peerBuffer, b.gossipRound)
+
+		if !added {
+			// run custom callback
+			added, err = b.serverCfg.CustomCallbacks.RunCustomCallbacks(m, b.serverCfg.Addr, b.serverCfg.Port,
+				b.serverCfg.Logger, b.msgBuffer, b.gossipRound)
+			return added, err
+		}
+		return added, err
+	}
+
+	err := b.msgBuffer.AddMessage(m)
+
+	if err != nil {
+		e := fmt.Errorf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s",
+			b.serverCfg.Addr, b.serverCfg.Port, m.ID, b.gossipRound.GetNumber(), err)
+		b.serverCfg.Logger.Print(e)
+		return true, e
+	}
+
+	b.serverCfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d",
+		b.serverCfg.Addr, b.serverCfg.Port, m.ID, b.gossipRound.GetNumber())
+	return true, nil
 }
 
 // AddPeer adds new peer in peers buffer

@@ -109,8 +109,10 @@ func synchronizationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) 
 	for _, m := range rcvMsgBuf.Messages {
 		// run callback function for messages with a callback registered
 		if m.CallbackType != callback.NOCALLBACK {
-			cfg.DefaultCallbacks.RunDefaultCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.PeerBuf, cfg.GossipRound)
-			cfg.CustomCallbacks.RunCustomCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.GossipRound)
+			added, _ := cfg.DefaultCallbacks.RunDefaultCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.PeerBuf, cfg.GossipRound)
+			if !added {
+				_, _ = cfg.CustomCallbacks.RunCustomCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.GossipRound)
+			}
 		} else {
 			err = cfg.MsgBuf.AddMessage(m)
 			if err != nil {
