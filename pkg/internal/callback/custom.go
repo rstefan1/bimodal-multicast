@@ -19,6 +19,9 @@ package callback
 import (
 	"fmt"
 	"log"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // CustomRegistry is a custom callbacks registry
@@ -44,4 +47,31 @@ func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Log
 		return v, nil
 	}
 	return nil, fmt.Errorf("callback type doesn't exist in custom registry")
+}
+
+// RunCustomCallbacks runs custom callbacks
+func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, hostAddr, hostPort string,
+	logger *log.Logger, msgBuf *buffer.MessageBuffer, gossipRound *round.GossipRound) {
+
+	// get callback from callbacks registry
+	callbackFn, err := r.GetCustomCallback(m.CallbackType)
+	if err != nil {
+		return
+	}
+
+	// run callback function
+	ok, err := callbackFn(m.Msg, logger)
+	if err != nil {
+		logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+	}
+
+	// add message in buffer only if callback call returns true
+	if ok {
+		err = msgBuf.AddMessage(m)
+		if err != nil {
+			logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
+		} else {
+			logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+		}
+	}
 }
