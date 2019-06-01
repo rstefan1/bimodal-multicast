@@ -47,6 +47,10 @@ type Bmmc struct {
 	server *server.Server
 	// gossiper
 	gossiper *gossip.Gossiper
+	// server config
+	serverCfg server.Config
+	// gossiper config
+	gossiperCfg gossip.Config
 	// stop channel
 	stop chan struct{}
 }
@@ -85,7 +89,7 @@ func New(cfg *Config) (*Bmmc, error) {
 		gossipRound: round.NewGossipRound(),
 	}
 
-	p.server = server.New(server.Config{
+	p.serverCfg = server.Config{
 		Addr:             cfg.Addr,
 		Port:             cfg.Port,
 		PeerBuf:          p.peerBuffer,
@@ -94,9 +98,8 @@ func New(cfg *Config) (*Bmmc, error) {
 		Logger:           cfg.Logger,
 		CustomCallbacks:  cbCustomRegistry,
 		DefaultCallbacks: cbDefaultRegistry,
-	})
-
-	p.gossiper = gossip.New(gossip.Config{
+	}
+	p.gossiperCfg = gossip.Config{
 		Addr:        cfg.Addr,
 		Port:        cfg.Port,
 		PeerBuf:     p.peerBuffer,
@@ -104,7 +107,10 @@ func New(cfg *Config) (*Bmmc, error) {
 		Beta:        cfg.Beta,
 		GossipRound: p.gossipRound,
 		Logger:      cfg.Logger,
-	})
+	}
+
+	p.server = server.New(p.serverCfg)
+	p.gossiper = gossip.New(p.gossiperCfg)
 
 	return p, nil
 }
@@ -133,6 +139,7 @@ func (b *Bmmc) Stop() {
 
 // AddMessage adds new message in messages buffer
 func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
+
 	return b.msgBuffer.AddMessage(buffer.NewMessage(msg, callbackType))
 }
 

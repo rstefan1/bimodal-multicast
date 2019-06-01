@@ -23,6 +23,7 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // DefaultRegistry is a default callbacks registry
@@ -68,4 +69,42 @@ func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, int
 		return v, nil
 	}
 	return nil, fmt.Errorf("callback type doesn't exist in default registry")
+}
+
+// RunDefaultCallbacks runs default callbacks
+func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, hostAddr, hostPort string,
+	logger *log.Logger, msgBuf *buffer.MessageBuffer, peerBuf *peer.Buffer, gossipRound *round.GossipRound) {
+
+	// get callback from callbacks registry
+	callbackFn, err := r.GetDefaultCallback(m.CallbackType)
+	if err != nil {
+		return
+	}
+
+	// TODO find a way to remove the following switch
+	var p interface{}
+	switch m.CallbackType {
+	case ADDPEER:
+		p = peerBuf
+	case REMOVEPEER:
+		p = peerBuf
+	default:
+		p = nil
+	}
+
+	// run callback function
+	ok, err := callbackFn(m, p, logger)
+	if err != nil {
+		logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
+	}
+
+	// add message in buffer only if callback call returns true
+	if ok {
+		err = msgBuf.AddMessage(m)
+		if err != nil {
+			logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
+		} else {
+			logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
+		}
+	}
 }

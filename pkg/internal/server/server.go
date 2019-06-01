@@ -40,67 +40,6 @@ type Server struct {
 	logger            *log.Logger
 }
 
-// runCustomCallbacks runs custom callbacks
-func runCustomCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string) {
-	// get callback from callbacks registry
-	callbackFn, err := cfg.CustomCallbacks.GetCustomCallback(m.CallbackType)
-	if err != nil {
-		return
-	}
-
-	// run callback function
-	ok, err := callbackFn(m.Msg, cfg.Logger)
-	if err != nil {
-		cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-	}
-
-	// add message in buffer only if callback call returns true
-	if ok {
-		err = cfg.MsgBuf.AddMessage(m)
-		if err != nil {
-			cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
-		} else {
-			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
-		}
-	}
-}
-
-// runDefaultCallbacks runs default callbacks
-func runDefaultCallbacks(m buffer.Message, cfg Config, hostAddr, hostPort string) {
-	// get callback from callbacks registry
-	callbackFn, err := cfg.DefaultCallbacks.GetDefaultCallback(m.CallbackType)
-	if err != nil {
-		return
-	}
-
-	// TODO find a way to remove the following switch
-	var p interface{}
-	switch m.CallbackType {
-	case callback.ADDPEER:
-		p = cfg.PeerBuf
-	case callback.REMOVEPEER:
-		p = cfg.PeerBuf
-	default:
-		p = nil
-	}
-
-	// run callback function
-	ok, err := callbackFn(m, p, cfg.Logger)
-	if err != nil {
-		cfg.Logger.Printf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-	}
-
-	// add message in buffer only if callback call returns true
-	if ok {
-		err = cfg.MsgBuf.AddMessage(m)
-		if err != nil {
-			cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
-		} else {
-			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
-		}
-	}
-}
-
 func gossipHandler(_ http.ResponseWriter, r *http.Request, cfg Config) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
 	if err != nil {
@@ -170,8 +109,8 @@ func synchronizationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) 
 	for _, m := range rcvMsgBuf.Messages {
 		// run callback function for messages with a callback registered
 		if m.CallbackType != callback.NOCALLBACK {
-			runDefaultCallbacks(m, cfg, hostAddr, hostPort)
-			runCustomCallbacks(m, cfg, hostAddr, hostPort)
+			cfg.DefaultCallbacks.RunDefaultCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.PeerBuf, cfg.GossipRound)
+			cfg.CustomCallbacks.RunCustomCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.GossipRound)
 		} else {
 			err = cfg.MsgBuf.AddMessage(m)
 			if err != nil {
