@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -68,6 +69,9 @@ func New(cfg *Config) (*Bmmc, error) {
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
+	}
+	if cfg.RoundDuration == 0 {
+		cfg.RoundDuration = time.Millisecond * 100
 	}
 
 	callbacks := cfg.Callbacks

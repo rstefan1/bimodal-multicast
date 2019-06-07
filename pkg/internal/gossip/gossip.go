@@ -44,6 +44,8 @@ type Gossiper struct {
 	selectedPeers []bool
 	// logger
 	logger *log.Logger
+	// gossip round duration
+	roundDuration time.Duration
 }
 
 // randomlySelectPeer is a helper func that returns a random peer
@@ -105,7 +107,7 @@ func (g *Gossiper) gossipRound(stop <-chan struct{}) {
 			(*g.msgBuffer).IncrementGossipCount()
 			g.resetSelectedPeers()
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(g.roundDuration)
 		}
 	}
 }
@@ -127,5 +129,6 @@ func New(cfg Config) *Gossiper {
 		beta:              cfg.Beta,
 		gossipRoundNumber: cfg.GossipRound,
 		logger:            cfg.Logger,
+		roundDuration:     cfg.RoundDuration,
 	}
 }

@@ -18,6 +18,7 @@ package gossip
 
 import (
 	"log"
+	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
@@ -40,4 +41,6 @@ type Config struct {
 	Beta float64
 	// Logger
 	Logger *log.Logger
+	// Gossip round duration
+	RoundDuration time.Duration
 }

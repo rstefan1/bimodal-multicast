@@ -18,6 +18,7 @@ package bmmc
 
 import (
 	"log"
+	"time"
 )
 
 // Config is the config for the protocol
@@ -37,4 +38,7 @@ type Config struct {
 	// Callbacks funtions
 	// Optional
 	Callbacks map[string]func(interface{}, *log.Logger) (bool, error)
+	// Gossip round duration
+	// Optional
+	RoundDuration time.Duration
 }
