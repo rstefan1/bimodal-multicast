@@ -147,7 +147,7 @@ func New(cfg Config) *Server {
 
 	return &Server{
 		server: &http.Server{
-			Addr: fmt.Sprintf("%s:%s", cfg.Addr, cfg.Port),
+			Addr: fmt.Sprintf("0.0.0.0:%s", cfg.Port),
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				switch path := r.URL.Path; path {
 				case "/gossip":
