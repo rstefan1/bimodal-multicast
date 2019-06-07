@@ -297,9 +297,6 @@ var _ = Describe("BMMC", func() {
 					added, err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
 					Expect(err).To(BeNil())
 					Expect(added).To(BeTrue())
-
-					Eventually(getBufferFn(nodes[randomNodes[i]]), time.Second).Should(
-						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
 
