@@ -16,7 +16,10 @@ limitations under the License.
 
 package round
 
-import "sync"
+import (
+	"math"
+	"sync"
+)
 
 // GossipRound is the number of gossiper rounds
 type GossipRound struct {
@@ -38,6 +41,9 @@ func (r *GossipRound) Increment() {
 	defer r.Mux.Unlock()
 
 	r.Number++
+	if r.Number > math.MaxInt64-10 {
+		r.Number = 1
+	}
 }
 
 // GetNumber returns the gossip round numbers
