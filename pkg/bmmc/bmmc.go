@@ -172,9 +172,13 @@ func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
 	if callbackType != callback.NOCALLBACK {
 		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.logger)
 		if err != nil {
-			b.logger.Printf("Error at calling callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
+			b.logger.Printf("Error at calling default callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
 		}
-		_ = b.customCallbacks.RunCustomCallbacks(m, b.logger)
+
+		err = b.customCallbacks.RunCustomCallbacks(m, b.logger)
+		if err != nil {
+			b.logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
+		}
 	}
 	return nil
 }

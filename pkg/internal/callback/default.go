@@ -76,7 +76,8 @@ func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, peerBuf *peer.Bu
 	// get callback from callbacks registry
 	callbackFn, err := r.GetDefaultCallback(m.CallbackType)
 	if err != nil {
-		return err
+		// dont't return err if default registry haven't given callback
+		return nil
 	}
 
 	// TODO find a way to remove the following switch

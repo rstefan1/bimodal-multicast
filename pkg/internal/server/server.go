@@ -117,9 +117,13 @@ func synchronizationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) 
 			if m.CallbackType != callback.NOCALLBACK {
 				err = cfg.DefaultCallbacks.RunDefaultCallbacks(m, cfg.PeerBuf, cfg.Logger)
 				if err != nil {
-					cfg.Logger.Printf("Error at calling callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+					cfg.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
 				}
-				_ = cfg.CustomCallbacks.RunCustomCallbacks(m, cfg.Logger)
+
+				err = cfg.CustomCallbacks.RunCustomCallbacks(m, cfg.Logger)
+				if err != nil {
+					cfg.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+				}
 			}
 		}
 	}

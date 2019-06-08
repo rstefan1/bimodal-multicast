@@ -53,7 +53,8 @@ func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, logger *log.Logger
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCustomCallback(m.CallbackType)
 	if err != nil {
-		return err
+		// dont't return err if custom registry haven't given callback
+		return nil
 	}
 
 	// run callback function
