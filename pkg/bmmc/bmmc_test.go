@@ -139,7 +139,6 @@ var _ = Describe("BMMC", func() {
 	DescribeTable("when system has two nodes and one node has a message in buffer",
 		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
 			msg, callbackType string,
-			shouldError bool,
 			expectedBuf []string) {
 
 			port1 := testutil.SuggestPort()
@@ -173,12 +172,7 @@ var _ = Describe("BMMC", func() {
 			}
 
 			// add a message in first node
-			err = node1.AddMessage(msg, callbackType)
-			if shouldError {
-				Expect(err).To(Not(BeNil()))
-			} else {
-				Expect(err).To(BeNil())
-			}
+			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
 
 			Eventually(getBufferFn(node1), time.Second).Should(
 				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
@@ -190,13 +184,11 @@ var _ = Describe("BMMC", func() {
 			fakeRegistry("my-callback", fmt.Errorf("invalid-callback")),
 			"awesome-message",
 			"my-callback",
-			true, // should not return error
 			[]string{"awesome-message"}),
 		Entry("sync buffers if callback not return false",
 			fakeRegistry("my-callback", nil),
 			"awesome-message",
 			"my-callback",
-			false, // should not return error
 			[]string{"awesome-message"}),
 	)
 
