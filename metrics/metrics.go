@@ -37,8 +37,8 @@ func main() {
 
 	for loss := minLoss; loss <= maxLoss; loss = loss + 0.1 {
 		for beta := minBeta; beta <= maxBeta; beta = beta + 0.1 {
-			cbRegistry := map[string]func(interface{}, *log.Logger) (bool, error){
-				cbType: func(msg interface{}, logger *log.Logger) (bool, error) {
+			cbRegistry := map[string]func(interface{}, *log.Logger) error{
+				cbType: func(msg interface{}, logger *log.Logger) error {
 					if rand.Float64() >= loss {
 						return true, nil
 					}

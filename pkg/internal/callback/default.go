@@ -23,33 +23,32 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // DefaultRegistry is a default callbacks registry
 type DefaultRegistry struct {
-	callbacks map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error)
+	callbacks map[string]func(buffer.Message, interface{}, *log.Logger) error
 }
 
 // NewDefaultRegistry creates a default callback registry
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
-	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) (bool, error){
-		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
+	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) error{
+		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
 			host := strings.Split(msg.Msg.(string), "/")
 			addr := host[0]
 			port := host[1]
 
 			err := peersBuf.(*peer.Buffer).AddPeer(peer.NewPeer(addr, port))
 			if err != nil {
-				return false, err
+				return err
 			}
 
 			logger.Printf("Peer %s/%s added in peers buffer", addr, port)
-			return true, nil
+			return nil
 		},
 		// nolint:unparam
-		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) (bool, error) {
+		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
 			host := strings.Split(msg.Msg.(string), "/")
 			addr := host[0]
 			port := host[1]
@@ -57,29 +56,27 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			peersBuf.(*peer.Buffer).RemovePeer(peer.NewPeer(addr, port))
 			logger.Printf("Peer %s/%s removed from peers buffer", addr, port)
 
-			return true, nil
+			return nil
 		},
 	}
 	return r, nil
 }
 
 // GetDefaultCallback returns a default callback from registry
-func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, interface{}, *log.Logger) (bool, error), error) {
+func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 	return nil, fmt.Errorf("callback type doesn't exist in default registry")
 }
 
-// RunDefaultCallbacks runs default callbacks and adds given message in buffer.
-// RunDefaultCallback returns true if message was added in buffer.
-func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, hostAddr, hostPort string,
-	logger *log.Logger, msgBuf *buffer.MessageBuffer, peerBuf *peer.Buffer, gossipRound *round.GossipRound) (bool, error) {
+// RunDefaultCallbacks runs default callbacks.
+func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, peerBuf *peer.Buffer, logger *log.Logger) error {
 
 	// get callback from callbacks registry
 	callbackFn, err := r.GetDefaultCallback(m.CallbackType)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// TODO find a way to remove the following switch
@@ -94,23 +91,10 @@ func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, hostAddr, hostPo
 	}
 
 	// run callback function
-	ok, err := callbackFn(m, p, logger)
+	err = callbackFn(m, p, logger)
 	if err != nil {
-		e := fmt.Errorf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-		logger.Print(e)
+		return err
 	}
 
-	// add message in buffer only if callback call returns true
-	if ok {
-		err = msgBuf.AddMessage(m)
-		if err != nil {
-			e := fmt.Errorf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
-			logger.Print(e)
-			return true, e
-		}
-		logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }

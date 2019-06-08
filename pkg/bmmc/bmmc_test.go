@@ -57,10 +57,10 @@ func interfaceToString(b []interface{}) []string {
 	return s
 }
 
-func fakeRegistry(cbType string, b bool, e error) map[string]func(interface{}, *log.Logger) (bool, error) {
-	return map[string]func(interface{}, *log.Logger) (bool, error){
-		cbType: func(_ interface{}, _ *log.Logger) (bool, error) {
-			return b, e
+func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logger) error {
+	return map[string]func(interface{}, *log.Logger) error{
+		cbType: func(_ interface{}, _ *log.Logger) error {
+			return e
 		},
 	}
 }
@@ -72,7 +72,7 @@ var _ = Describe("BMMC", func() {
 				Port:      "1999",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) error{},
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -82,7 +82,7 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) error{},
 			})
 			Expect(err).To(Not(Succeed()))
 		})
@@ -103,11 +103,24 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Port:      "1999",
 				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) error{},
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
 			Expect(cfg.Beta).To(Equal(0.3))
+		})
+
+		It("set default value for gossip round duration if it is empty", func() {
+			cfg := bmmc.Config{
+				Addr:      "localhost",
+				Port:      "1999",
+				Beta:      0.5,
+				Logger:    log.New(os.Stdout, "", 0),
+				Callbacks: map[string]func(interface{}, *log.Logger) error{},
+			}
+			_, err := bmmc.New(&cfg)
+			Expect(err).To(Succeed())
+			Expect(cfg.RoundDuration).NotTo(Equal(0))
 		})
 
 		It("set default value for logger if it is empty", func() {
@@ -115,7 +128,7 @@ var _ = Describe("BMMC", func() {
 				Addr:      "localhost",
 				Port:      "1999",
 				Beta:      0.5,
-				Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
+				Callbacks: map[string]func(interface{}, *log.Logger) error{},
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -124,9 +137,8 @@ var _ = Describe("BMMC", func() {
 	})
 
 	DescribeTable("when system has two nodes and one node has a message in buffer",
-		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) (bool, error),
+		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
 			msg, callbackType string,
-			shouldAdded bool,
 			shouldError bool,
 			expectedBuf []string) {
 
@@ -161,8 +173,7 @@ var _ = Describe("BMMC", func() {
 			}
 
 			// add a message in first node
-			added, err := node1.AddMessage(msg, callbackType)
-			Expect(added).To(Equal(shouldAdded))
+			err = node1.AddMessage(msg, callbackType)
 			if shouldError {
 				Expect(err).To(Not(BeNil()))
 			} else {
@@ -175,27 +186,18 @@ var _ = Describe("BMMC", func() {
 			Eventually(getBufferFn(node2), time.Second).Should(
 				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
 		},
-		Entry("sync buffers with the message",
-			map[string]func(interface{}, *log.Logger) (bool, error){},
-			"awesome-message",
-			callback.NOCALLBACK,
-			true,  // should added
-			false, // should not return error
-			[]string{"awesome-message"}),
-		Entry("sync buffers if callback returned error",
-			fakeRegistry("my-callback", true, fmt.Errorf("invalid-callback")),
+		Entry("sync buffers if callback return error",
+			fakeRegistry("my-callback", fmt.Errorf("invalid-callback")),
 			"awesome-message",
 			"my-callback",
-			true,  // should added,
-			false, // should not return error
+			true, // should not return error
 			[]string{"awesome-message"}),
-		Entry("doesn't sync buffers if callback returned false",
-			fakeRegistry("my-callback", false, nil),
+		Entry("sync buffers if callback not return false",
+			fakeRegistry("my-callback", nil),
 			"awesome-message",
 			"my-callback",
-			false, // should not added
 			false, // should not return error
-			[]string{}),
+			[]string{"awesome-message"}),
 	)
 
 	When("system has ten nodes", func() {
@@ -223,7 +225,7 @@ var _ = Describe("BMMC", func() {
 				nodes[i], err = bmmc.New(&bmmc.Config{
 					Addr:      addrs[i],
 					Port:      ports[i],
-					Callbacks: map[string]func(interface{}, *log.Logger) (bool, error){},
+					Callbacks: map[string]func(interface{}, *log.Logger) error{},
 				})
 				Expect(err).To(Succeed())
 			}
@@ -249,9 +251,8 @@ var _ = Describe("BMMC", func() {
 				expectedBuf = append(expectedBuf, msg)
 
 				randomNode := rand.Intn(len)
-				added, err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Expect(err).To(BeNil())
-				Expect(added).To(BeTrue())
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 			})
 
@@ -269,9 +270,8 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					added, err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 					Expect(err).To(BeNil())
-					Expect(added).To(BeTrue())
 				}
 
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
@@ -294,9 +294,8 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					added, err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
 					Expect(err).To(BeNil())
-					Expect(added).To(BeTrue())
 				}
 			})
 

@@ -26,19 +26,19 @@ import (
 
 var _ = Describe("CustomCallbackRegistry interface", func() {
 	It("creates new registry when given callbacks map is empty", func() {
-		cb := map[string]func(interface{}, *log.Logger) (bool, error){}
+		cb := map[string]func(interface{}, *log.Logger) error{}
 		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 		Expect(r.callbacks).To(Equal(cb))
 	})
 
 	It("creates new registry when given callbacks map has more callbacks", func() {
-		cb := map[string]func(interface{}, *log.Logger) (bool, error){
-			"first-callback": func(msg interface{}, logger *log.Logger) (bool, error) {
-				return true, nil
+		cb := map[string]func(interface{}, *log.Logger) error{
+			"first-callback": func(msg interface{}, logger *log.Logger) error {
+				return nil
 			},
-			"second-callback": func(msg interface{}, logger *log.Logger) (bool, error) {
-				return false, nil
+			"second-callback": func(msg interface{}, logger *log.Logger) error {
+				return nil
 			},
 		}
 		r, err := NewCustomRegistry(cb)
@@ -55,15 +55,15 @@ var _ = Describe("CustomCallbackRegistry interface", func() {
 	It("returns proper callback func when given callback type exists in registry", func() {
 		var (
 			cbType string
-			cbFn   func(interface{}, *log.Logger) (bool, error)
+			cbFn   func(interface{}, *log.Logger) error
 		)
 
 		cbType = "my-callback"
-		cbFn = func(msg interface{}, logger *log.Logger) (bool, error) {
-			return true, nil
+		cbFn = func(msg interface{}, logger *log.Logger) error {
+			return nil
 		}
 
-		cb := map[string]func(interface{}, *log.Logger) (bool, error){
+		cb := map[string]func(interface{}, *log.Logger) error{
 			cbType: cbFn,
 		}
 		r, err := NewCustomRegistry(cb)
@@ -75,11 +75,11 @@ var _ = Describe("CustomCallbackRegistry interface", func() {
 	})
 
 	It("returns error when given callback type doesn't exist in registry", func() {
-		cb := map[string]func(interface{}, *log.Logger) (bool, error){}
+		cb := map[string]func(interface{}, *log.Logger) error{}
 		r, err := NewCustomRegistry(cb)
 		Expect(err).To(Succeed())
 
-		fn, err := r.GetCustomCallback("mu-callback")
+		fn, err := r.GetCustomCallback("my-callback")
 		Expect(err).To(Not(Succeed()))
 		Expect(fn).To(BeNil())
 	})

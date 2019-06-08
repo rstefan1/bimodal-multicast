@@ -107,18 +107,19 @@ func synchronizationHandler(_ http.ResponseWriter, r *http.Request, cfg Config) 
 	}
 
 	for _, m := range rcvMsgBuf.Messages {
-		// run callback function for messages with a callback registered
-		if m.CallbackType != callback.NOCALLBACK {
-			added, _ := cfg.DefaultCallbacks.RunDefaultCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.PeerBuf, cfg.GossipRound)
-			if !added {
-				_, _ = cfg.CustomCallbacks.RunCustomCallbacks(m, hostAddr, hostPort, cfg.Logger, cfg.MsgBuf, cfg.GossipRound)
-			}
+		err = cfg.MsgBuf.AddMessage(m)
+		if err != nil {
+			cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
 		} else {
-			err = cfg.MsgBuf.AddMessage(m)
-			if err != nil {
-				cfg.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber(), err)
-			} else {
-				cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+			cfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+
+			// run callback function for messages with a callback registered
+			if m.CallbackType != callback.NOCALLBACK {
+				err = cfg.DefaultCallbacks.RunDefaultCallbacks(m, cfg.PeerBuf, cfg.Logger)
+				if err != nil {
+					cfg.Logger.Printf("Error at calling callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, cfg.GossipRound.GetNumber())
+				}
+				_ = cfg.CustomCallbacks.RunCustomCallbacks(m, cfg.Logger)
 			}
 		}
 	}

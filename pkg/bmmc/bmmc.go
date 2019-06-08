@@ -38,6 +38,10 @@ const (
 
 // Bmmc is the protocol
 type Bmmc struct {
+	// address
+	addr string
+	// port
+	port string
 	// shared buffer with addresses of nodes in system
 	peerBuffer *peer.Buffer
 	// shared buffer with gossip messages
@@ -52,6 +56,12 @@ type Bmmc struct {
 	serverCfg server.Config
 	// gossiper config
 	gossiperCfg gossip.Config
+	// logger
+	logger *log.Logger
+	// custom callback registry
+	customCallbacks *callback.CustomRegistry
+	// default callback registry
+	defaultCallbacks *callback.DefaultRegistry
 	// stop channel
 	stop chan struct{}
 }
@@ -76,7 +86,7 @@ func New(cfg *Config) (*Bmmc, error) {
 
 	callbacks := cfg.Callbacks
 	if callbacks == nil {
-		callbacks = map[string]func(interface{}, *log.Logger) (bool, error){}
+		callbacks = map[string]func(interface{}, *log.Logger) error{}
 	}
 	cbCustomRegistry, err := callback.NewCustomRegistry(callbacks)
 	if err != nil {
@@ -88,29 +98,34 @@ func New(cfg *Config) (*Bmmc, error) {
 	}
 
 	p := &Bmmc{
-		peerBuffer:  peer.NewPeerBuffer(),
-		msgBuffer:   buffer.NewMessageBuffer(),
-		gossipRound: round.NewGossipRound(),
+		addr:             cfg.Addr,
+		port:             cfg.Port,
+		peerBuffer:       peer.NewPeerBuffer(),
+		msgBuffer:        buffer.NewMessageBuffer(),
+		gossipRound:      round.NewGossipRound(),
+		customCallbacks:  cbCustomRegistry,
+		defaultCallbacks: cbDefaultRegistry,
+		logger:           cfg.Logger,
 	}
 
 	p.serverCfg = server.Config{
-		Addr:             cfg.Addr,
-		Port:             cfg.Port,
+		Addr:             p.addr,
+		Port:             p.port,
 		PeerBuf:          p.peerBuffer,
 		MsgBuf:           p.msgBuffer,
 		GossipRound:      p.gossipRound,
-		Logger:           cfg.Logger,
-		CustomCallbacks:  cbCustomRegistry,
-		DefaultCallbacks: cbDefaultRegistry,
+		Logger:           p.logger,
+		CustomCallbacks:  p.customCallbacks,
+		DefaultCallbacks: p.defaultCallbacks,
 	}
 	p.gossiperCfg = gossip.Config{
-		Addr:        cfg.Addr,
-		Port:        cfg.Port,
+		Addr:        p.addr,
+		Port:        p.port,
 		PeerBuf:     p.peerBuffer,
 		MsgBuf:      p.msgBuffer,
 		Beta:        cfg.Beta,
 		GossipRound: p.gossipRound,
-		Logger:      cfg.Logger,
+		Logger:      p.logger,
 	}
 
 	p.server = server.New(p.serverCfg)
@@ -142,36 +157,26 @@ func (b *Bmmc) Stop() {
 }
 
 // AddMessage adds new message in messages buffer.
-// It returns true if given message was added in buffer.
-func (b *Bmmc) AddMessage(msg interface{}, callbackType string) (bool, error) {
+func (b *Bmmc) AddMessage(msg interface{}, callbackType string) error {
 	m := buffer.NewMessage(msg, callbackType)
 
-	if callbackType != callback.NOCALLBACK {
-		// run defautl callback
-		added, err := b.serverCfg.DefaultCallbacks.RunDefaultCallbacks(m, b.serverCfg.Addr, b.serverCfg.Port,
-			b.serverCfg.Logger, b.msgBuffer, b.peerBuffer, b.gossipRound)
-
-		if !added {
-			// run custom callback
-			added, err = b.serverCfg.CustomCallbacks.RunCustomCallbacks(m, b.serverCfg.Addr, b.serverCfg.Port,
-				b.serverCfg.Logger, b.msgBuffer, b.gossipRound)
-			return added, err
-		}
-		return added, err
-	}
-
 	err := b.msgBuffer.AddMessage(m)
-
 	if err != nil {
-		e := fmt.Errorf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s",
-			b.serverCfg.Addr, b.serverCfg.Port, m.ID, b.gossipRound.GetNumber(), err)
-		b.serverCfg.Logger.Print(e)
-		return true, e
+		b.logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", b.addr, b.port, m.ID, b.gossipRound.GetNumber(), err)
+		return err
 	}
 
-	b.serverCfg.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d",
-		b.serverCfg.Addr, b.serverCfg.Port, m.ID, b.gossipRound.GetNumber())
-	return true, nil
+	b.logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
+
+	// run callback function for messages with a callback registered
+	if callbackType != callback.NOCALLBACK {
+		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.logger)
+		if err != nil {
+			b.logger.Printf("Error at calling callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
+		}
+		_ = b.customCallbacks.RunCustomCallbacks(m, b.logger)
+	}
+	return nil
 }
 
 // AddPeer adds new peer in peers buffer
