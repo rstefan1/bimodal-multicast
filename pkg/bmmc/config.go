@@ -37,7 +37,7 @@ type Config struct {
 	Logger *log.Logger
 	// Callbacks funtions
 	// Optional
-	Callbacks map[string]func(interface{}, *log.Logger) (bool, error)
+	Callbacks map[string]func(interface{}, *log.Logger) error
 	// Gossip round duration
 	// Optional
 	RoundDuration time.Duration

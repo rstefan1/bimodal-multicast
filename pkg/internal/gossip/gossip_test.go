@@ -39,7 +39,7 @@ const (
 )
 
 func getFakeEmptyCallbackRegistry() *callback.CustomRegistry {
-	cb, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) (bool, error){})
+	cb, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) error{})
 	Expect(err).To(Succeed())
 	return cb
 }

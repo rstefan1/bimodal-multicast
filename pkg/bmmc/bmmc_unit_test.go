@@ -39,7 +39,7 @@ const localhost = "localhost"
 func newBMMC(addr, port string, peerBuffer *peer.Buffer, msgBuffer *buffer.MessageBuffer) *Bmmc {
 	gossipRound := round.NewGossipRound()
 
-	cbCustomRegistry, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) (bool, error){})
+	cbCustomRegistry, err := callback.NewCustomRegistry(map[string]func(interface{}, *log.Logger) error{})
 	Expect(err).To(Succeed())
 	cbDefaultRegistry, err := callback.NewDefaultRegistry()
 	Expect(err).To(Succeed())
@@ -77,6 +77,7 @@ func newBMMC(addr, port string, peerBuffer *peer.Buffer, msgBuffer *buffer.Messa
 		gossiper:    gossiper,
 		serverCfg:   serverCfg,
 		gossiperCfg: gossiperCfg,
+		logger:      logger,
 		stop:        make(chan struct{}),
 	}
 }
@@ -124,9 +125,8 @@ var _ = Describe("BMMC", func() {
 			msg := "awesome-message"
 			expectedBuffer := []string{msg}
 
-			added, err := bmmc1.AddMessage(msg, callback.NOCALLBACK)
+			err := bmmc1.AddMessage(msg, callback.NOCALLBACK)
 			Expect(err).To(BeNil())
-			Expect(added).To(BeTrue())
 
 			Eventually(func() []string {
 				buf := bmmc1.GetMessages()

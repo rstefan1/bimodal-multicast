@@ -21,16 +21,15 @@ import (
 	"log"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // CustomRegistry is a custom callbacks registry
 type CustomRegistry struct {
-	callbacks map[string]func(interface{}, *log.Logger) (bool, error)
+	callbacks map[string]func(interface{}, *log.Logger) error
 }
 
 // NewCustomRegistry creates a custom callback registry
-func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) (bool, error)) (*CustomRegistry, error) {
+func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*CustomRegistry, error) {
 	r := &CustomRegistry{}
 
 	if cb == nil {
@@ -42,43 +41,26 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) (bool, error
 }
 
 // GetCustomCallback returns a custom callback from registry
-func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Logger) (bool, error), error) {
+func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 	return nil, fmt.Errorf("callback type doesn't exist in custom registry")
 }
 
-// RunCustomCallbacks runs custom callbacks and adds given message in buffer.
-// RunCustomCallbacks returns true if given message was added in buffer.
-func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, hostAddr, hostPort string,
-	logger *log.Logger, msgBuf *buffer.MessageBuffer, gossipRound *round.GossipRound) (bool, error) {
-
+// RunCustomCallbacks runs custom callbacks.
+func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, logger *log.Logger) error {
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCustomCallback(m.CallbackType)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// run callback function
-	ok, err := callbackFn(m.Msg, logger)
+	err = callbackFn(m.Msg, logger)
 	if err != nil {
-		e := fmt.Errorf("BMMC %s:%s: Error at calling callback function: %s", hostAddr, hostPort, err)
-		logger.Print(e)
+		return err
 	}
 
-	// add message in buffer only if callback call returns true
-	if ok {
-		err = msgBuf.AddMessage(m)
-		if err != nil {
-			e := fmt.Errorf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, gossipRound.GetNumber(), err)
-			logger.Print(e)
-			fmt.Println()
-			return true, e
-		}
-		logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, gossipRound.GetNumber())
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }

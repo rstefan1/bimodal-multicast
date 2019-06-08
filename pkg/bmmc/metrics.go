@@ -32,7 +32,7 @@ func RunWithSpec(retries int,
 	noPeers int,
 	loss float64,
 	beta float64,
-	cbRegistry map[string]func(interface{}, *log.Logger) (bool, error),
+	cbRegistry map[string]func(interface{}, *log.Logger) error,
 	cbType string,
 	timeout time.Duration) error {
 
@@ -89,12 +89,9 @@ func RunWithSpec(retries int,
 		// add a message
 		msg := "another-awesome-message"
 		randomNode := rand.Intn(noPeers)
-		added, err := nodes[randomNode].AddMessage(msg, cbType)
+		err = nodes[randomNode].AddMessage(msg, cbType)
 		if err != nil {
 			return err
-		}
-		if !added {
-			return fmt.Errorf("Message not added in buffer")
 		}
 
 		// add peers in buffer

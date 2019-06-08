@@ -35,17 +35,15 @@ import (
     cfg := bmmc.Config{
         Addr:      "localhost",
         Port:      "14999",
-        Callbacks: map[string]func (interface{}, *log.Logger) (bool, error) {
+        Callbacks: map[string]func (interface{}, *log.Logger) (error) {
             "awesome-callback":
-            func (msg interface{}, logger *log.Logger) (bool, error) {
+            func (msg interface{}, logger *log.Logger) (error) {
                 fmt.Println("The message is:", msg)
-                return true, nil
+                return nil
             },
         },
     }
 ```
-
-The buffer will be updated only if the callback function call returns true.
 
 * Create an instance for protocol
 
@@ -68,9 +66,9 @@ The buffer will be updated only if the callback function call returns true.
 * Add a new message in buffer
 
 ```golang
-    added, err := p.AddMessage("awesome message", "awesome-callback")
+    err := p.AddMessage("awesome message", "awesome-callback")
     
-    added, err := p.AddMessage(12345, "awesome-callback")
+    err := p.AddMessage(12345, "awesome-callback")
 ```
 
 For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
