@@ -119,13 +119,14 @@ func New(cfg *Config) (*Bmmc, error) {
 		DefaultCallbacks: p.defaultCallbacks,
 	}
 	p.gossiperCfg = gossip.Config{
-		Addr:        p.addr,
-		Port:        p.port,
-		PeerBuf:     p.peerBuffer,
-		MsgBuf:      p.msgBuffer,
-		Beta:        cfg.Beta,
-		GossipRound: p.gossipRound,
-		Logger:      p.logger,
+		Addr:          p.addr,
+		Port:          p.port,
+		PeerBuf:       p.peerBuffer,
+		MsgBuf:        p.msgBuffer,
+		Beta:          cfg.Beta,
+		GossipRound:   p.gossipRound,
+		RoundDuration: cfg.RoundDuration,
+		Logger:        p.logger,
 	}
 
 	p.server = server.New(p.serverCfg)
