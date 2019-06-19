@@ -35,9 +35,9 @@ import (
     cfg := bmmc.Config{
         Addr:      "localhost",
         Port:      "14999",
-        Callbacks: map[string]func (interface{}, *log.Logger) (error) {
+        Callbacks: map[string]func (interface{}, *log.Logger) error {
             "awesome-callback":
-            func (msg interface{}, logger *log.Logger) (error) {
+            func (msg interface{}, logger *log.Logger) error {
                 fmt.Println("The message is:", msg)
                 return nil
             },
@@ -54,7 +54,7 @@ import (
 * Start the protocol
 
 ```golang
-    p.Start()
+    err := p.Start()
 ```
 
 * Stop the protocol
@@ -69,6 +69,8 @@ import (
     err := p.AddMessage("awesome message", "awesome-callback")
     
     err := p.AddMessage(12345, "awesome-callback")
+    
+    err := p.AddMessage(true, "awesome-callback")
 ```
 
 For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
@@ -107,9 +109,22 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  - [x] add and remove peers via protocol
  - [x] synchronize all types of messages (bool, string, int, complex structs, etc.)
  
+ 
+## Roadmap to v0.3
+ - [ ] Refactor
+ - [ ] Documentation
+
+
+## Roadmap to v1.0
+ - [ ] Circular buffer
+ - [ ] Publisher - subscriber pattern
+ - [ ] Validate performance, scalability and data consistency
+ - [ ] Performance optimizations
+
+
 ## Contributing
 
-We welcome all contributions in the form of new issues for feature requests, bugs
+I welcome all contributions in the form of new issues for feature requests, bugs
 or even pull requests.
 
 ## License
