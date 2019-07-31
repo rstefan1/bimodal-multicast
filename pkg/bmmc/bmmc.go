@@ -19,15 +19,14 @@ package bmmc
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/gossip"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/server"
 )
 
 const (
@@ -69,9 +68,7 @@ type BMMC struct {
 	// gossip round number
 	gossipRound *round.GossipRound
 	// http server
-	server *server.Server
-	// gossiper
-	gossiper *gossip.Gossiper
+	server *http.Server
 	// custom callback registry
 	customCallbacks *callback.CustomRegistry
 	// default callback registry
@@ -126,7 +123,7 @@ func New(cfg *Config) (*BMMC, error) {
 		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
 	}
 
-	p := &Bmmc{
+	b := &Bmmc{
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),
 		messageBuffer:    buffer.NewMessageBuffer(),
@@ -138,8 +135,9 @@ func New(cfg *Config) (*BMMC, error) {
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),
 	}
+	b.server = b.newServer()
 
-	return p, nil
+	return b, nil
 }
 
 // Start starts the gossip server and the http server
