@@ -19,46 +19,12 @@ package bmmc
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
-
-// Config has configs for http server
-type Config struct {
-	// Addr is http server address
-	Addr string
-	// Port is http server port
-	Port string
-	// PeerBuf is the list of peers
-	PeerBuf *peer.Buffer
-	// MsgBuf is the list of messages
-	MsgBuf *buffer.MessageBuffer
-	// GossipRound is the gossip round number
-	GossipRound *round.GossipRound
-	// Logger
-	Logger *log.Logger
-	// Customo Callbacks Registry
-	CustomCallbacks *callback.CustomRegistry
-	// Default Callback Registry
-	DefaultCallbacks *callback.DefaultRegistry
-}
-
-// Server is exported type for server
-type Server struct {
-	server            *http.Server
-	peerBuffer        *peer.Buffer
-	msgBuffer         *buffer.MessageBuffer
-	gossipRoundNumber *round.GossipRound
-	logger            *log.Logger
-}
 
 func gossipHandler(_ http.ResponseWriter, r *http.Request, cfg Config) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
@@ -164,13 +130,10 @@ func gracefullyShutdown(s *Server) {
 	}
 }
 
-// New creates new server
-func New(cfg Config) *Server {
-	if cfg.Logger == nil {
-		cfg.Logger = log.New(os.Stdout, "", 0)
-	}
+func (s *BMMC) startServer(stop <-chan struct{}) error {
+	errChan := make(chan error)
 
-	return &Server{
+	srv := &Server{
 		server: &http.Server{
 			Addr: fmt.Sprintf("0.0.0.0:%s", cfg.Port),
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -189,14 +152,9 @@ func New(cfg Config) *Server {
 		gossipRoundNumber: cfg.GossipRound,
 		logger:            cfg.Logger,
 	}
-}
-
-// Start starts the server
-func (s *Server) Start(stop <-chan struct{}) error {
-	errChan := make(chan error)
 
 	go func() {
-		err := startServer(s)
+		err := startServer(srv)
 		errChan <- err
 	}()
 
