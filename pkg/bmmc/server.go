@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package server
+package bmmc
 
 import (
 	"context"
@@ -30,6 +30,26 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
+
+// Config has configs for http server
+type Config struct {
+	// Addr is http server address
+	Addr string
+	// Port is http server port
+	Port string
+	// PeerBuf is the list of peers
+	PeerBuf *peer.Buffer
+	// MsgBuf is the list of messages
+	MsgBuf *buffer.MessageBuffer
+	// GossipRound is the gossip round number
+	GossipRound *round.GossipRound
+	// Logger
+	Logger *log.Logger
+	// Customo Callbacks Registry
+	CustomCallbacks *callback.CustomRegistry
+	// Default Callback Registry
+	DefaultCallbacks *callback.DefaultRegistry
+}
 
 // Server is exported type for server
 type Server struct {

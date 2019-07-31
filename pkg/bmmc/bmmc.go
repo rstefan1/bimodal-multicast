@@ -36,6 +36,28 @@ const (
 	NOCALLBACK = callback.NOCALLBACK
 )
 
+// Config is the config for the protocol
+type Config struct {
+	// Addr is HTTP address for node which runs gossip and http servers
+	// Required
+	Addr string
+	// Port is HTTP port for node which runs gossip  and http servers
+	// Required
+	Port string
+	// Beta is the expected fanout for gossip rounds
+	// Optional
+	Beta float64
+	// Logger
+	// Optional
+	Logger *log.Logger
+	// Callbacks funtions
+	// Optional
+	Callbacks map[string]func(interface{}, *log.Logger) error
+	// Gossip round duration
+	// Optional
+	RoundDuration time.Duration
+}
+
 // Bmmc is the protocol
 type Bmmc struct {
 	// address
