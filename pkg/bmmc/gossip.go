@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gossip
+package bmmc
 
 import (
 	"log"
@@ -25,6 +25,26 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
+
+// Config has configs for gossip object
+type Config struct {
+	// Addr is the address for node which runs gossip round
+	Addr string
+	// Port is the port for node which runs gossip round
+	Port string
+	// PeerBuf is the list of peers
+	PeerBuf *peer.Buffer
+	// MsgBuf is the list of messages
+	MsgBuf *buffer.MessageBuffer
+	// GossipRound is the gossip round number
+	GossipRound *round.GossipRound
+	// Beta is the expected fanout
+	Beta float64
+	// Logger
+	Logger *log.Logger
+	// Gossip round duration
+	RoundDuration time.Duration
+}
 
 // Gossiper is the gossiper
 type Gossiper struct {
