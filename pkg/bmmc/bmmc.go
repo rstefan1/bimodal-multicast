@@ -123,14 +123,13 @@ func New(cfg *Config) (*BMMC, error) {
 		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
 	}
 
-	b := &Bmmc{
+	b := &BMMC{
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),
 		messageBuffer:    buffer.NewMessageBuffer(),
 		gossipRound:      round.NewGossipRound(),
 		customCallbacks:  cbCustomRegistry,
 		defaultCallbacks: cbDefaultRegistry,
-		logger:           cfg.Logger,
 
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),
@@ -145,7 +144,7 @@ func (b *BMMC) Start() error {
 	b.stop = make(chan struct{})
 
 	// start http server
-	if err := b.startGossiper(b.stop); err != nil {
+	if err := b.startServer(b.stop); err != nil {
 		return err
 	}
 
@@ -162,75 +161,79 @@ func (b *BMMC) Stop() {
 	close(b.stop)
 }
 
-// // AddMessage adds new message in messages buffer.
-// func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
-// 	m := buffer.NewMessage(msg, callbackType)
+// AddMessage adds new message in messages buffer.
+func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
+	m := buffer.NewMessage(msg, callbackType)
 
-// 	err := b.msgBuffer.AddMessage(m)
-// 	if err != nil {
-// 		b.logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", b.addr, b.port, m.ID, b.gossipRound.GetNumber(), err)
-// 		return err
-// 	}
+	err := b.messageBuffer.AddMessage(m)
+	if err != nil {
+		b.config.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s",
+			b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+		return err
+	}
 
-// 	b.logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
+	b.config.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d",
+		b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
 
-// 	// run callback function for messages with a callback registered
-// 	if callbackType != callback.NOCALLBACK {
-// 		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.logger)
-// 		if err != nil {
-// 			b.logger.Printf("Error at calling default callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
-// 		}
+	// run callback function for messages with a callback registered
+	if callbackType != callback.NOCALLBACK {
+		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.config.Logger)
+		if err != nil {
+			b.config.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d",
+				b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
+		}
 
-// 		err = b.customCallbacks.RunCustomCallbacks(m, b.logger)
-// 		if err != nil {
-// 			b.logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d", b.addr, b.port, m.ID, b.gossipRound.GetNumber())
-// 		}
-// 	}
-// 	return nil
-// }
+		err = b.customCallbacks.RunCustomCallbacks(m, b.config.Logger)
+		if err != nil {
+			b.config.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d",
+				b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
+		}
+	}
+	return nil
+}
 
-// // AddPeer adds new peer in peers buffer
-// func (b *BMMC) AddPeer(addr, port string) error {
-// 	err := b.peerBuffer.AddPeer(
-// 		peer.NewPeer(addr, port),
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
-// 	}
+// AddPeer adds new peer in peers buffer
+func (b *BMMC) AddPeer(addr, port string) error {
+	err := b.peerBuffer.AddPeer(
+		peer.NewPeer(addr, port),
+	)
+	if err != nil {
+		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
+	}
 
-// 	err = b.msgBuffer.AddMessage(
-// 		buffer.NewMessage(
-// 			fmt.Sprintf("%s/%s", addr, port),
-// 			callback.ADDPEER,
-// 		),
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
-// 	}
+	err = b.messageBuffer.AddMessage(
+		buffer.NewMessage(
+			fmt.Sprintf("%s/%s", addr, port),
+			callback.ADDPEER,
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
-// // RemovePeer removes given peer from peers buffer
-// func (b *BMMC) RemovePeer(addr, port string) error {
-// 	b.peerBuffer.RemovePeer(
-// 		peer.NewPeer(addr, port),
-// 	)
+// RemovePeer removes given peer from peers buffer
+func (b *BMMC) RemovePeer(addr, port string) error {
+	b.peerBuffer.RemovePeer(
+		peer.NewPeer(addr, port),
+	)
 
-// 	err := b.msgBuffer.AddMessage(
-// 		buffer.NewMessage(
-// 			fmt.Sprintf("%s/%s", addr, port),
-// 			callback.REMOVEPEER,
-// 		),
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("Error at removing the peer %s/%s: %s", addr, port, err)
-// 	}
+	err := b.messageBuffer.AddMessage(
+		buffer.NewMessage(
+			fmt.Sprintf("%s/%s", addr, port),
+			callback.REMOVEPEER,
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("Error at removing the peer %s/%s: %s", addr, port, err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
-// // GetMessages returns a slice with all messages from messages buffer
-// func (b *BMMC) GetMessages() []interface{} {
-// 	return b.msgBuffer.UnwrapMessageBuffer()
-// }
+// GetMessages returns a slice with all messages from messages buffer
+func (b *BMMC) GetMessages() []interface{} {
+	return b.messageBuffer.UnwrapMessageBuffer()
+}
