@@ -38,10 +38,10 @@ const (
 
 // Config is the config for the protocol
 type Config struct {
-	// Addr is HTTP address for node which runs gossip and http servers
+	// Addr is HTTP address for node which runs http servers
 	// Required
 	Addr string
-	// Port is HTTP port for node which runs gossip  and http servers
+	// Port is HTTP port for node which runs http servers
 	// Required
 	Port string
 	// Beta is the expected fanout for gossip rounds
@@ -60,11 +60,6 @@ type Config struct {
 
 // Bmmc is the protocol
 type Bmmc struct {
-	// address
-	addr string
-	// port
-	port string
-	// shared buffer with addresses of nodes in system
 	peerBuffer *peer.Buffer
 	// shared buffer with gossip messages
 	msgBuffer *buffer.MessageBuffer
@@ -88,13 +83,14 @@ type Bmmc struct {
 	stop chan struct{}
 }
 
-// New creates a new instance for the protocol
-func New(cfg *Config) (*Bmmc, error) {
+// validateConfig validates given config.
+// Also, it sets default values for optional fields.
+func validateConfig(cfg *Config) error {
 	if len(cfg.Addr) == 0 {
-		return nil, fmt.Errorf("Address must not be empty")
+		return fmt.Errorf("Address must not be empty")
 	}
 	if len(cfg.Port) == 0 {
-		return nil, fmt.Errorf("Port must not be empty")
+		return fmt.Errorf("Port must not be empty")
 	}
 	if cfg.Beta == 0 {
 		cfg.Beta = defaultBeta
@@ -104,6 +100,16 @@ func New(cfg *Config) (*Bmmc, error) {
 	}
 	if cfg.RoundDuration == 0 {
 		cfg.RoundDuration = time.Millisecond * 100
+	}
+
+	return nil
+}
+
+// New creates a new instance for the protocol
+func New(cfg *Config) (*Bmmc, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	callbacks := cfg.Callbacks
