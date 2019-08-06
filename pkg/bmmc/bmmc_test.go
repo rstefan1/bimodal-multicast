@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
+	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -28,7 +30,6 @@ import (
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/testutil"
 )
 
 func getBuffer(node *bmmc.BMMC) []string {
@@ -64,57 +65,74 @@ func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logg
 	}
 }
 
+// suggestPort suggests an unused port
+func suggestPort() string {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		panic(err)
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+	// nolint:errcheck
+	defer l.Close()
+
+	return strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+}
+
+func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
+	b, err := bmmc.New(&bmmc.Config{
+		Addr:      addr,
+		Port:      port,
+		Callbacks: cbCustomRegistry,
+	})
+	Expect(err).To(BeNil())
+
+	return b
+}
+
 var _ = Describe("BMMC", func() {
-	DescribeTable("when system has two nodes and one node has a message in buffer",
+	DescribeTable("protocol",
 		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
 			msg, callbackType string,
 			expectedBuf []string) {
 
-			port1 := testutil.SuggestPort()
-			port2 := testutil.SuggestPort()
+			addr := "localhost"
+			port1 := suggestPort()
+			port2 := suggestPort()
 
-			node1, err := bmmc.New(&bmmc.Config{
-				Addr:      "localhost",
-				Port:      port1,
-				Beta:      0.5,
-				Callbacks: cbCustomRegistry,
-			})
-			Expect(err).To(Succeed())
-
-			node2, err := bmmc.New(&bmmc.Config{
-				Addr:      "localhost",
-				Port:      port2,
-				Beta:      0.5,
-				Callbacks: cbCustomRegistry,
-			})
-			Expect(err).To(Succeed())
+			node1 := newBMMC(addr, port1, cbCustomRegistry)
+			node2 := newBMMC(addr, port2, cbCustomRegistry)
 
 			Expect(node1.Start())
 			Expect(node2.Start())
 
-			Expect(node1.AddPeer("localhost", port2)).To(Succeed())
-			Expect(node2.AddPeer("localhost", port1)).To(Succeed())
+			Expect(node1.AddPeer(addr, port2)).To(Succeed())
+			Expect(node2.AddPeer(addr, port1)).To(Succeed())
 
+			// message for adding peers in buffer
 			extraMsgBuffer := []string{
-				fmt.Sprintf("localhost/%s", port1),
-				fmt.Sprintf("localhost/%s", port2),
+				fmt.Sprintf("%s/%s", addr, port1),
+				fmt.Sprintf("%s/%s", addr, port2),
 			}
+			expectedBuf = append(expectedBuf, extraMsgBuffer...)
 
-			// add a message in first node
+			// Add a message in first node.
+			// Both nodes must have this message.
 			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
 
-			Eventually(getBufferFn(node1), time.Second).Should(
-				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
-
-			Eventually(getBufferFn(node2), time.Second).Should(
-				ConsistOf(append(extraMsgBuffer, expectedBuf...)))
+			Eventually(getBufferFn(node1)).Should(ConsistOf(expectedBuf))
+			Eventually(getBufferFn(node2)).Should(ConsistOf(expectedBuf))
 		},
-		Entry("sync buffers if callback return error",
+		Entry("sync buffers if callback returns error",
 			fakeRegistry("my-callback", fmt.Errorf("invalid-callback")),
 			"awesome-message",
 			"my-callback",
 			[]string{"awesome-message"}),
-		Entry("sync buffers if callback not return false",
+		Entry("sync buffers if callback doesn't return error",
 			fakeRegistry("my-callback", nil),
 			"awesome-message",
 			"my-callback",
@@ -132,23 +150,17 @@ var _ = Describe("BMMC", func() {
 		)
 
 		BeforeEach(func() {
-			var err error
 			extraMsgBuffer = make([]interface{}, len)
 			expectedBuf = []interface{}{}
 
 			for i := 0; i < len; i++ {
-				ports[i] = testutil.SuggestPort()
+				ports[i] = suggestPort()
 				addrs[i] = "localhost"
 				extraMsgBuffer[i] = fmt.Sprintf("%s/%s", addrs[i], ports[i])
 			}
 
 			for i := 0; i < len; i++ {
-				nodes[i], err = bmmc.New(&bmmc.Config{
-					Addr:      addrs[i],
-					Port:      ports[i],
-					Callbacks: map[string]func(interface{}, *log.Logger) error{},
-				})
-				Expect(err).To(Succeed())
+				nodes[i] = newBMMC(addrs[i], ports[i], map[string]func(interface{}, *log.Logger) error{})
 			}
 
 			// start protocol for all nodes
