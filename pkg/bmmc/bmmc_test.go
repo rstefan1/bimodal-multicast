@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -66,76 +65,6 @@ func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logg
 }
 
 var _ = Describe("BMMC", func() {
-	When("creates new protocol instance with broken config", func() {
-		It("returns error when address is empty", func() {
-			_, err := bmmc.New(&bmmc.Config{
-				Port:      "1999",
-				Beta:      0.5,
-				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) error{},
-			})
-			Expect(err).To(Not(Succeed()))
-		})
-
-		It("returns error when port is empty", func() {
-			_, err := bmmc.New(&bmmc.Config{
-				Addr:      "localhost",
-				Beta:      0.5,
-				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) error{},
-			})
-			Expect(err).To(Not(Succeed()))
-		})
-
-		It("doens't returns error when callback CustomRegistry is nil", func() {
-			cfg := bmmc.Config{
-				Addr:   "localhost",
-				Port:   "1999",
-				Beta:   0.5,
-				Logger: log.New(os.Stdout, "", 0),
-			}
-			_, err := bmmc.New(&cfg)
-			Expect(err).To(Succeed())
-		})
-
-		It("set default value for beta if it is empty", func() {
-			cfg := bmmc.Config{
-				Addr:      "localhost",
-				Port:      "1999",
-				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) error{},
-			}
-			_, err := bmmc.New(&cfg)
-			Expect(err).To(Succeed())
-			Expect(cfg.Beta).To(Equal(0.3))
-		})
-
-		It("set default value for gossip round duration if it is empty", func() {
-			cfg := bmmc.Config{
-				Addr:      "localhost",
-				Port:      "1999",
-				Beta:      0.5,
-				Logger:    log.New(os.Stdout, "", 0),
-				Callbacks: map[string]func(interface{}, *log.Logger) error{},
-			}
-			_, err := bmmc.New(&cfg)
-			Expect(err).To(Succeed())
-			Expect(cfg.RoundDuration).NotTo(Equal(0))
-		})
-
-		It("set default value for logger if it is empty", func() {
-			cfg := bmmc.Config{
-				Addr:      "localhost",
-				Port:      "1999",
-				Beta:      0.5,
-				Callbacks: map[string]func(interface{}, *log.Logger) error{},
-			}
-			_, err := bmmc.New(&cfg)
-			Expect(err).To(Succeed())
-			Expect(cfg.Logger).To(Not(BeNil()))
-		})
-	})
-
 	DescribeTable("when system has two nodes and one node has a message in buffer",
 		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
 			msg, callbackType string,
