@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httputil
+package bmmc
 
 import (
 	"bytes"
@@ -28,34 +28,36 @@ import (
 
 // HTTPGossip is gossip message for http server
 type HTTPGossip struct {
-	Addr        string              `json:"http_gossip_addr"`
-	Port        string              `json:"http_gossip_port"`
-	RoundNumber *round.GossipRound  `json:"http_gossip_round_number"`
-	Digests     buffer.DigestBuffer `json:"http_gossip_digests"`
+	Addr        string              `json:"addr"`
+	Port        string              `json:"port"`
+	RoundNumber *round.GossipRound  `json:"roundNumber"`
+	Digests     buffer.DigestBuffer `json:"digests"`
 }
 
-// ReceiveGossip receives http gossip message
-func ReceiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
-	decoder := json.NewDecoder(r.Body)
+func gossipHTTPPath(addr, port string) string {
+	return fmt.Sprintf("http://%s:%s/gossip", addr, port)
+}
+
+// receiveGossip receives a HTPP gossip message
+func receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
 	var t HTTPGossip
-	err := decoder.Decode(&t)
-	if err != nil {
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&t); err != nil {
 		return nil, "", "", nil, fmt.Errorf("Error at decoding http gossip message in HTTP Server: %s", err)
 	}
 
 	return &t.Digests, t.Addr, t.Port, t.RoundNumber, nil
 }
 
-// SendGossip send http gossip message
-func SendGossip(gossipMsg HTTPGossip, tAddr, tPort string) error {
+// sendGossip sends a HTTP gossip message
+func sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	jsonGossip, err := json.Marshal(gossipMsg)
 	if err != nil {
 		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", gossipMsg.Addr, gossipMsg.Port, err)
 	}
 
-	path := fmt.Sprintf("http://%s:%s/gossip", tAddr, tPort)
-
-	_, err = http.Post(path, "json", bytes.NewBuffer(jsonGossip))
+	_, err = http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
 	if err != nil {
 		return fmt.Errorf("Gossiper from %s:%s can not marshal the gossip message: %s", gossipMsg.Addr, gossipMsg.Port, err)
 	}

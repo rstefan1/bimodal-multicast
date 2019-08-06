@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httputil
+package bmmc
 
 import (
 	"bytes"
@@ -27,33 +27,35 @@ import (
 
 // HTTPSynchronization is synchronization message for http server
 type HTTPSynchronization struct {
-	Addr     string               `json:"http_synchronization_addr"`
-	Port     string               `json:"http_synchronization_port"`
-	Messages buffer.MessageBuffer `json:"http_synchronization_digests"`
+	Addr     string               `json:"addr"`
+	Port     string               `json:"port"`
+	Messages buffer.MessageBuffer `json:"messages"`
 }
 
-// ReceiveSynchronization receives http solicitation message
-func ReceiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
-	decoder := json.NewDecoder(r.Body)
+func synchronizationHTTPPath(addr, port string) string {
+	return fmt.Sprintf("http://%s:%s/synchronization", addr, port)
+}
+
+// receiveSynchronization receives http solicitation message
+func receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
 	var t HTTPSynchronization
-	err := decoder.Decode(&t)
-	if err != nil {
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&t); err != nil {
 		return nil, "", "", fmt.Errorf("Error at decoding http synchronization message in HTTP Server: %s", err)
 	}
 
 	return &t.Messages, t.Addr, t.Port, nil
 }
 
-// SendSynchronization send http synchronization message
-func SendSynchronization(synchronization HTTPSynchronization, tAddr, tPort string) error {
+// sendSynchronization send http synchronization message
+func sendSynchronization(synchronization HTTPSynchronization, addr, port string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
 		return fmt.Errorf("Error at marshal http synchronization message in HTTP Server: %s", err)
 	}
 
-	path := fmt.Sprintf("http://%s:%s/synchronization", tAddr, tPort)
-
-	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSynchronization))
+	_, err = http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
 		return fmt.Errorf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
 	}

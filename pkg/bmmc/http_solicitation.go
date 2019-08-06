@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package httputil
+package bmmc
 
 import (
 	"bytes"
@@ -28,34 +28,36 @@ import (
 
 // HTTPSolicitation is solicitation message for http server
 type HTTPSolicitation struct {
-	Addr        string              `json:"http_solicitation_addr"`
-	Port        string              `json:"http_solicitation_port"`
-	RoundNumber *round.GossipRound  `json:"http_solicitation_round_number"`
-	Digests     buffer.DigestBuffer `json:"http_solicitation_digests"`
+	Addr        string              `json:"addr"`
+	Port        string              `json:"port"`
+	RoundNumber *round.GossipRound  `json:"roundNumber"`
+	Digests     buffer.DigestBuffer `json:"digests"`
 }
 
-// ReceiveSolicitation receives http solicitation message
-func ReceiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
-	decoder := json.NewDecoder(r.Body)
+func solicitationHTTPPath(addr, port string) string {
+	return fmt.Sprintf("http://%s:%s/solicitation", addr, port)
+}
+
+// receiveSolicitation receives http solicitation message
+func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
 	var t HTTPSolicitation
-	err := decoder.Decode(&t)
-	if err != nil {
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&t); err != nil {
 		return nil, "", "", nil, fmt.Errorf("Error at decoding http solicitation message in HTTP Server: %s", err)
 	}
 
 	return &t.Digests, t.Addr, t.Port, t.RoundNumber, nil
 }
 
-// SendSolicitation send http solicitation message
-func SendSolicitation(solicitation HTTPSolicitation, tAddr, tPort string) error {
+// sendSolicitation send http solicitation message
+func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 	jsonSolicitation, err := json.Marshal(solicitation)
 	if err != nil {
 		return fmt.Errorf("Error at marshal http solicitation in HTTP Server: %s", err)
 	}
 
-	path := fmt.Sprintf("http://%s:%s/solicitation", tAddr, tPort)
-
-	_, err = http.Post(path, "json", bytes.NewBuffer(jsonSolicitation))
+	_, err = http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 	if err != nil {
 		return fmt.Errorf("Error at sending http soliccitation message in HTTP Server: %s", err)
 	}
