@@ -18,10 +18,7 @@ package bmmc
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -30,34 +27,11 @@ import (
 )
 
 const (
-	defaultBeta = 0.3
 	// NOCALLBACK is callback type for messages without callback
 	NOCALLBACK = callback.NOCALLBACK
 )
 
-// Config is the config for the protocol
-type Config struct {
-	// Addr is HTTP address for node which runs http servers
-	// Required
-	Addr string
-	// Port is HTTP port for node which runs http servers
-	// Required
-	Port string
-	// Beta is the expected fanout for gossip rounds
-	// Optional
-	Beta float64
-	// Logger
-	// Optional
-	Logger *log.Logger
-	// Callbacks funtions
-	// Optional
-	Callbacks map[string]func(interface{}, *log.Logger) error
-	// Gossip round duration
-	// Optional
-	RoundDuration time.Duration
-}
-
-// BMMC is the protocol
+// BMMC is the bimodal multicast protocol
 type BMMC struct {
 	// protocol config
 	config *Config
@@ -80,41 +54,16 @@ type BMMC struct {
 	selectedPeers []bool
 }
 
-// validateConfig validates given config.
-// Also, it sets default values for optional fields.
-func validateConfig(cfg *Config) error {
-	if len(cfg.Addr) == 0 {
-		return fmt.Errorf("Address must not be empty")
-	}
-	if len(cfg.Port) == 0 {
-		return fmt.Errorf("Port must not be empty")
-	}
-	if cfg.Beta == 0 {
-		cfg.Beta = defaultBeta
-	}
-	if cfg.Logger == nil {
-		cfg.Logger = log.New(os.Stdout, "", 0)
-	}
-	if cfg.RoundDuration == 0 {
-		cfg.RoundDuration = time.Millisecond * 100
-	}
-
-	return nil
-}
-
 // New creates a new instance for the protocol
 func New(cfg *Config) (*BMMC, error) {
-	err := validateConfig(cfg)
-	if err != nil {
+	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 
+	cfg.fillEmptyFields()
+
 	// set callbacks
-	callbacks := cfg.Callbacks
-	if callbacks == nil {
-		callbacks = map[string]func(interface{}, *log.Logger) error{}
-	}
-	cbCustomRegistry, err := callback.NewCustomRegistry(callbacks)
+	cbCustomRegistry, err := callback.NewCustomRegistry(cfg.Callbacks)
 	if err != nil {
 		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
 	}
