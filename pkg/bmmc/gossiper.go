@@ -18,8 +18,6 @@ package bmmc
 
 import (
 	"time"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 )
 
 // randomlySelectPeer is a helper func that returns a random peer
@@ -55,7 +53,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
-			b.config.Logger.Printf("End of gossip round from %s:%s", b.config.Address, b.config.Port)
+			b.config.Logger.Printf("End of gossip round from %s:%s", b.config.Addr, b.config.Port)
 			return
 		default:
 			b.gossipRound.Increment()
@@ -66,14 +64,14 @@ func (b *BMMC) round(stop <-chan struct{}) {
 			for i := 0; i < gossipLen; i++ {
 				destAddr, destPort := b.randomlySelectPeer()
 
-				gossipMsg := httputil.HTTPGossip{
-					Addr:        b.config.Address,
+				gossipMsg := HTTPGossip{
+					Addr:        b.config.Addr,
 					Port:        b.config.Port,
 					RoundNumber: b.gossipRound,
 					Digests:     *(b.messageBuffer).DigestBuffer(),
 				}
 
-				err := httputil.SendGossip(gossipMsg, destAddr, destPort)
+				err := sendGossip(gossipMsg, destAddr, destPort)
 				if err != nil {
 					b.config.Logger.Printf("%s", err)
 				}
@@ -88,6 +86,6 @@ func (b *BMMC) round(stop <-chan struct{}) {
 }
 
 func (b *BMMC) startGossiper(stop <-chan struct{}) {
-	b.config.Logger.Printf("Starting Gossiper on %s:%s", b.config.Address, b.config.Port)
+	b.config.Logger.Printf("Starting Gossiper on %s:%s", b.config.Addr, b.config.Port)
 	b.round(stop)
 }

@@ -37,9 +37,9 @@ const (
 
 // Config is the config for the protocol
 type Config struct {
-	// Address is HTTP address for node which runs http servers
+	// Addr is HTTP address for node which runs http servers
 	// Required
-	Address string
+	Addr string
 	// Port is HTTP port for node which runs http servers
 	// Required
 	Port string
@@ -83,7 +83,7 @@ type BMMC struct {
 // validateConfig validates given config.
 // Also, it sets default values for optional fields.
 func validateConfig(cfg *Config) error {
-	if len(cfg.Address) == 0 {
+	if len(cfg.Addr) == 0 {
 		return fmt.Errorf("Address must not be empty")
 	}
 	if len(cfg.Port) == 0 {
@@ -168,25 +168,25 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	err := b.messageBuffer.AddMessage(m)
 	if err != nil {
 		b.config.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s",
-			b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+			b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
 		return err
 	}
 
 	b.config.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d",
-		b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
+		b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 
 	// run callback function for messages with a callback registered
 	if callbackType != callback.NOCALLBACK {
 		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.config.Logger)
 		if err != nil {
 			b.config.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d",
-				b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
+				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 		}
 
 		err = b.customCallbacks.RunCustomCallbacks(m, b.config.Logger)
 		if err != nil {
 			b.config.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d",
-				b.config.Address, b.config.Port, m.ID, b.gossipRound.GetNumber())
+				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 		}
 	}
 	return nil

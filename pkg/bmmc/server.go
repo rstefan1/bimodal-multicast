@@ -23,11 +23,10 @@ import (
 	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/httputil"
 )
 
 func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
-	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := httputil.ReceiveGossip(r)
+	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := receiveGossip(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
@@ -41,14 +40,14 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	hostPort := host[1]
 
 	if missingDigestBuffer.Length() > 0 {
-		solicitationMsg := httputil.HTTPSolicitation{
+		solicitationMsg := HTTPSolicitation{
 			Addr:        hostAddr,
 			Port:        hostPort,
 			RoundNumber: tRoundNumber,
 			Digests:     *missingDigestBuffer,
 		}
 
-		err = httputil.SendSolicitation(solicitationMsg, tAddr, tPort)
+		err = sendSolicitation(solicitationMsg, tAddr, tPort)
 		if err != nil {
 			b.config.Logger.Printf("%s", err)
 			return
@@ -57,7 +56,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
-	missingDigestBuffer, tAddr, tPort, _, err := httputil.ReceiveSolicitation(r)
+	missingDigestBuffer, tAddr, tPort, _, err := receiveSolicitation(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
@@ -68,13 +67,13 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	hostAddr := host[0]
 	hostPort := host[1]
 
-	synchronizationMsg := httputil.HTTPSynchronization{
+	synchronizationMsg := HTTPSynchronization{
 		Addr:     hostAddr,
 		Port:     hostPort,
 		Messages: *missingMsgBuffer,
 	}
 
-	err = httputil.SendSynchronization(synchronizationMsg, tAddr, tPort)
+	err = sendSynchronization(synchronizationMsg, tAddr, tPort)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
@@ -86,7 +85,7 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 	hostAddr := host[0]
 	hostPort := host[1]
 
-	rcvMsgBuf, _, _, err := httputil.ReceiveSynchronization(r)
+	rcvMsgBuf, _, _, err := receiveSynchronization(r)
 	if err != nil {
 		b.config.Logger.Printf("BMMC %s:%s Error at receiving synchronization error: %s", hostAddr, hostPort, err)
 		return

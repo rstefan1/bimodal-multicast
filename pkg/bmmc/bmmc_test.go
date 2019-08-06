@@ -79,7 +79,7 @@ var _ = Describe("BMMC", func() {
 
 		It("returns error when port is empty", func() {
 			_, err := bmmc.New(&bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
 				Callbacks: map[string]func(interface{}, *log.Logger) error{},
@@ -89,10 +89,10 @@ var _ = Describe("BMMC", func() {
 
 		It("doens't returns error when callback CustomRegistry is nil", func() {
 			cfg := bmmc.Config{
-				Address: "localhost",
-				Port:    "1999",
-				Beta:    0.5,
-				Logger:  log.New(os.Stdout, "", 0),
+				Addr:   "localhost",
+				Port:   "1999",
+				Beta:   0.5,
+				Logger: log.New(os.Stdout, "", 0),
 			}
 			_, err := bmmc.New(&cfg)
 			Expect(err).To(Succeed())
@@ -100,7 +100,7 @@ var _ = Describe("BMMC", func() {
 
 		It("set default value for beta if it is empty", func() {
 			cfg := bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Port:      "1999",
 				Logger:    log.New(os.Stdout, "", 0),
 				Callbacks: map[string]func(interface{}, *log.Logger) error{},
@@ -112,7 +112,7 @@ var _ = Describe("BMMC", func() {
 
 		It("set default value for gossip round duration if it is empty", func() {
 			cfg := bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Port:      "1999",
 				Beta:      0.5,
 				Logger:    log.New(os.Stdout, "", 0),
@@ -125,7 +125,7 @@ var _ = Describe("BMMC", func() {
 
 		It("set default value for logger if it is empty", func() {
 			cfg := bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Port:      "1999",
 				Beta:      0.5,
 				Callbacks: map[string]func(interface{}, *log.Logger) error{},
@@ -145,7 +145,7 @@ var _ = Describe("BMMC", func() {
 			port2 := testutil.SuggestPort()
 
 			node1, err := bmmc.New(&bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Port:      port1,
 				Beta:      0.5,
 				Callbacks: cbCustomRegistry,
@@ -153,7 +153,7 @@ var _ = Describe("BMMC", func() {
 			Expect(err).To(Succeed())
 
 			node2, err := bmmc.New(&bmmc.Config{
-				Address:   "localhost",
+				Addr:      "localhost",
 				Port:      port2,
 				Beta:      0.5,
 				Callbacks: cbCustomRegistry,
@@ -215,7 +215,7 @@ var _ = Describe("BMMC", func() {
 
 			for i := 0; i < len; i++ {
 				nodes[i], err = bmmc.New(&bmmc.Config{
-					Address:   addrs[i],
+					Addr:      addrs[i],
 					Port:      ports[i],
 					Callbacks: map[string]func(interface{}, *log.Logger) error{},
 				})
