@@ -21,6 +21,10 @@ import (
 	"sync"
 )
 
+const (
+	maxRoundNumber = int64(math.MaxInt64 - 10)
+)
+
 // GossipRound is the number of gossiper rounds
 type GossipRound struct {
 	Number int64       `json:"number"`
@@ -41,8 +45,8 @@ func (r *GossipRound) Increment() {
 	defer r.Mux.Unlock()
 
 	r.Number++
-	if r.Number > math.MaxInt64-10 {
-		r.Number = 1
+	if r.Number > maxRoundNumber {
+		r.Number = int64(1)
 	}
 }
 
