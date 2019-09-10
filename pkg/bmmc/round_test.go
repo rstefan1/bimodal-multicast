@@ -35,20 +35,4 @@ var _ = Describe("GossipRound", func() {
 		Entry("counter is equal to max round number", maxRoundNumber, int64(1)),
 		Entry("counter is equal to max round number plus 1", maxRoundNumber+1, int64(1)),
 	)
-
-	// Describe("Increment function", func() {
-	// 	It("increases correctly the counter when it is smaller than the max round number", func() {
-	// 		r := NewGossipRound()
-	// 		r.Number = 5
-	// 		r.Increment()
-	// 		Expect(r.Number).To(Equal(int64(6)))
-	// 	})
-
-	// 	It("reset the counter when it is equal with the max round number", func() {
-	// 		r := NewGossipRound()
-	// 		r.Number = maxRoundNumber
-	// 		r.Increment()
-	// 		Expect(r.Number).To(Equal(int64(1)))
-	// 	})
-	// })
 })
