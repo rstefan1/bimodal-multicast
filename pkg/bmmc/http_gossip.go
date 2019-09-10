@@ -23,14 +23,13 @@ import (
 	"net/http"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // HTTPGossip is gossip message for http server
 type HTTPGossip struct {
 	Addr        string              `json:"addr"`
 	Port        string              `json:"port"`
-	RoundNumber *round.GossipRound  `json:"roundNumber"`
+	RoundNumber *GossipRound        `json:"roundNumber"`
 	Digests     buffer.DigestBuffer `json:"digests"`
 }
 
@@ -39,7 +38,7 @@ func gossipHTTPPath(addr, port string) string {
 }
 
 // receiveGossip receives a HTPP gossip message
-func receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
+func receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
 	var t HTTPGossip
 
 	decoder := json.NewDecoder(r.Body)
