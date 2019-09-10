@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package round
+package bmmc
 
 import (
 	"math"
@@ -23,8 +23,8 @@ import (
 
 // GossipRound is the number of gossiper rounds
 type GossipRound struct {
-	Number int64       `json:"gossip_round_number"`
-	Mux    *sync.Mutex `json:"gossip_round_mux"`
+	Number int64       `json:"number"`
+	Mux    *sync.Mutex `json:"mux"`
 }
 
 // NewGossipRound creates new GossipRound

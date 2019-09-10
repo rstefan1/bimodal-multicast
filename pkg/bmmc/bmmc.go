@@ -23,7 +23,6 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 const (
@@ -40,7 +39,7 @@ type BMMC struct {
 	// shared buffer with gossip messages
 	messageBuffer *buffer.MessageBuffer
 	// gossip round number
-	gossipRound *round.GossipRound
+	gossipRound *GossipRound
 	// http server
 	server *http.Server
 	// custom callback registry
@@ -79,7 +78,7 @@ func New(cfg *Config) (*BMMC, error) {
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),
 		messageBuffer:    buffer.NewMessageBuffer(),
-		gossipRound:      round.NewGossipRound(),
+		gossipRound:      NewGossipRound(),
 		customCallbacks:  cbCustomRegistry,
 		defaultCallbacks: cbDefaultRegistry,
 

@@ -23,14 +23,13 @@ import (
 	"net/http"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/round"
 )
 
 // HTTPSolicitation is solicitation message for http server
 type HTTPSolicitation struct {
 	Addr        string              `json:"addr"`
 	Port        string              `json:"port"`
-	RoundNumber *round.GossipRound  `json:"roundNumber"`
+	RoundNumber *GossipRound        `json:"roundNumber"`
 	Digests     buffer.DigestBuffer `json:"digests"`
 }
 
@@ -39,7 +38,7 @@ func solicitationHTTPPath(addr, port string) string {
 }
 
 // receiveSolicitation receives http solicitation message
-func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *round.GossipRound, error) {
+func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
 	var t HTTPSolicitation
 
 	decoder := json.NewDecoder(r.Body)
