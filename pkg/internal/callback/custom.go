@@ -17,10 +17,15 @@ limitations under the License.
 package callback
 
 import (
-	"fmt"
+	"errors"
 	"log"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
+)
+
+const (
+	nilCallbackMapErr           = "callback map must not be nil"
+	inexistentCustomCallbackErr = "callback doesn't exist in the custom registry"
 )
 
 // CustomRegistry is a custom callbacks registry
@@ -30,12 +35,11 @@ type CustomRegistry struct {
 
 // NewCustomRegistry creates a custom callback registry
 func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*CustomRegistry, error) {
-	r := &CustomRegistry{}
-
 	if cb == nil {
-		return nil, fmt.Errorf("callback map must not be empty")
+		return nil, errors.New(nilCallbackMapErr)
 	}
 
+	r := &CustomRegistry{}
 	r.callbacks = cb
 	return r, nil
 }
@@ -45,7 +49,7 @@ func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Log
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
-	return nil, fmt.Errorf("callback type doesn't exist in custom registry")
+	return nil, errors.New(inexistentCustomCallbackErr)
 }
 
 // RunCustomCallbacks runs custom callbacks.

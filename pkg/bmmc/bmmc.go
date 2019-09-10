@@ -56,10 +56,12 @@ type BMMC struct {
 
 // New creates a new instance for the protocol
 func New(cfg *Config) (*BMMC, error) {
+	// validate given config
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 
+	// fill optional fields of the config
 	cfg.fillEmptyFields()
 
 	// set callbacks
@@ -72,6 +74,7 @@ func New(cfg *Config) (*BMMC, error) {
 		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
 	}
 
+	// create an instance of the protocol
 	b := &BMMC{
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),

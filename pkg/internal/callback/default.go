@@ -17,13 +17,46 @@ limitations under the License.
 package callback
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"strings"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
+
+const (
+	invalidAddPeerMsgErr         = "invalid add peer message"
+	invalidRemovePeerMsgErr      = "invalid remove peer message"
+	inexistentDefaultCallbackErr = "callback doesn't exist in the default registry"
+
+	peerAddedLogFmt   = "peer %s/%s added in the peers buffer"
+	peerRemovedLogFmt = "peer %s/%s removed from the peers buffer"
+)
+
+// DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
+func DecomposeAddPeerMessage(msg string) (string, string, error) {
+	host := strings.Split(msg, "/")
+	if len(host) < 2 {
+		return "", "", errors.New(invalidAddPeerMsgErr)
+	}
+
+	addr := host[0]
+	port := host[1]
+	return addr, port, nil
+}
+
+// DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
+func DecomposeRemovePeerMessage(msg string) (string, string, error) {
+	host := strings.Split(msg, "/")
+	if len(host) < 2 {
+		return "", "", errors.New(invalidRemovePeerMsgErr)
+	}
+
+	addr := host[0]
+	port := host[1]
+	return addr, port, nil
+}
 
 // DefaultRegistry is a default callbacks registry
 type DefaultRegistry struct {
@@ -33,32 +66,40 @@ type DefaultRegistry struct {
 // NewDefaultRegistry creates a default callback registry
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
+
 	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) error{
 		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
-			host := strings.Split(msg.Msg.(string), "/")
-			addr := host[0]
-			port := host[1]
-
-			err := peersBuf.(*peer.Buffer).AddPeer(peer.NewPeer(addr, port))
+			// extract addr and peer from `add peer` message
+			addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
 			if err != nil {
 				return err
 			}
 
-			logger.Printf("Peer %s/%s added in peers buffer", addr, port)
+			// add peer in buffer
+			if err = peersBuf.(*peer.Buffer).AddPeer(peer.NewPeer(addr, port)); err != nil {
+				return err
+			}
+
+			logger.Printf(peerAddedLogFmt, addr, port)
 			return nil
 		},
+
 		// nolint:unparam
 		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
-			host := strings.Split(msg.Msg.(string), "/")
-			addr := host[0]
-			port := host[1]
+			// extract addr and peer from `remove peer` message
+			addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
+			if err != nil {
+				return err
+			}
 
+			// remove the peer from buffer
 			peersBuf.(*peer.Buffer).RemovePeer(peer.NewPeer(addr, port))
-			logger.Printf("Peer %s/%s removed from peers buffer", addr, port)
 
+			logger.Printf(peerRemovedLogFmt, addr, port)
 			return nil
 		},
 	}
+
 	return r, nil
 }
 
@@ -67,7 +108,7 @@ func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, int
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
-	return nil, fmt.Errorf("callback type doesn't exist in default registry")
+	return nil, errors.New(inexistentDefaultCallbackErr)
 }
 
 // RunDefaultCallbacks runs default callbacks.

@@ -24,63 +24,62 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CustomCallbackRegistry interface", func() {
-	It("creates new registry when given callbacks map is empty", func() {
-		cb := map[string]func(interface{}, *log.Logger) error{}
-		r, err := NewCustomRegistry(cb)
-		Expect(err).To(Succeed())
-		Expect(r.callbacks).To(Equal(cb))
+var _ = Describe("Custom Callback interface", func() {
+	Describe("NewCustomRegistry func", func() {
+		It("creates new registry when given callbacks map is empty", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{}
+			r, err := NewCustomRegistry(cb)
+			Expect(err).To(Succeed())
+			Expect(r.callbacks).To(Equal(cb))
+		})
+
+		It("creates new registry when given callbacks map has more callbacks", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{
+				"first-callback": func(msg interface{}, logger *log.Logger) error {
+					return nil
+				},
+				"second-callback": func(msg interface{}, logger *log.Logger) error {
+					return nil
+				},
+			}
+			r, err := NewCustomRegistry(cb)
+			Expect(err).To(Succeed())
+			Expect(r.callbacks).To(Equal(cb))
+		})
+
+		It("returns error if given callbacks map is nil", func() {
+			r, err := NewCustomRegistry(nil)
+			Expect(err).To(Not(Succeed()))
+			Expect(r).To(BeNil())
+		})
 	})
 
-	It("creates new registry when given callbacks map has more callbacks", func() {
-		cb := map[string]func(interface{}, *log.Logger) error{
-			"first-callback": func(msg interface{}, logger *log.Logger) error {
+	Describe("GetCustomCallback func", func() {
+		It("returns proper callback func when given callback type exists in registry", func() {
+			cbType := "my-callback"
+			cbFn := func(msg interface{}, logger *log.Logger) error {
 				return nil
-			},
-			"second-callback": func(msg interface{}, logger *log.Logger) error {
-				return nil
-			},
-		}
-		r, err := NewCustomRegistry(cb)
-		Expect(err).To(Succeed())
-		Expect(r.callbacks).To(Equal(cb))
-	})
+			}
 
-	It("returns error if given callbacks map is empty", func() {
-		r, err := NewCustomRegistry(nil)
-		Expect(err).To(Not(Succeed()))
-		Expect(r).To(BeNil())
-	})
+			cb := map[string]func(interface{}, *log.Logger) error{
+				cbType: cbFn,
+			}
+			r, err := NewCustomRegistry(cb)
+			Expect(err).To(Succeed())
 
-	It("returns proper callback func when given callback type exists in registry", func() {
-		var (
-			cbType string
-			cbFn   func(interface{}, *log.Logger) error
-		)
+			fn, err := r.GetCustomCallback(cbType)
+			Expect(err).To(BeNil())
+			Expect(reflect.ValueOf(fn)).To(Equal(reflect.ValueOf(cbFn)))
+		})
 
-		cbType = "my-callback"
-		cbFn = func(msg interface{}, logger *log.Logger) error {
-			return nil
-		}
+		It("returns error when given callback type doesn't exist in registry", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{}
+			r, err := NewCustomRegistry(cb)
+			Expect(err).To(Succeed())
 
-		cb := map[string]func(interface{}, *log.Logger) error{
-			cbType: cbFn,
-		}
-		r, err := NewCustomRegistry(cb)
-		Expect(err).To(Succeed())
-
-		fn, err := r.GetCustomCallback(cbType)
-		Expect(err).To(Succeed())
-		Expect(reflect.ValueOf(fn)).To(Equal(reflect.ValueOf(cbFn)))
-	})
-
-	It("returns error when given callback type doesn't exist in registry", func() {
-		cb := map[string]func(interface{}, *log.Logger) error{}
-		r, err := NewCustomRegistry(cb)
-		Expect(err).To(Succeed())
-
-		fn, err := r.GetCustomCallback("my-callback")
-		Expect(err).To(Not(Succeed()))
-		Expect(fn).To(BeNil())
+			fn, err := r.GetCustomCallback("inexistent-callback")
+			Expect(err).NotTo(BeNil())
+			Expect(fn).To(BeNil())
+		})
 	})
 })
