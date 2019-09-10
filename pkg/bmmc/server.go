@@ -25,6 +25,21 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 )
 
+func addrPort(s string) (string, string) {
+	host := strings.Split(s, ":")
+	if len(s) < 2 {
+		panic("invalid host")
+	}
+
+	addr := host[0]
+	port := host[1]
+	return addr, port
+}
+
+func fullHost(addr, port string) string {
+	return fmt.Sprintf("%s:%s", addr, port)
+}
+
 func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := receiveGossip(r)
 	if err != nil {
@@ -35,9 +50,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	msgDigestBuffer := b.messageBuffer.DigestBuffer()
 	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
 
-	host := strings.Split(r.Host, ":")
-	hostAddr := host[0]
-	hostPort := host[1]
+	hostAddr, hostPort := addrPort(r.Host)
 
 	if missingDigestBuffer.Length() > 0 {
 		solicitationMsg := HTTPSolicitation{
@@ -63,9 +76,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	}
 	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(b.messageBuffer)
 
-	host := strings.Split(r.Host, ":")
-	hostAddr := host[0]
-	hostPort := host[1]
+	hostAddr, hostPort := addrPort(r.Host)
 
 	synchronizationMsg := HTTPSynchronization{
 		Addr:     hostAddr,
@@ -81,9 +92,8 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
-	host := strings.Split(r.Host, ":")
-	hostAddr := host[0]
-	hostPort := host[1]
+
+	hostAddr, hostPort := addrPort(r.Host)
 
 	rcvMsgBuf, _, _, err := receiveSynchronization(r)
 	if err != nil {
@@ -122,7 +132,7 @@ func (b *BMMC) gracefullyShutdown() {
 
 func (b *BMMC) newServer() *http.Server {
 	return &http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%s", b.config.Port),
+		Addr: fullHost("0.0.0.0", b.config.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch path := r.URL.Path; path {
 			case "/gossip":
