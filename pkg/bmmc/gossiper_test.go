@@ -23,13 +23,6 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
-// func (b *BMMC) computeGossipLen() int {
-// 	if b.peerBuffer.Length() == 0 || b.messageBuffer.Length() == 0 || b.config.Beta == 0 {
-// 		return 0
-// 	}
-// 	return int(b.config.Beta*float64(b.peerBuffer.Length())) + 1
-// }
-
 var _ = Describe("Gossiper", func() {
 	Describe("computeGossipLen function", func() {
 		var b *BMMC
