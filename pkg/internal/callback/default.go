@@ -114,19 +114,19 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 	return r, nil
 }
 
-// GetDefaultCallback returns a default callback from registry
-func (r *DefaultRegistry) GetDefaultCallback(t string) (func(buffer.Message, interface{}, *log.Logger) error, error) {
+// GetCallback returns a default callback from registry
+func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Message, interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 	return nil, errors.New(inexistentDefaultCallbackErr)
 }
 
-// RunDefaultCallbacks runs default callbacks.
-func (r *DefaultRegistry) RunDefaultCallbacks(m buffer.Message, peerBuf *peer.Buffer, logger *log.Logger) error {
+// RunCallbacks runs default callbacks.
+func (r *DefaultRegistry) RunCallbacks(m buffer.Message, peerBuf *peer.Buffer, logger *log.Logger) error {
 
 	// get callback from callbacks registry
-	callbackFn, err := r.GetDefaultCallback(m.CallbackType)
+	callbackFn, err := r.GetCallback(m.CallbackType)
 	if err != nil {
 		// dont't return err if default registry haven't given callback
 		return nil

@@ -54,7 +54,7 @@ var _ = Describe("Custom Callback interface", func() {
 		})
 	})
 
-	Describe("GetCustomCallback func", func() {
+	Describe("GetCallback func", func() {
 		It("returns proper callback func when given callback type exists in registry", func() {
 			cbType := "my-callback"
 			cbFn := func(msg interface{}, logger *log.Logger) error {
@@ -67,7 +67,7 @@ var _ = Describe("Custom Callback interface", func() {
 			r, err := NewCustomRegistry(cb)
 			Expect(err).To(Succeed())
 
-			fn, err := r.GetCustomCallback(cbType)
+			fn, err := r.GetCallback(cbType)
 			Expect(err).To(BeNil())
 			Expect(reflect.ValueOf(fn)).To(Equal(reflect.ValueOf(cbFn)))
 		})
@@ -77,7 +77,7 @@ var _ = Describe("Custom Callback interface", func() {
 			r, err := NewCustomRegistry(cb)
 			Expect(err).To(Succeed())
 
-			fn, err := r.GetCustomCallback("inexistent-callback")
+			fn, err := r.GetCallback("inexistent-callback")
 			Expect(err).NotTo(BeNil())
 			Expect(fn).To(BeNil())
 		})
