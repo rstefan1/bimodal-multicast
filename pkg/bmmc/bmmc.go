@@ -28,6 +28,9 @@ import (
 const (
 	// NOCALLBACK is callback type for messages without callback
 	NOCALLBACK = callback.NOCALLBACK
+
+	addPeerErrFmt    = "Error at adding the peer %s/%s: %s"
+	removePeerErrFmt = "Error at removing the peer %s/%s: %s"
 )
 
 // BMMC is the bimodal multicast protocol
@@ -118,12 +121,11 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 
 	err := b.messageBuffer.AddMessage(m)
 	if err != nil {
-		b.config.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s",
-			b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
 		return err
 	}
 
-	b.config.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d",
+	b.config.Logger.Printf(bufferSyncedLogFmt,
 		b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 
 	// run callback function for messages with a callback registered
@@ -149,7 +151,7 @@ func (b *BMMC) AddPeer(addr, port string) error {
 		peer.NewPeer(addr, port),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
+		return fmt.Errorf(addPeerErrFmt, addr, port, err)
 	}
 
 	err = b.messageBuffer.AddMessage(
@@ -159,7 +161,7 @@ func (b *BMMC) AddPeer(addr, port string) error {
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at adding the peer %s/%s: %s", addr, port, err)
+		return fmt.Errorf(addPeerErrFmt, addr, port, err)
 	}
 
 	return nil
@@ -178,7 +180,7 @@ func (b *BMMC) RemovePeer(addr, port string) error {
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("Error at removing the peer %s/%s: %s", addr, port, err)
+		return fmt.Errorf(removePeerErrFmt, addr, port, err)
 	}
 
 	return nil

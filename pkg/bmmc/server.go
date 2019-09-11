@@ -18,6 +18,7 @@ package bmmc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,15 +26,31 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 )
 
-func addrPort(s string) (string, string) {
+const (
+	startServerLogFmt       = "Starting server for  %s"
+	stopServerLogFmt        = "End of server round from %s"
+	unableStartServerLogFmt = "Unable to start  server: %s"
+	unableStopServerLogFmt  = "Unable to shutdown server properly: %s"
+
+	gossipHandlerErrLogFmt          = "Error in gossip handler: %s"
+	solicitationHandlerErrLogFmt    = "Error in solicitation handler: %s"
+	synchronizationHandlerErrLogFmt = "Error in synchronization handler: %s"
+
+	syncBufferLogErrFmt = "BMMC %s:%s error at syncing buffer with message %s in round %d: %s"
+	bufferSyncedLogFmt  = "BMMC %s:%s synced buffer with message %s in round %d"
+
+	invalidHostErr = "invalid host"
+)
+
+func addrPort(s string) (string, string, error) {
 	host := strings.Split(s, ":")
-	if len(s) < 2 {
-		panic("invalid host")
+	if len(host) != 2 {
+		return "", "", errors.New(invalidHostErr)
 	}
 
 	addr := host[0]
 	port := host[1]
-	return addr, port
+	return addr, port, nil
 }
 
 func fullHost(addr, port string) string {
@@ -50,7 +67,11 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	msgDigestBuffer := b.messageBuffer.DigestBuffer()
 	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
 
-	hostAddr, hostPort := addrPort(r.Host)
+	hostAddr, hostPort, err := addrPort(r.Host)
+	if err != nil {
+		b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
+		return
+	}
 
 	if missingDigestBuffer.Length() > 0 {
 		solicitationMsg := HTTPSolicitation{
@@ -62,7 +83,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 
 		err = sendSolicitation(solicitationMsg, tAddr, tPort)
 		if err != nil {
-			b.config.Logger.Printf("%s", err)
+			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
 			return
 		}
 	}
@@ -71,12 +92,16 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	missingDigestBuffer, tAddr, tPort, _, err := receiveSolicitation(r)
 	if err != nil {
-		b.config.Logger.Printf("%s", err)
+		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
 	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(b.messageBuffer)
 
-	hostAddr, hostPort := addrPort(r.Host)
+	hostAddr, hostPort, err := addrPort(r.Host)
+	if err != nil {
+		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
+		return
+	}
 
 	synchronizationMsg := HTTPSynchronization{
 		Addr:     hostAddr,
@@ -86,27 +111,30 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 
 	err = sendSynchronization(synchronizationMsg, tAddr, tPort)
 	if err != nil {
-		b.config.Logger.Printf("%s", err)
+		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
 }
 
 func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
-
-	hostAddr, hostPort := addrPort(r.Host)
+	hostAddr, hostPort, err := addrPort(r.Host)
+	if err != nil {
+		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
+		return
+	}
 
 	rcvMsgBuf, _, _, err := receiveSynchronization(r)
 	if err != nil {
-		b.config.Logger.Printf("BMMC %s:%s Error at receiving synchronization error: %s", hostAddr, hostPort, err)
+		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
 		return
 	}
 
 	for _, m := range rcvMsgBuf.Messages {
 		err = b.messageBuffer.AddMessage(m)
 		if err != nil {
-			b.config.Logger.Printf("BMMC %s:%s error at syncing buffer with message %s in round %d: %s", hostAddr, hostPort, m.ID, b.gossipRound.GetNumber(), err)
+			b.config.Logger.Printf(syncBufferLogErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber(), err)
 		} else {
-			b.config.Logger.Printf("BMMC %s:%s synced buffer with message %s in round %d", hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
+			b.config.Logger.Printf(bufferSyncedLogFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
 
 			// run callback function for messages with a callback registered
 			if m.CallbackType != callback.NOCALLBACK {
@@ -126,7 +154,7 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 
 func (b *BMMC) gracefullyShutdown() {
 	if err := b.server.Shutdown(context.TODO()); err != nil {
-		b.config.Logger.Printf("Unable to shutdown server properly: %s", err)
+		b.config.Logger.Printf(unableStopServerLogFmt, err)
 	}
 }
 
@@ -150,10 +178,10 @@ func (b *BMMC) startServer(stop <-chan struct{}) error {
 	errChan := make(chan error)
 
 	go func() {
-		b.config.Logger.Printf("Server listening at %s", b.server.Addr)
+		b.config.Logger.Printf(startServerLogFmt, b.server.Addr)
 
 		if err := b.server.ListenAndServe(); err != http.ErrServerClosed {
-			b.config.Logger.Printf("Unable to start  server: %s", err)
+			b.config.Logger.Printf(unableStartServerLogFmt, err)
 			errChan <- err
 			return
 		}
@@ -163,6 +191,7 @@ func (b *BMMC) startServer(stop <-chan struct{}) error {
 	go func() {
 		<-stop
 		b.gracefullyShutdown()
+		b.config.Logger.Printf(stopServerLogFmt, b.server.Addr)
 	}()
 
 	// return <-errChan
