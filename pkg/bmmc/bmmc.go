@@ -31,6 +31,9 @@ const (
 
 	addPeerErrFmt    = "Error at adding the peer %s/%s: %s"
 	removePeerErrFmt = "Error at removing the peer %s/%s: %s"
+
+	runDefaultCallbackErrFmt = "Error at calling default callback at %s:%s for message %s in round %d"
+	runCustomCallbackErrFmt  = "Error at calling custom callback at %s:%s for message %s in round %d"
 )
 
 // BMMC is the bimodal multicast protocol
@@ -128,20 +131,7 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	b.config.Logger.Printf(bufferSyncedLogFmt,
 		b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 
-	// run callback function for messages with a callback registered
-	if callbackType != callback.NOCALLBACK {
-		err = b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger)
-		if err != nil {
-			b.config.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d",
-				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
-		}
-
-		err = b.customCallbacks.RunCallbacks(m, b.config.Logger)
-		if err != nil {
-			b.config.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d",
-				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
-		}
-	}
+	b.runCallbacks(m, b.config.Addr, b.config.Port)
 	return nil
 }
 
@@ -189,4 +179,20 @@ func (b *BMMC) RemovePeer(addr, port string) error {
 // GetMessages returns a slice with all messages from messages buffer
 func (b *BMMC) GetMessages() []interface{} {
 	return b.messageBuffer.UnwrapMessageBuffer()
+}
+
+func (b *BMMC) runCallbacks(m buffer.Message, hostAddr, hostPort string) {
+	// TODO remove hostAddr and hostport from func args. These are used only for logging
+
+	if m.CallbackType != callback.NOCALLBACK {
+		err := b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger)
+		if err != nil {
+			b.config.Logger.Printf(runDefaultCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
+		}
+
+		err = b.customCallbacks.RunCallbacks(m, b.config.Logger)
+		if err != nil {
+			b.config.Logger.Printf(runCustomCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
+		}
+	}
 }
