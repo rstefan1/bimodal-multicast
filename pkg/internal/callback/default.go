@@ -18,6 +18,7 @@ package callback
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -34,6 +35,11 @@ const (
 	peerRemovedLogFmt = "peer %s/%s removed from the peers buffer"
 )
 
+// ComposeAddPeerMessage returns a `add peer` message with given addr and port
+func ComposeAddPeerMessage(addr, port string) string {
+	return fmt.Sprintf("%s/%s", addr, port)
+}
+
 // DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
 func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
@@ -44,6 +50,11 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	addr := host[0]
 	port := host[1]
 	return addr, port, nil
+}
+
+// ComposeRemovePeerMessage returns a `remove peer` message with given addr and port
+func ComposeRemovePeerMessage(addr, port string) string {
+	return fmt.Sprintf("%s/%s", addr, port)
 }
 
 // DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
