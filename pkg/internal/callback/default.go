@@ -37,7 +37,7 @@ const (
 // DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
 func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) < 2 {
+	if len(host) != 2 {
 		return "", "", errors.New(invalidAddPeerMsgErr)
 	}
 
@@ -49,7 +49,7 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 // DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
 func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) < 2 {
+	if len(host) != 2 {
 		return "", "", errors.New(invalidRemovePeerMsgErr)
 	}
 

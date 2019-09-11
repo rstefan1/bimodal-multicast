@@ -17,6 +17,8 @@ limitations under the License.
 package bmmc
 
 import (
+	"errors"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -31,11 +33,20 @@ var _ = Describe("Server", func() {
 	)
 
 	DescribeTable("addrPort helper function", func(host, expectedAddr, expectedPort string) {
-		addr, port := addrPort(host)
+		addr, port, err := addrPort(host)
+		Expect(err).To(BeNil())
 		Expect(addr).To(Equal(expectedAddr))
 		Expect(port).To(Equal(expectedPort))
 	},
 		Entry("returns proper address and port", "127.168.0.100:8080", "127.168.0.100", "8080"),
 		Entry("returns proper address and port", "localhost:7070", "localhost", "7070"),
+	)
+
+	DescribeTable("addrPort helper function", func(host string, expectedErr error) {
+		_, _, err := addrPort(host)
+		Expect(err).To(Equal(expectedErr))
+	},
+		Entry("returns error when full host contains only addr or only port", "127.168.0.100", errors.New(invalidHostErr)),
+		Entry("returns error when full host contains to much elements", "localhost:127.168.0.100:7070", errors.New(invalidHostErr)),
 	)
 })
