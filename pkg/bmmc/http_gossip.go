@@ -62,10 +62,11 @@ func sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 		return fmt.Errorf(httpGossipMarshalErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
 	}
 
-	_, err = http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
+	resp, err := http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
 	if err != nil {
 		return fmt.Errorf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
 	}
+	defer resp.Body.Close() // nolint:errcheck
 
 	return nil
 }
