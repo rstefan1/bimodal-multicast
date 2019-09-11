@@ -38,10 +38,10 @@ type Buffer struct {
 }
 
 // NewPeer creates a Peer
-func NewPeer(a, p string) Peer {
+func NewPeer(addr, port string) Peer {
 	return Peer{
-		addr: a,
-		port: p,
+		addr: addr,
+		port: port,
 	}
 }
 
