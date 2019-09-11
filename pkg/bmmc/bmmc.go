@@ -29,14 +29,14 @@ const (
 	// NOCALLBACK is callback type for messages without callback
 	NOCALLBACK = callback.NOCALLBACK
 
-	addPeerErrFmt    = "Error at adding the peer %s/%s: %s"
-	removePeerErrFmt = "Error at removing the peer %s/%s: %s"
+	addPeerErrFmt    = "error at adding the peer %s/%s: %s"
+	removePeerErrFmt = "error at removing the peer %s/%s: %s"
 
-	runDefaultCallbackErrFmt = "Error at calling default callback at %s:%s for message %s in round %d"
-	runCustomCallbackErrFmt  = "Error at calling custom callback at %s:%s for message %s in round %d"
+	runDefaultCallbackErrFmt = "error at calling default callback at %s:%s for message %s in round %d"
+	runCustomCallbackErrFmt  = "error at calling custom callback at %s:%s for message %s in round %d"
 
-	createCustomCRErrFmt  = "Error at creating new custom callbacks registry: %s"
-	createDefaultCRErrFmt = "Error at creating new default callbacks registry: %s"
+	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %s"
+	createDefaultCRErrFmt = "error at creating new default callbacks registry: %s"
 )
 
 // BMMC is the bimodal multicast protocol

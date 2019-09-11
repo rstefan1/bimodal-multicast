@@ -30,11 +30,11 @@ func expectProperMessage(msg Message, msgID, msgMsg string, msgGossipCount int) 
 	Expect(msg.GossipCount).To(Equal(msgGossipCount))
 }
 
-func createMessageFromInitialBuffer(ID, msg string, gossipCount int, beginIndex, endIndex int, messageBuffer *MessageBuffer) *MessageBuffer {
+func createMessageFromInitialBuffer(id, msg string, gossipCount int, beginIndex, endIndex int, messageBuffer *MessageBuffer) *MessageBuffer {
 	for i := beginIndex; i < endIndex; i++ {
-		_ID := fmt.Sprintf("%s-%02d", ID, i)
+		_id := fmt.Sprintf("%s-%02d", id, i)
 		messageBuffer.Messages = append(messageBuffer.Messages, Message{
-			ID:          _ID,
+			ID:          _id,
 			Msg:         msg,
 			GossipCount: gossipCount,
 		})
@@ -42,14 +42,14 @@ func createMessageFromInitialBuffer(ID, msg string, gossipCount int, beginIndex,
 	return messageBuffer
 }
 
-func createMessage(ID, msg string, gossipCount, cnt int) ([]Message, *MessageBuffer) {
+func createMessage(id, msg string, gossipCount, cnt int) ([]Message, *MessageBuffer) {
 	var messageSlice []Message
 	messageBuffer := NewMessageBuffer()
 
 	for i := 0; i < cnt; i++ {
-		_ID := fmt.Sprintf("%s-%02d", ID, i)
+		_id := fmt.Sprintf("%s-%02d", id, i)
 		newMsg := Message{
-			ID:          _ID,
+			ID:          _id,
 			Msg:         msg,
 			GossipCount: gossipCount,
 		}
