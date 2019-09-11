@@ -25,6 +25,12 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
+const (
+	httpSynchronizationDecodeErrFmt  = "Error at decoding http synchronization message in HTTP Server: %s"
+	httpSynchronizationMarshalErrFmt = "Error at marshal http synchronization message in HTTP Server: %s"
+	httpSynchronizationSendErrFmt    = "Error at sending HTTPSynchronization message in HTTP Server: %s"
+)
+
 // HTTPSynchronization is synchronization message for http server
 type HTTPSynchronization struct {
 	Addr     string               `json:"addr"`
@@ -33,7 +39,7 @@ type HTTPSynchronization struct {
 }
 
 func synchronizationHTTPPath(addr, port string) string {
-	return fmt.Sprintf("http://%s:%s/synchronization", addr, port)
+	return fmt.Sprintf("http://%s:%s%s", addr, port, synchronizationRoute)
 }
 
 // receiveSynchronization receives http solicitation message
@@ -42,7 +48,7 @@ func receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, str
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&t); err != nil {
-		return nil, "", "", fmt.Errorf("Error at decoding http synchronization message in HTTP Server: %s", err)
+		return nil, "", "", fmt.Errorf(httpSynchronizationDecodeErrFmt, err)
 	}
 
 	return &t.Messages, t.Addr, t.Port, nil
@@ -52,12 +58,12 @@ func receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, str
 func sendSynchronization(synchronization HTTPSynchronization, addr, port string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
-		return fmt.Errorf("Error at marshal http synchronization message in HTTP Server: %s", err)
+		return fmt.Errorf(httpSynchronizationMarshalErrFmt, err)
 	}
 
 	_, err = http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
-		return fmt.Errorf("Error at sending HTTPSynchronization message in HTTP Server: %s", err)
+		return fmt.Errorf(httpSynchronizationSendErrFmt, err)
 	}
 
 	return nil

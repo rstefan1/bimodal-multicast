@@ -74,7 +74,7 @@ var _ = Describe("BMMC Config", func() {
 
 			cfg.fillEmptyFields()
 
-			Expect(cfg.Beta).To(Equal(defaultBeta))
+			Expect(cfg.Beta).To(Equal(0.3))
 			Expect(cfg.RoundDuration).To(Equal(defaultRoundDuration))
 			Expect(cfg.Logger).NotTo(BeNil())
 			Expect(cfg.Callbacks).NotTo(BeNil())
