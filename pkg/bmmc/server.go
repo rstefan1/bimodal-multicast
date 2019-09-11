@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 )
 
 const (
@@ -135,19 +133,7 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 			b.config.Logger.Printf(syncBufferLogErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber(), err)
 		} else {
 			b.config.Logger.Printf(bufferSyncedLogFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
-
-			// run callback function for messages with a callback registered
-			if m.CallbackType != callback.NOCALLBACK {
-				err = b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger)
-				if err != nil {
-					b.config.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
-				}
-
-				err = b.customCallbacks.RunCallbacks(m, b.config.Logger)
-				if err != nil {
-					b.config.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d", hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
-				}
-			}
+			b.runCallbacks(m, hostAddr, hostPort)
 		}
 	}
 }
