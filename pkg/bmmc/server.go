@@ -38,6 +38,10 @@ const (
 	bufferSyncedLogFmt  = "BMMC %s:%s synced buffer with message %s in round %d"
 
 	invalidHostErr = "invalid host"
+
+	gossipRoute          = "/gossip"
+	solicitationRoute    = "/solicitation"
+	synchronizationRoute = "/synchronization"
 )
 
 func addrPort(s string) (string, string, error) {
@@ -149,11 +153,11 @@ func (b *BMMC) newServer() *http.Server {
 		Addr: fullHost("0.0.0.0", b.config.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch path := r.URL.Path; path {
-			case "/gossip":
+			case gossipRoute:
 				b.gossipHandler(w, r)
-			case "/solicitation":
+			case solicitationRoute:
 				b.solicitationHandler(w, r)
-			case "/synchronization":
+			case synchronizationRoute:
 				b.synchronizationHandler(w, r)
 			}
 		}),

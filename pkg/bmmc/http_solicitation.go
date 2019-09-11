@@ -25,6 +25,12 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
+const (
+	httpSolicitationDecodingErrFmt = "Error at decoding http solicitation message in HTTP Server: %s"
+	httpSolicitationMarshalErrFmt  = "Error at marshal http solicitation in HTTP Server: %s"
+	httpSolicitationSendErrFmt     = "Error at sending http soliccitation message in HTTP Server: %s"
+)
+
 // HTTPSolicitation is solicitation message for http server
 type HTTPSolicitation struct {
 	Addr        string              `json:"addr"`
@@ -34,7 +40,7 @@ type HTTPSolicitation struct {
 }
 
 func solicitationHTTPPath(addr, port string) string {
-	return fmt.Sprintf("http://%s:%s/solicitation", addr, port)
+	return fmt.Sprintf("http://%s:%s%s", addr, port, solicitationRoute)
 }
 
 // receiveSolicitation receives http solicitation message
@@ -43,7 +49,7 @@ func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string,
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&t); err != nil {
-		return nil, "", "", nil, fmt.Errorf("Error at decoding http solicitation message in HTTP Server: %s", err)
+		return nil, "", "", nil, fmt.Errorf(httpSolicitationDecodingErrFmt, err)
 	}
 
 	return &t.Digests, t.Addr, t.Port, t.RoundNumber, nil
@@ -53,12 +59,12 @@ func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string,
 func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 	jsonSolicitation, err := json.Marshal(solicitation)
 	if err != nil {
-		return fmt.Errorf("Error at marshal http solicitation in HTTP Server: %s", err)
+		return fmt.Errorf(httpSolicitationMarshalErrFmt, err)
 	}
 
 	_, err = http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 	if err != nil {
-		return fmt.Errorf("Error at sending http soliccitation message in HTTP Server: %s", err)
+		return fmt.Errorf(httpSolicitationSendErrFmt, err)
 	}
 
 	return nil

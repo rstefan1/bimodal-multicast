@@ -69,7 +69,7 @@ func (cfg *Config) validate() error {
 // fillEmptyFields set default values for optional empty fields.
 func (cfg *Config) fillEmptyFields() {
 	if cfg.Beta == 0 {
-		cfg.Beta = 0.3
+		cfg.Beta = defaultBeta
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)

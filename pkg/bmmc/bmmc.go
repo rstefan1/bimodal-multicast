@@ -34,6 +34,9 @@ const (
 
 	runDefaultCallbackErrFmt = "Error at calling default callback at %s:%s for message %s in round %d"
 	runCustomCallbackErrFmt  = "Error at calling custom callback at %s:%s for message %s in round %d"
+
+	createCustomCRErrFmt  = "Error at creating new custom callbacks registry: %s"
+	createDefaultCRErrFmt = "Error at creating new default callbacks registry: %s"
 )
 
 // BMMC is the bimodal multicast protocol
@@ -72,11 +75,11 @@ func New(cfg *Config) (*BMMC, error) {
 	// set callbacks
 	cbCustomRegistry, err := callback.NewCustomRegistry(cfg.Callbacks)
 	if err != nil {
-		return nil, fmt.Errorf("Error at creating new custom callbacks registry: %s", err)
+		return nil, fmt.Errorf(createCustomCRErrFmt, err)
 	}
 	cbDefaultRegistry, err := callback.NewDefaultRegistry()
 	if err != nil {
-		return nil, fmt.Errorf("Error at creating new default callbacks registry: %s", err)
+		return nil, fmt.Errorf(createDefaultCRErrFmt, err)
 	}
 
 	// create an instance of the protocol
