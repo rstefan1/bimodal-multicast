@@ -49,7 +49,7 @@ var _ = Describe("Peer Buffer Interface", func() {
 			Expect(pBuf.alreadyExists(p)).To(Equal(expected))
 		},
 
-		Entry("returns true if peers is at the beggining",
+		Entry("returns true if peers is at the beginning",
 			[]Peer{
 				{addr: "localhost", port: "55555"},
 				{addr: "localhost", port: "10000"},

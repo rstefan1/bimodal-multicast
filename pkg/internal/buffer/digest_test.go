@@ -24,21 +24,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func createDigest(ID string, cnt int) ([]string, *DigestBuffer) {
+func createDigest(id string, cnt int) ([]string, *DigestBuffer) {
 	digestBuffer := &DigestBuffer{}
 	var digestSlice []string
 	for i := 0; i < cnt; i++ {
-		_ID := fmt.Sprintf("%s-%02d", ID, i)
-		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: _ID})
-		digestSlice = append(digestSlice, _ID)
+		_id := fmt.Sprintf("%s-%02d", id, i)
+		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: _id})
+		digestSlice = append(digestSlice, _id)
 	}
 	return digestSlice, digestBuffer
 }
 
-func createDigestFromInitialBuffer(ID string, beginIndex, endIndex int, digestBuffer *DigestBuffer) *DigestBuffer {
+func createDigestFromInitialBuffer(id string, beginIndex, endIndex int, digestBuffer *DigestBuffer) *DigestBuffer {
 	for i := beginIndex; i < endIndex; i++ {
-		_ID := fmt.Sprintf("%s-%02d", ID, i)
-		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: _ID})
+		_id := fmt.Sprintf("%s-%02d", id, i)
+		digestBuffer.Digests = append(digestBuffer.Digests, Digest{ID: _id})
 	}
 	return digestBuffer
 }

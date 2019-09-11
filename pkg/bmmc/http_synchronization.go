@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	httpSynchronizationDecodeErrFmt  = "Error at decoding http synchronization message in HTTP Server: %s"
-	httpSynchronizationMarshalErrFmt = "Error at marshal http synchronization message in HTTP Server: %s"
-	httpSynchronizationSendErrFmt    = "Error at sending HTTPSynchronization message in HTTP Server: %s"
+	httpSynchronizationDecodeErrFmt  = "error at decoding http synchronization message in HTTP Server: %s"
+	httpSynchronizationMarshalErrFmt = "error at marshal http synchronization message in HTTP Server: %s"
+	httpSynchronizationSendErrFmt    = "error at sending HTTPSynchronization message in HTTP Server: %s"
 )
 
 // HTTPSynchronization is synchronization message for http server

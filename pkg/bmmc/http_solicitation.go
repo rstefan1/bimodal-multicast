@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	httpSolicitationDecodingErrFmt = "Error at decoding http solicitation message in HTTP Server: %s"
-	httpSolicitationMarshalErrFmt  = "Error at marshal http solicitation in HTTP Server: %s"
-	httpSolicitationSendErrFmt     = "Error at sending http soliccitation message in HTTP Server: %s"
+	httpSolicitationDecodingErrFmt = "error at decoding http solicitation message in HTTP Server: %s"
+	httpSolicitationMarshalErrFmt  = "error at marshal http solicitation in HTTP Server: %s"
+	httpSolicitationSendErrFmt     = "error at sending http soliccitation message in HTTP Server: %s"
 )
 
 // HTTPSolicitation is solicitation message for http server

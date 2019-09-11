@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	httpGossipDecodingErrFmt = "Error at decoding http gossip message in HTTP Server: %s"
-	httpGossipMarshalErrFmt  = "Gossiper from %s:%s can not marshal the gossip message: %s"
-	httpGossipSendErrFmt     = "Gossiper from %s:%s can not send the gossip message: %s"
+	httpGossipDecodingErrFmt = "error at decoding http gossip message in HTTP Server: %s"
+	httpGossipMarshalErrFmt  = "gossiper from %s:%s can not marshal the gossip message: %s"
+	httpGossipSendErrFmt     = "gossiper from %s:%s can not send the gossip message: %s"
 )
 
 // HTTPGossip is gossip message for http server

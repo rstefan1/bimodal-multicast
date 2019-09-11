@@ -95,7 +95,7 @@ func (msgBuffer *MessageBuffer) AddMessage(msg Message) error {
 	defer msgBuffer.Mux.Unlock()
 
 	if msgBuffer.alreadyExists(msg) {
-		return fmt.Errorf("Message %s already exists in buffer message", msg.Msg)
+		return fmt.Errorf("message %s already exists in buffer message", msg.Msg)
 	}
 
 	msgBuffer.Messages = append(msgBuffer.Messages, msg)

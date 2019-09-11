@@ -29,8 +29,8 @@ const (
 )
 
 const (
-	emptyAddrErr = "Adress must not be empty"
-	emptyPortErr = "Port must not be empty"
+	emptyAddrErr = "address must not be empty"
+	emptyPortErr = "port must not be empty"
 )
 
 // Config is the config for the protocol
