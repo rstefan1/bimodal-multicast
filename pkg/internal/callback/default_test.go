@@ -25,6 +25,12 @@ import (
 )
 
 var _ = Describe("Default Callback interface", func() {
+	Describe("ComposeAddPeerMessage helper function", func() {
+		It("returns proper `add peer` message", func() {
+			Expect(ComposeAddPeerMessage("127.120.100.0", "1999")).To(Equal("127.120.100.0/1999"))
+		})
+	})
+
 	DescribeTable("DecomposeAddPeerMessage helper function return proper addr and port",
 		func(msg, expectedAddr, expectedPort string) {
 			addr, port, err := DecomposeAddPeerMessage(msg)
@@ -38,6 +44,12 @@ var _ = Describe("Default Callback interface", func() {
 		Entry("message contains an empty port", "localhost/", "localhost", ""),
 		Entry("message contains empty host and empty port", "/", "", ""),
 	)
+
+	Describe("ComposeRemovePeerMessage helepr function", func() {
+		It("returns proper `remove peer` message", func() {
+			Expect(ComposeRemovePeerMessage("localhost", "9080")).To(Equal("localhost/9080"))
+		})
+	})
 
 	DescribeTable("DecomposeAddPeerMessage helper function return error", func(msg string) {
 		_, _, err := DecomposeAddPeerMessage(msg)

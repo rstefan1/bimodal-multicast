@@ -156,7 +156,7 @@ func (b *BMMC) AddPeer(addr, port string) error {
 
 	err = b.messageBuffer.AddMessage(
 		buffer.NewMessage(
-			fmt.Sprintf("%s/%s", addr, port),
+			callback.ComposeAddPeerMessage(addr, port),
 			callback.ADDPEER,
 		),
 	)
@@ -175,7 +175,7 @@ func (b *BMMC) RemovePeer(addr, port string) error {
 
 	err := b.messageBuffer.AddMessage(
 		buffer.NewMessage(
-			fmt.Sprintf("%s/%s", addr, port),
+			callback.ComposeRemovePeerMessage(addr, port),
 			callback.REMOVEPEER,
 		),
 	)
