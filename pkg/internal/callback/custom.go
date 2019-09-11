@@ -44,18 +44,18 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*Cus
 	return r, nil
 }
 
-// GetCustomCallback returns a custom callback from registry
-func (r *CustomRegistry) GetCustomCallback(t string) (func(interface{}, *log.Logger) error, error) {
+// GetCallback returns a custom callback from registry
+func (r *CustomRegistry) GetCallback(t string) (func(interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 	return nil, errors.New(inexistentCustomCallbackErr)
 }
 
-// RunCustomCallbacks runs custom callbacks.
-func (r *CustomRegistry) RunCustomCallbacks(m buffer.Message, logger *log.Logger) error {
+// RunCallbacks runs custom callbacks.
+func (r *CustomRegistry) RunCallbacks(m buffer.Message, logger *log.Logger) error {
 	// get callback from callbacks registry
-	callbackFn, err := r.GetCustomCallback(m.CallbackType)
+	callbackFn, err := r.GetCallback(m.CallbackType)
 	if err != nil {
 		// dont't return err if custom registry haven't given callback
 		return nil

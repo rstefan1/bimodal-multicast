@@ -130,13 +130,13 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 
 	// run callback function for messages with a callback registered
 	if callbackType != callback.NOCALLBACK {
-		err = b.defaultCallbacks.RunDefaultCallbacks(m, b.peerBuffer, b.config.Logger)
+		err = b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger)
 		if err != nil {
 			b.config.Logger.Printf("Error at calling default callback at %s:%s for message %s in round %d",
 				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 		}
 
-		err = b.customCallbacks.RunCustomCallbacks(m, b.config.Logger)
+		err = b.customCallbacks.RunCallbacks(m, b.config.Logger)
 		if err != nil {
 			b.config.Logger.Printf("Error at calling custom callback at %s:%s for message %s in round %d",
 				b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
