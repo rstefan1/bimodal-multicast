@@ -61,10 +61,11 @@ func sendSynchronization(synchronization HTTPSynchronization, addr, port string)
 		return fmt.Errorf(httpSynchronizationMarshalErrFmt, err)
 	}
 
-	_, err = http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
+	resp, err := http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
 	if err != nil {
 		return fmt.Errorf(httpSynchronizationSendErrFmt, err)
 	}
+	defer resp.Body.Close() // nolint:errcheck
 
 	return nil
 }

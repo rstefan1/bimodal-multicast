@@ -62,10 +62,11 @@ func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 		return fmt.Errorf(httpSolicitationMarshalErrFmt, err)
 	}
 
-	_, err = http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
+	resp, err := http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 	if err != nil {
 		return fmt.Errorf(httpSolicitationSendErrFmt, err)
 	}
+	defer resp.Body.Close() // nolint:errcheck
 
 	return nil
 }
