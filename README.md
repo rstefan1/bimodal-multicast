@@ -111,15 +111,16 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  
  
 ## Roadmap to v0.3
- - [ ] Refactor
+ - [x] Refactor
  - [ ] Documentation
 
 
+## Roadmap to v0.4
+ - [ ] Circular buffers
+
+
 ## Roadmap to v1.0
- - [ ] Circular buffer
  - [ ] Publisher - subscriber pattern
- - [ ] Validate performance, scalability and data consistency
- - [ ] Performance optimizations
 
 
 ## Contributing
