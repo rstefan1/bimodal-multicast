@@ -37,35 +37,35 @@ const (
 
 // ComposeAddPeerMessage returns a `add peer` message with given addr and port
 func ComposeAddPeerMessage(addr, port string) string {
-	return fmt.Sprintf("%s/%s", addr, port)
+	return fmt.Sprintf("add/%s/%s", addr, port)
 }
 
 // DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
 func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 2 {
+	if len(host) != 3 {
 		return "", "", errors.New(invalidAddPeerMsgErr)
 	}
 
-	addr := host[0]
-	port := host[1]
+	addr := host[1]
+	port := host[2]
 	return addr, port, nil
 }
 
 // ComposeRemovePeerMessage returns a `remove peer` message with given addr and port
 func ComposeRemovePeerMessage(addr, port string) string {
-	return fmt.Sprintf("%s/%s", addr, port)
+	return fmt.Sprintf("remove/%s/%s", addr, port)
 }
 
 // DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
 func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 2 {
+	if len(host) != 3 {
 		return "", "", errors.New(invalidRemovePeerMsgErr)
 	}
 
-	addr := host[0]
-	port := host[1]
+	addr := host[1]
+	port := host[2]
 	return addr, port, nil
 }
 
