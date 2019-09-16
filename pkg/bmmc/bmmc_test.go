@@ -115,8 +115,8 @@ var _ = Describe("BMMC", func() {
 
 			// message for adding peers in buffer
 			extraMsgBuffer := []string{
-				fmt.Sprintf("%s/%s", addr, port1),
-				fmt.Sprintf("%s/%s", addr, port2),
+				callback.ComposeAddPeerMessage(addr, port1),
+				callback.ComposeAddPeerMessage(addr, port2),
 			}
 			expectedBuf = append(expectedBuf, extraMsgBuffer...)
 
@@ -156,7 +156,7 @@ var _ = Describe("BMMC", func() {
 			for i := 0; i < len; i++ {
 				ports[i] = suggestPort()
 				addrs[i] = "localhost"
-				extraMsgBuffer[i] = fmt.Sprintf("%s/%s", addrs[i], ports[i])
+				extraMsgBuffer[i] = callback.ComposeAddPeerMessage(addrs[i], ports[i])
 			}
 
 			for i := 0; i < len; i++ {

@@ -27,7 +27,7 @@ import (
 var _ = Describe("Default Callback interface", func() {
 	Describe("ComposeAddPeerMessage helper function", func() {
 		It("returns proper `add peer` message", func() {
-			Expect(ComposeAddPeerMessage("127.120.100.0", "1999")).To(Equal("127.120.100.0/1999"))
+			Expect(ComposeAddPeerMessage("127.120.100.0", "1999")).To(Equal("add/127.120.100.0/1999"))
 		})
 	})
 
@@ -38,26 +38,27 @@ var _ = Describe("Default Callback interface", func() {
 			Expect(addr).To(Equal(expectedAddr))
 			Expect(port).To(Equal(expectedPort))
 		},
-		Entry("message contains a host name", "localhost/9090", "localhost", "9090"),
-		Entry("message contains an ip", "127.120.200.100/7070", "127.120.200.100", "7070"),
-		Entry("message contains an empty host", "/6060", "", "6060"),
-		Entry("message contains an empty port", "localhost/", "localhost", ""),
-		Entry("message contains empty host and empty port", "/", "", ""),
+		Entry("message contains a host name", "add/localhost/9090", "localhost", "9090"),
+		Entry("message contains an ip", "add/127.120.200.100/7070", "127.120.200.100", "7070"),
+		Entry("message contains an empty host", "add//6060", "", "6060"),
+		Entry("message contains an empty port", "add/localhost/", "localhost", ""),
+		Entry("message contains empty host and empty port", "add//", "", ""),
 	)
 
 	Describe("ComposeRemovePeerMessage helepr function", func() {
 		It("returns proper `remove peer` message", func() {
-			Expect(ComposeRemovePeerMessage("localhost", "9080")).To(Equal("localhost/9080"))
+			Expect(ComposeRemovePeerMessage("localhost", "9080")).To(Equal("remove/localhost/9080"))
 		})
 	})
 
-	DescribeTable("DecomposeAddPeerMessage helper function return error", func(msg string) {
+	DescribeTable("DecomposeAddPeerMessage helper function returns error", func(msg string) {
 		_, _, err := DecomposeAddPeerMessage(msg)
 		Expect(err).To(Equal(errors.New(invalidAddPeerMsgErr)))
 	},
-		Entry("message is invalid", "localhost"),
-		Entry("message is invalid", "127.100.120.0"),
-		Entry("message is invalid", ""),
+		Entry("message is invalid", "add/localhost"),
+		Entry("message is invalid", "add/127.100.120.0"),
+		Entry("message is empty", ""),
+		Entry("message doesn't contain `add` prefix", "localhost/19999"),
 	)
 
 	DescribeTable("DecomposeRemovePeerMessage helper function return proper addr and port",
@@ -67,19 +68,20 @@ var _ = Describe("Default Callback interface", func() {
 			Expect(addr).To(Equal(expectedAddr))
 			Expect(port).To(Equal(expectedPort))
 		},
-		Entry("message contains a host name", "localhost/9090", "localhost", "9090"),
-		Entry("message contains an ip", "127.120.200.100/7070", "127.120.200.100", "7070"),
-		Entry("message contains an empty host", "/6060", "", "6060"),
-		Entry("message contains an empty port", "localhost/", "localhost", ""),
-		Entry("message contains empty host and empty port", "/", "", ""),
+		Entry("message contains a host name", "remove/localhost/9090", "localhost", "9090"),
+		Entry("message contains an ip", "remove/127.120.200.100/7070", "127.120.200.100", "7070"),
+		Entry("message contains an empty host", "remove//6060", "", "6060"),
+		Entry("message contains an empty port", "remove/localhost/", "localhost", ""),
+		Entry("message contains empty host and empty port", "remove//", "", ""),
 	)
 
 	DescribeTable("DecomposeRemovePeerMessage helper function return error", func(msg string) {
 		_, _, err := DecomposeRemovePeerMessage(msg)
 		Expect(err).To(Equal(errors.New(invalidRemovePeerMsgErr)))
 	},
-		Entry("message is invalid", "localhost"),
-		Entry("message is invalid", "127.100.120.0"),
-		Entry("message is invalid", ""),
+		Entry("message is invalid", "remove/localhost"),
+		Entry("message is invalid", "remove/127.100.120.0"),
+		Entry("message is empty", ""),
+		Entry("message doesn't contain `remove` prefix", "localhost/19999"),
 	)
 })
