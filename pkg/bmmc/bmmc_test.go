@@ -163,12 +163,18 @@ var _ = Describe("BMMC", func() {
 				nodes[i] = newBMMC(addrs[i], ports[i], map[string]func(interface{}, *log.Logger) error{})
 			}
 
+			for p := 1; p < len; p++ {
+				Expect(nodes[0].AddPeer(addrs[p], ports[p])).To(Succeed())
+			}
+			Expect(nodes[1].AddPeer(addrs[0], ports[0])).To(Succeed())
+
 			// start protocol for all nodes
 			for p := 0; p < len; p++ {
-				for i := 0; i < len; i++ {
-					_ = nodes[p].AddPeer(addrs[i], ports[i])
-				}
-				Expect(nodes[p].Start())
+				Expect(nodes[p].Start()).To(Succeed())
+			}
+
+			for i := range nodes {
+				Eventually(getBufferFn(nodes[i]), time.Second*10).Should(ConsistOf(extraMsgBuffer))
 			}
 		})
 
@@ -191,7 +197,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with the message", func() {
 				for i := range nodes {
-					Eventually(getBufferFn(nodes[i]), time.Second*3).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 				}
 			})
 		})
@@ -213,7 +219,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+					Eventually(getBufferFn(nodes[i]), time.Second).Should(
 						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
@@ -234,7 +240,7 @@ var _ = Describe("BMMC", func() {
 
 			It("sync all nodes with all messages", func() {
 				for i := range nodes {
-					Eventually(getBufferFn(nodes[i]), time.Second*5).Should(
+					Eventually(getBufferFn(nodes[i]), time.Second).Should(
 						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
 			})
