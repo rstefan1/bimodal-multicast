@@ -80,9 +80,10 @@ func (msgBuffer *MessageBuffer) DigestBuffer() *DigestBuffer {
 
 // alreadyExists return true if the message already exists in message buffer
 func (msgBuffer *MessageBuffer) alreadyExists(msg Message) bool {
+	// TODO: Solve the following situatiion:
 	// Important! Whoever calls this function must LOCK the buffer
 	for i := range msgBuffer.Messages {
-		if msgBuffer.Messages[i].Msg == msg.Msg {
+		if msgBuffer.Messages[i].ID == msg.ID {
 			return true
 		}
 	}
