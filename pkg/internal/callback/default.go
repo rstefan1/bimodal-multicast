@@ -47,6 +47,10 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 		return "", "", errors.New(invalidAddPeerMsgErr)
 	}
 
+	if host[0] != "add" {
+		return "", "", errors.New(invalidAddPeerMsgErr)
+	}
+
 	addr := host[1]
 	port := host[2]
 	return addr, port, nil
@@ -61,6 +65,10 @@ func ComposeRemovePeerMessage(addr, port string) string {
 func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
 	if len(host) != 3 {
+		return "", "", errors.New(invalidRemovePeerMsgErr)
+	}
+
+	if host[0] != "remove" {
 		return "", "", errors.New(invalidRemovePeerMsgErr)
 	}
 
