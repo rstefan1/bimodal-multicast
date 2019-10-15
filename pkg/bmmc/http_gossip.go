@@ -62,11 +62,14 @@ func sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 		return fmt.Errorf(httpGossipMarshalErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
 	}
 
-	resp, err := http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
-	if err != nil {
-		return fmt.Errorf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
-	}
-	defer resp.Body.Close() // nolint:errcheck
+	go func() {
+		resp, err := http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
+		if err != nil {
+			// TODO log: fmt.Errorf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
+			return
+		}
+		defer resp.Body.Close() // nolint:errcheck
+	}()
 
 	return nil
 }
