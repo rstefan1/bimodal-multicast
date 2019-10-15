@@ -62,11 +62,14 @@ func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 		return fmt.Errorf(httpSolicitationMarshalErrFmt, err)
 	}
 
-	resp, err := http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
-	if err != nil {
-		return fmt.Errorf(httpSolicitationSendErrFmt, err)
-	}
-	defer resp.Body.Close() // nolint:errcheck
+	go func() {
+		resp, err := http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
+		if err != nil {
+			// TODO: log: fmt.Errorf(httpSolicitationSendErrFmt, err)
+			return
+		}
+		defer resp.Body.Close() // nolint:errcheck
+	}()
 
 	return nil
 }
