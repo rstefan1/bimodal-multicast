@@ -159,22 +159,20 @@ var _ = Describe("BMMC", func() {
 				extraMsgBuffer[i] = callback.ComposeAddPeerMessage(addrs[i], ports[i])
 			}
 
+			// create a protocol for each node, and start it
 			for i := 0; i < len; i++ {
 				nodes[i] = newBMMC(addrs[i], ports[i], map[string]func(interface{}, *log.Logger) error{})
+				Expect(nodes[i].Start()).To(Succeed())
 			}
 
-			for p := 1; p < len; p++ {
-				Expect(nodes[0].AddPeer(addrs[p], ports[p])).To(Succeed())
+			// add peers
+			for i := 1; i < len; i++ {
+				Expect(nodes[0].AddPeer(addrs[i], ports[i])).To(Succeed())
 			}
 			Expect(nodes[1].AddPeer(addrs[0], ports[0])).To(Succeed())
 
-			// start protocol for all nodes
-			for p := 0; p < len; p++ {
-				Expect(nodes[p].Start()).To(Succeed())
-			}
-
 			for i := range nodes {
-				Eventually(getBufferFn(nodes[i]), time.Second*10).Should(ConsistOf(extraMsgBuffer))
+				Eventually(getBufferFn(nodes[i]), time.Second*5).Should(ConsistOf(extraMsgBuffer))
 			}
 		})
 
