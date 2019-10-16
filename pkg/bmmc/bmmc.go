@@ -184,6 +184,11 @@ func (b *BMMC) GetMessages() []interface{} {
 	return b.messageBuffer.UnwrapMessageBuffer()
 }
 
+// GetPeers returns an array with all peers from peers buffer
+func (b *BMMC) GetPeers() []string {
+	return b.peerBuffer.GetPeers()
+}
+
 func (b *BMMC) runCallbacks(m buffer.Message, hostAddr, hostPort string) {
 	// TODO remove hostAddr and hostport from func args. These are used only for logging
 
