@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -36,13 +35,13 @@ func main() {
 	fmt.Println("*** Address:", addr)
 	fmt.Println("*** Port:", port)
 
-	// create file for logs
-	fName := fmt.Sprintf("log-%s-%s-%d", addr, port, rand.Int31())
-	logFile, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0600)
-	if err != nil {
-		fmt.Println("Error at creating log file with name", fName)
-		return
-	}
+	// // create file for logs
+	// fName := fmt.Sprintf("log-%s-%s-%d", addr, port, rand.Int31())
+	// logFile, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0600)
+	// if err != nil {
+	// 	fmt.Println("Error at creating log file with name", fName)
+	// 	return
+	// }
 
 	callbacks := map[string]func(
 		interface{}, *log.Logger) error{
@@ -63,7 +62,7 @@ func main() {
 		Port:      port,
 		Callbacks: callbacks,
 		Beta:      0.25,
-		Logger:    log.New(logFile, "", 0),
+		// Logger:    log.New(logFile, "", 0),
 		// RoundDuration: time.Second * 2,
 	}
 
