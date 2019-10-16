@@ -33,11 +33,16 @@ const (
 
 	peerAddedLogFmt   = "peer %s/%s added in the peers buffer"
 	peerRemovedLogFmt = "peer %s/%s removed from the peers buffer"
+
+	// addPrefix is the prefix for add peer messages
+	addPrefix = "add"
+	// removePrefix is the prefix for remove peer messages
+	removePrefix = "remove"
 )
 
 // ComposeAddPeerMessage returns a `add peer` message with given addr and port
 func ComposeAddPeerMessage(addr, port string) string {
-	return fmt.Sprintf("add/%s/%s", addr, port)
+	return fmt.Sprintf("%s/%s/%s", addPrefix, addr, port)
 }
 
 // DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
@@ -47,7 +52,7 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 		return "", "", errors.New(invalidAddPeerMsgErr)
 	}
 
-	if host[0] != "add" {
+	if host[0] != addPrefix {
 		return "", "", errors.New(invalidAddPeerMsgErr)
 	}
 
@@ -58,7 +63,7 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 
 // ComposeRemovePeerMessage returns a `remove peer` message with given addr and port
 func ComposeRemovePeerMessage(addr, port string) string {
-	return fmt.Sprintf("remove/%s/%s", addr, port)
+	return fmt.Sprintf("%s/%s/%s", removePrefix, addr, port)
 }
 
 // DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
@@ -68,7 +73,7 @@ func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 		return "", "", errors.New(invalidRemovePeerMsgErr)
 	}
 
-	if host[0] != "remove" {
+	if host[0] != removePrefix {
 		return "", "", errors.New(invalidRemovePeerMsgErr)
 	}
 
@@ -106,7 +111,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 		// nolint:unparam
 		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
 			// extract addr and peer from `remove peer` message
-			addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
+			addr, port, err := DecomposeRemovePeerMessage(msg.Msg.(string))
 			if err != nil {
 				return err
 			}
