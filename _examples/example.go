@@ -146,6 +146,9 @@ func main() {
 		case "get-messages":
 			fmt.Println("Messages:\n", node.GetMessages())
 
+		case "get-peers":
+			fmt.Println("Peers:\n", node.GetPeers())
+
 		case "stop":
 			node.Stop()
 			return
