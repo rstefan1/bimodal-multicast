@@ -132,10 +132,13 @@ func (b *BMMC) Stop() {
 
 // AddMessage adds new message in messages buffer.
 func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
-	m := buffer.NewMessage(msg, callbackType)
-
-	err := b.messageBuffer.AddMessage(m)
+	m, err := buffer.NewMessage(msg, callbackType)
 	if err != nil {
+		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+		return err
+	}
+
+	if err := b.messageBuffer.AddMessage(m); err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
 		return err
 	}
@@ -149,20 +152,21 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 
 // AddPeer adds new peer in peers buffer
 func (b *BMMC) AddPeer(addr, port string) error {
-	err := b.peerBuffer.AddPeer(
+	if err := b.peerBuffer.AddPeer(
 		peer.NewPeer(addr, port),
+	); err != nil {
+		return fmt.Errorf(addPeerErrFmt, addr, port, err)
+	}
+
+	msg, err := buffer.NewMessage(
+		callback.ComposeAddPeerMessage(addr, port),
+		callback.ADDPEER,
 	)
 	if err != nil {
 		return fmt.Errorf(addPeerErrFmt, addr, port, err)
 	}
 
-	err = b.messageBuffer.AddMessage(
-		buffer.NewMessage(
-			callback.ComposeAddPeerMessage(addr, port),
-			callback.ADDPEER,
-		),
-	)
-	if err != nil {
+	if err = b.messageBuffer.AddMessage(msg); err != nil {
 		return fmt.Errorf(addPeerErrFmt, addr, port, err)
 	}
 
@@ -175,13 +179,15 @@ func (b *BMMC) RemovePeer(addr, port string) error {
 		peer.NewPeer(addr, port),
 	)
 
-	err := b.messageBuffer.AddMessage(
-		buffer.NewMessage(
-			callback.ComposeRemovePeerMessage(addr, port),
-			callback.REMOVEPEER,
-		),
+	msg, err := buffer.NewMessage(
+		callback.ComposeRemovePeerMessage(addr, port),
+		callback.REMOVEPEER,
 	)
 	if err != nil {
+		return fmt.Errorf(removePeerErrFmt, addr, port, err)
+	}
+
+	if err := b.messageBuffer.AddMessage(msg); err != nil {
 		return fmt.Errorf(removePeerErrFmt, addr, port, err)
 	}
 

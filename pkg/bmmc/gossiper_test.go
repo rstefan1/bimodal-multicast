@@ -33,7 +33,11 @@ var _ = Describe("Gossiper", func() {
 			Expect(peerBuf.AddPeer(peer.NewPeer("localhost", "19999"))).To(Succeed())
 
 			msgBuf := buffer.NewMessageBuffer()
-			Expect(msgBuf.AddMessage(buffer.NewMessage("awesome message", "awesome-callback"))).To(Succeed())
+
+			msg, err := buffer.NewMessage("awesome message", "awesome-callback")
+			Expect(err).To(BeNil())
+
+			Expect(msgBuf.AddMessage(msg)).To(Succeed())
 
 			b = &BMMC{
 				peerBuffer:    peerBuf,

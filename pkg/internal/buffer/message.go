@@ -17,8 +17,9 @@ limitations under the License.
 package buffer
 
 import (
+	"crypto/sha1" // nolint: gosec
+	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"sort"
 	"sync"
 	"time"
@@ -38,14 +39,34 @@ type MessageBuffer struct {
 	Mux      *sync.Mutex `json:"message_buffer_mux"`
 }
 
+// generateIDFromMsg returns an ID consisting of a hash of the original string
+func generateIDFromMsg(s string) (string, error) {
+	h := sha1.New() // nolint: gosec
+
+	if _, err := h.Write([]byte(s)); err != nil {
+		return "", err
+	}
+
+	sha1Hash := hex.EncodeToString(h.Sum(nil))
+
+	id := sha1Hash + "-" + time.Now().Format("20060102150405")
+
+	return id, nil
+}
+
 // NewMessage creates new message
-func NewMessage(m interface{}, callbackType string) Message {
+func NewMessage(m interface{}, callbackType string) (Message, error) {
+	id, err := generateIDFromMsg(fmt.Sprintf("%v", m))
+	if err != nil {
+		return Message{}, err
+	}
+
 	return Message{
-		ID:           fmt.Sprintf("%s%d", time.Now().Format("20060102150405"), rand.Int31()),
+		ID:           id,
 		Msg:          m,
 		CallbackType: callbackType,
 		GossipCount:  0,
-	}
+	}, nil
 }
 
 // NewMessageBuffer creates new MessageBuffer
