@@ -19,6 +19,7 @@ package bmmc
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -37,6 +38,9 @@ const (
 
 	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %s"
 	createDefaultCRErrFmt = "error at creating new default callbacks registry: %s"
+
+	// netClientTimeout is the timeout for http client
+	netClientTimeout = time.Second * 10
 )
 
 // BMMC is the bimodal multicast protocol
@@ -57,6 +61,8 @@ type BMMC struct {
 	defaultCallbacks *callback.DefaultRegistry
 	// stop channel
 	stop chan struct{}
+	// netClient is the http client
+	netClient *http.Client
 
 	// TODO remove the following field
 	selectedPeers []bool
@@ -90,6 +96,9 @@ func New(cfg *Config) (*BMMC, error) {
 		gossipRound:      NewGossipRound(),
 		customCallbacks:  cbCustomRegistry,
 		defaultCallbacks: cbDefaultRegistry,
+		netClient: &http.Client{
+			Timeout: netClientTimeout,
+		},
 
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),

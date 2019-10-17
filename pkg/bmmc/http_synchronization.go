@@ -62,7 +62,7 @@ func (b *BMMC) sendSynchronization(synchronization HTTPSynchronization, addr, po
 	}
 
 	go func() {
-		resp, err := http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
+		resp, err := b.netClient.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
 		if err != nil {
 			b.config.Logger.Printf(httpSynchronizationSendErrFmt, err)
 			return

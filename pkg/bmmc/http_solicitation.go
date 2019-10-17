@@ -63,7 +63,7 @@ func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string
 	}
 
 	go func() {
-		resp, err := http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
+		resp, err := b.netClient.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
 			b.config.Logger.Printf(httpSolicitationSendErrFmt, err)
 			return

@@ -63,7 +63,7 @@ func (b *BMMC) sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	}
 
 	go func() {
-		resp, err := http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
+		resp, err := b.netClient.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
 		if err != nil {
 			b.config.Logger.Printf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
 			return
