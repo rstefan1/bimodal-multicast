@@ -28,6 +28,7 @@ import (
 // Message is a message
 type Message struct {
 	ID           string      `json:"message_ID"`
+	Timestamp    time.Time   `json:"message_timestamp"`
 	Msg          interface{} `json:"message_msg"`
 	CallbackType string      `json:"message_callback_type"`
 	GossipCount  int         `json:"message_gossip_count"`
@@ -63,6 +64,7 @@ func NewMessage(m interface{}, callbackType string) (Message, error) {
 
 	return Message{
 		ID:           id,
+		Timestamp:    time.Now(),
 		Msg:          m,
 		CallbackType: callbackType,
 		GossipCount:  0,
