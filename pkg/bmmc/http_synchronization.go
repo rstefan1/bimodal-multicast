@@ -28,6 +28,7 @@ import (
 const (
 	httpSynchronizationDecodeErrFmt  = "error at decoding http synchronization message in HTTP Server: %s"
 	httpSynchronizationMarshalErrFmt = "error at marshal http synchronization message in HTTP Server: %s"
+	httpSynchronizationSendErrFmt    = "error at sending HTTPSynchronization message in HTTP Server: %s"
 )
 
 // HTTPSynchronization is synchronization message for http server
@@ -42,7 +43,7 @@ func synchronizationHTTPPath(addr, port string) string {
 }
 
 // receiveSynchronization receives http solicitation message
-func receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
+func (b *BMMC) receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
 	var t HTTPSynchronization
 
 	decoder := json.NewDecoder(r.Body)
@@ -54,7 +55,7 @@ func receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, str
 }
 
 // sendSynchronization send http synchronization message
-func sendSynchronization(synchronization HTTPSynchronization, addr, port string) error {
+func (b *BMMC) sendSynchronization(synchronization HTTPSynchronization, addr, port string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
 		return fmt.Errorf(httpSynchronizationMarshalErrFmt, err)
@@ -63,7 +64,7 @@ func sendSynchronization(synchronization HTTPSynchronization, addr, port string)
 	go func() {
 		resp, err := http.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization))
 		if err != nil {
-			// TODO: log: fmt.Errorf(httpSynchronizationSendErrFmt, err)
+			b.config.Logger.Printf(httpSynchronizationSendErrFmt, err)
 			return
 		}
 		defer resp.Body.Close() // nolint:errcheck

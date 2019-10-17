@@ -28,6 +28,7 @@ import (
 const (
 	httpSolicitationDecodingErrFmt = "error at decoding http solicitation message in HTTP Server: %s"
 	httpSolicitationMarshalErrFmt  = "error at marshal http solicitation in HTTP Server: %s"
+	httpSolicitationSendErrFmt     = "error at sending http soliccitation message in HTTP Server: %s"
 )
 
 // HTTPSolicitation is solicitation message for http server
@@ -43,7 +44,7 @@ func solicitationHTTPPath(addr, port string) string {
 }
 
 // receiveSolicitation receives http solicitation message
-func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
+func (b *BMMC) receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
 	var t HTTPSolicitation
 
 	decoder := json.NewDecoder(r.Body)
@@ -55,7 +56,7 @@ func receiveSolicitation(r *http.Request) (*buffer.DigestBuffer, string, string,
 }
 
 // sendSolicitation send http solicitation message
-func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
+func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 	jsonSolicitation, err := json.Marshal(solicitation)
 	if err != nil {
 		return fmt.Errorf(httpSolicitationMarshalErrFmt, err)
@@ -64,7 +65,7 @@ func sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 	go func() {
 		resp, err := http.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
-			// TODO: log: fmt.Errorf(httpSolicitationSendErrFmt, err)
+			b.config.Logger.Printf(httpSolicitationSendErrFmt, err)
 			return
 		}
 		defer resp.Body.Close() // nolint:errcheck

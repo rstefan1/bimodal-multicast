@@ -76,7 +76,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 					Digests:     *(b.messageBuffer).DigestBuffer(),
 				}
 
-				err := sendGossip(gossipMsg, destAddr, destPort)
+				err := b.sendGossip(gossipMsg, destAddr, destPort)
 				if err != nil {
 					b.config.Logger.Printf("%s", err)
 				}

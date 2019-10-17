@@ -28,6 +28,7 @@ import (
 const (
 	httpGossipDecodingErrFmt = "error at decoding http gossip message in HTTP Server: %s"
 	httpGossipMarshalErrFmt  = "gossiper from %s:%s can not marshal the gossip message: %s"
+	httpGossipSendErrFmt     = "gossiper from %s:%s can not send the gossip message: %s"
 )
 
 // HTTPGossip is gossip message for http server
@@ -43,7 +44,7 @@ func gossipHTTPPath(addr, port string) string {
 }
 
 // receiveGossip receives a HTPP gossip message
-func receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
+func (b *BMMC) receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *GossipRound, error) {
 	var t HTTPGossip
 
 	decoder := json.NewDecoder(r.Body)
@@ -55,7 +56,7 @@ func receiveGossip(r *http.Request) (*buffer.DigestBuffer, string, string, *Goss
 }
 
 // sendGossip sends a HTTP gossip message
-func sendGossip(gossipMsg HTTPGossip, addr, port string) error {
+func (b *BMMC) sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	jsonGossip, err := json.Marshal(gossipMsg)
 	if err != nil {
 		return fmt.Errorf(httpGossipMarshalErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
@@ -64,7 +65,7 @@ func sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	go func() {
 		resp, err := http.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
 		if err != nil {
-			// TODO log: fmt.Errorf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
+			b.config.Logger.Printf(httpGossipSendErrFmt, gossipMsg.Addr, gossipMsg.Port, err)
 			return
 		}
 		defer resp.Body.Close() // nolint:errcheck

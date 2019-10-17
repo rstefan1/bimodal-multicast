@@ -60,7 +60,7 @@ func fullHost(addr, port string) string {
 }
 
 func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
-	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := receiveGossip(r)
+	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
@@ -83,7 +83,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 			Digests:     *missingDigestBuffer,
 		}
 
-		err = sendSolicitation(solicitationMsg, tAddr, tPort)
+		err = b.sendSolicitation(solicitationMsg, tAddr, tPort)
 		if err != nil {
 			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
 			return
@@ -92,7 +92,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
-	missingDigestBuffer, tAddr, tPort, _, err := receiveSolicitation(r)
+	missingDigestBuffer, tAddr, tPort, _, err := b.receiveSolicitation(r)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
@@ -111,7 +111,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 		Messages: *missingMsgBuffer,
 	}
 
-	err = sendSynchronization(synchronizationMsg, tAddr, tPort)
+	err = b.sendSynchronization(synchronizationMsg, tAddr, tPort)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
@@ -125,7 +125,7 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rcvMsgBuf, _, _, err := receiveSynchronization(r)
+	rcvMsgBuf, _, _, err := b.receiveSynchronization(r)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
 		return
