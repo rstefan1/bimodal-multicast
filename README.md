@@ -93,6 +93,12 @@ For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
     err := p.RemovePeer("localhost", "18999")
 ```
 
+* Get all peers
+
+```golang
+    peers := GetPeers()
+```
+
 
 ## Performance
 
@@ -112,7 +118,6 @@ When beta is 0.5 and loss is 30% (after 20 retries):
  
 ## Roadmap to v0.3
  - [x] Refactor
- - [ ] Documentation
 
 
 ## Roadmap to v0.4
