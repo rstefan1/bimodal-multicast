@@ -31,7 +31,7 @@ type Message struct {
 	Timestamp    time.Time   `json:"message_timestamp"`
 	Msg          interface{} `json:"message_msg"`
 	CallbackType string      `json:"message_callback_type"`
-	GossipCount  int         `json:"message_gossip_count"`
+	GossipCount  int64       `json:"message_gossip_count"`
 }
 
 // MessageBuffer is the buffer with messages

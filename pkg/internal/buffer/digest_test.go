@@ -187,12 +187,12 @@ var _ = Describe("DigestBuffer interface", func() {
 			msgBuffer         *MessageBuffer
 			expectedMsgBuffer *MessageBuffer
 			msgMsg            string
-			msgGossipCount    int
+			msgGossipCount    int64
 		)
 
 		BeforeEach(func() {
 			msgMsg = fmt.Sprintf("%d", rand.Int31())
-			msgGossipCount = int(rand.Int31())
+			msgGossipCount = int64(rand.Int31())
 
 			msgBuffer = NewMessageBuffer()
 			for i := 0; i < digestCount; i++ {

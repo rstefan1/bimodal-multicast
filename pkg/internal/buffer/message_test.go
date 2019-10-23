@@ -24,13 +24,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func expectProperMessage(msg Message, msgID, msgMsg string, msgGossipCount int) {
+func expectProperMessage(msg Message, msgID, msgMsg string, msgGossipCount int64) {
 	Expect(msg.ID).To(Equal(msgID))
 	Expect(msg.Msg).To(Equal(msgMsg))
 	Expect(msg.GossipCount).To(Equal(msgGossipCount))
 }
 
-func createMessageFromInitialBuffer(id, msg string, gossipCount int, beginIndex, endIndex int, messageBuffer *MessageBuffer) *MessageBuffer {
+func createMessageFromInitialBuffer(id, msg string, gossipCount int64, beginIndex, endIndex int, messageBuffer *MessageBuffer) *MessageBuffer {
 	for i := beginIndex; i < endIndex; i++ {
 		_id := fmt.Sprintf("%s-%02d", id, i)
 		messageBuffer.Messages = append(messageBuffer.Messages, Message{
@@ -42,7 +42,7 @@ func createMessageFromInitialBuffer(id, msg string, gossipCount int, beginIndex,
 	return messageBuffer
 }
 
-func createMessage(id, msg string, gossipCount, cnt int) ([]Message, *MessageBuffer) {
+func createMessage(id, msg string, gossipCount int64, cnt int) ([]Message, *MessageBuffer) {
 	var messageSlice []Message
 	messageBuffer := NewMessageBuffer()
 
@@ -65,7 +65,7 @@ var _ = Describe("MessageBuffer interface", func() {
 		msgCount       = 3
 		msgID          string
 		msgMsg         string
-		msgGossipCount int
+		msgGossipCount int64
 	)
 
 	BeforeEach(func() {
@@ -73,7 +73,7 @@ var _ = Describe("MessageBuffer interface", func() {
 
 		msgID = fmt.Sprintf("%d", rand.Int31())
 		msgMsg = fmt.Sprintf("%d", rand.Int31())
-		msgGossipCount = int(rand.Int31())
+		msgGossipCount = int64(rand.Int31())
 
 		for i := 0; i < msgCount; i++ {
 			_msgID := fmt.Sprintf("%s-%02d", msgID, i)
@@ -149,7 +149,7 @@ var _ = Describe("MessageBuffer interface", func() {
 			extraMessage       Message
 			messageID          string
 			messageMsg         string
-			messageGossipCount int
+			messageGossipCount int64
 			messageCount       int
 		)
 
