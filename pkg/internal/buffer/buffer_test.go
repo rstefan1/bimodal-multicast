@@ -16,10 +16,19 @@ limitations under the License.
 
 package buffer
 
-import "sync"
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-// Buffer is the buffer with messages
-type Buffer struct {
-	Elements []Element   `json:"elements"`
-	Mux      *sync.Mutex `json:"mutex"`
-}
+var _ = Describe("Buffer interface", func() {
+	Describe("NewBuffer function", func() {
+		It("creates new buffer", func() {
+			buf := NewBuffer(5)
+
+			Expect(buf.Elements).To(HaveLen(5))
+			Expect(buf.Size).To(Equal(5))
+			Expect(buf.Mux).NotTo(BeNil())
+		})
+	})
+})
