@@ -15,3 +15,11 @@ limitations under the License.
 */
 
 package buffer
+
+import "sync"
+
+// Buffer is the buffer with messages
+type Buffer struct {
+	Elements []Element   `json:"elements"`
+	Mux      *sync.Mutex `json:"mutex"`
+}
