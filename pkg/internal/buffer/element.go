@@ -16,12 +16,51 @@ limitations under the License.
 
 package buffer
 
-import "time"
+import (
+	"crypto/sha1" // nolint: gosec
+	"encoding/hex"
+	"fmt"
+	"math/rand"
+	"time"
+)
 
+// Element is an element from messages buffer
 type Element struct {
 	ID           string      `json:"id"`
 	Timestamp    time.Time   `json:"timestamp"`
 	Msg          interface{} `json:"msg"`
 	CallbackType string      `json:"callback_type"`
 	GossipCount  int64       `json:"gossip_count"`
+}
+
+// generateIDFromMsg returns an ID consisting of a hash of the original string,
+// a timestamp and a random number
+func generateIDFromMsg(s string) (string, error) {
+	h := sha1.New() // nolint: gosec
+
+	if _, err := h.Write([]byte(s)); err != nil {
+		return "", err
+	}
+
+	sha1Hash := hex.EncodeToString(h.Sum(nil))
+
+	id := sha1Hash + "-" + time.Now().Format("20060102150405") + "-" + string(rand.Int31())
+
+	return id, nil
+}
+
+// NewElement creates new buffer element with given message and callback type
+func NewElement(msg interface{}, cbType string) (*Element, error) {
+	id, err := generateIDFromMsg(fmt.Sprintf("%v", msg))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Element{
+		ID:           id,
+		Timestamp:    time.Now(),
+		Msg:          msg,
+		CallbackType: cbType,
+		GossipCount:  0,
+	}, nil
 }
