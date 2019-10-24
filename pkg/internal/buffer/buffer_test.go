@@ -27,7 +27,7 @@ var _ = Describe("Buffer interface", func() {
 			buf := NewBuffer(5)
 
 			Expect(buf.Elements).To(HaveLen(5))
-			Expect(buf.Size).To(Equal(5))
+			Expect(buf.Len).To(BeZero())
 			Expect(buf.Mux).NotTo(BeNil())
 		})
 	})

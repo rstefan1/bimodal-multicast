@@ -21,7 +21,7 @@ import "sync"
 // Buffer is the buffer with messages
 type Buffer struct {
 	Elements []Element   `json:"elements"`
-	Size     int         `json:"size"`
+	Len      int         `json:"len"`
 	Mux      *sync.Mutex `json:"mux"`
 }
 
@@ -29,7 +29,7 @@ type Buffer struct {
 func NewBuffer(size int) *Buffer {
 	return &Buffer{
 		Elements: make([]Element, size),
-		Size:     size,
+		Len:      0,
 		Mux:      &sync.Mutex{},
 	}
 }
