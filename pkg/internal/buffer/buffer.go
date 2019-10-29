@@ -37,7 +37,9 @@ func NewBuffer(size int) *Buffer {
 // elementPosition gets the element position in buffer
 func (buf *Buffer) elementPosition(el Element) int {
 	for i := 0; i < buf.Len; i++ {
-		if el.Timestamp.String() >= buf.Elements[i].Timestamp.String() {
+		if el.Timestamp.String() == buf.Elements[i].Timestamp.String() {
+			return -1
+		} else if el.Timestamp.String() > buf.Elements[i].Timestamp.String() {
 			return i
 		}
 	}
