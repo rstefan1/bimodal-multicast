@@ -118,4 +118,167 @@ var _ = Describe("Buffer interface", func() {
 			Expect(fullBuf.elementPosition(el)).To(Equal(-1))
 		})
 	})
+
+	Describe("shiftElements function", func() {
+		When("buffer is full", func() {
+			var buf *Buffer
+
+			BeforeEach(func() {
+				buf = &Buffer{
+					Elements: make([]Element, 4),
+					Len:      4,
+					Mux:      &sync.Mutex{},
+				}
+				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				buf.Elements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				buf.Elements[3] = Element{Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			})
+
+			It("shift all elements if index is 0", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(0)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("shift elements if index is in the middle of array", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(1)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("doesn't shift any element if index is index of last element", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(3)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("doesn't shift any element if index is lower than 0", func() {
+				// TODO: not implemented
+			})
+
+			It("doesn't shift any elements if index is greater then buffer size", func() {
+				// TODO: not implemented
+			})
+		})
+
+		When("buffer is not full", func() {
+			var buf *Buffer
+
+			BeforeEach(func() {
+				buf = &Buffer{
+					Elements: make([]Element, 4),
+					Len:      3,
+					Mux:      &sync.Mutex{},
+				}
+				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				buf.Elements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			})
+
+			It("shift all elements if index is 0", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(0)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("shift elements if index is in the middle of array", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(1)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("doesn't shift any element if index is the index of last element", func() {
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(2)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("doesn't shift any element if index is lower than 0", func() {
+				// TODO: not implemented
+			})
+
+			It("doesn't shift any elements if index is greater then buffer size", func() {
+				// TODO: not implemented
+			})
+
+			It("doesn't shift any element if index is greater then buffer len but lower then buffer size", func() {
+				buf = &Buffer{
+					Elements: make([]Element, 4),
+					Len:      1,
+					Mux:      &sync.Mutex{},
+				}
+				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+				buf.shiftElements(2)
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+		})
+	})
+
+	Describe("Add function", func() {
+		It("adds the new element in buffer", func() {
+			buf := &Buffer{
+				Elements: make([]Element, 4),
+				Len:      4,
+				Mux:      &sync.Mutex{},
+			}
+			buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			buf.Elements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			buf.Elements[3] = Element{Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+			expectedElements := make([]Element, 4)
+			expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			expectedElements[2] = Element{Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+			el := Element{Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC)}
+
+			buf.Add(el)
+
+			Expect(buf.Elements).To(Equal(expectedElements))
+		})
+	})
 })
