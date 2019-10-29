@@ -16,7 +16,9 @@ limitations under the License.
 
 package buffer
 
-import "sync"
+import (
+	"sync"
+)
 
 // Buffer is the buffer with messages
 type Buffer struct {
@@ -42,6 +44,10 @@ func (buf *Buffer) elementPosition(el Element) int {
 		} else if el.Timestamp.String() > buf.Elements[i].Timestamp.String() {
 			return i
 		}
+	}
+
+	if buf.Len < len(buf.Elements) {
+		return buf.Len
 	}
 
 	return -1
@@ -73,4 +79,5 @@ func (buf *Buffer) Add(el Element) {
 	buf.shiftElements(pos)
 
 	buf.Elements[pos] = el
+	buf.Len++
 }
