@@ -33,3 +33,42 @@ func NewBuffer(size int) *Buffer {
 		Mux:      &sync.Mutex{},
 	}
 }
+
+// elementPosition gets the element position in buffer
+func (buf *Buffer) elementPosition(el Element) int {
+	for i := 0; i < buf.Len; i++ {
+		if el.Timestamp.String() >= buf.Elements[i].Timestamp.String() {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// shiftElements shifts elements from given index to right
+func (buf *Buffer) shiftElements(index int) {
+	lastElPos := buf.Len
+
+	if buf.Len == len(buf.Elements) {
+		lastElPos--
+	}
+
+	for i := lastElPos; i > index; i-- {
+		buf.Elements[i] = buf.Elements[i-1]
+	}
+}
+
+// Add adds the given element in buffer
+func (buf *Buffer) Add(el Element) {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
+	pos := buf.elementPosition(el)
+	if pos == -1 {
+		return
+	}
+
+	buf.shiftElements(pos)
+
+	buf.Elements[pos] = el
+}
