@@ -397,4 +397,40 @@ var _ = Describe("Buffer interface", func() {
 			Expect(buf.Elements).To(Equal(expectedElements))
 		})
 	})
+
+	Describe("Messages function", func() {
+		It("returns messages from each element from buffer", func() {
+			type testType struct {
+				String  string
+				Int     int
+				Boolean bool
+			}
+
+			buf := &Buffer{
+				Elements: make([]Element, 4),
+				Len:      4,
+				Mux:      &sync.Mutex{},
+			}
+			buf.Elements[0] = Element{Msg: "string"}
+			buf.Elements[1] = Element{Msg: 100}
+			buf.Elements[2] = Element{Msg: true}
+			buf.Elements[3] = Element{Msg: testType{
+				String:  "another-string",
+				Int:     200,
+				Boolean: false,
+			}}
+
+			expectedMsg := make([]interface{}, 4)
+			expectedMsg[0] = "string"
+			expectedMsg[1] = 100
+			expectedMsg[2] = true
+			expectedMsg[3] = testType{
+				String:  "another-string",
+				Int:     200,
+				Boolean: false,
+			}
+
+			Expect(buf.Messages()).To(Equal(expectedMsg))
+		})
+	})
 })
