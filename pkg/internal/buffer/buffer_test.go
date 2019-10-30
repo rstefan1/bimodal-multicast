@@ -433,4 +433,16 @@ var _ = Describe("Buffer interface", func() {
 			Expect(buf.Messages()).To(Equal(expectedMsg))
 		})
 	})
+
+	Describe("Length function", func() {
+		It("returns number of elements in buffer", func() {
+			buf := &Buffer{
+				Elements: make([]Element, 4),
+				Len:      2,
+				Mux:      &sync.Mutex{},
+			}
+
+			Expect(buf.Length()).To(Equal(2))
+		})
+	})
 })
