@@ -17,6 +17,7 @@ limitations under the License.
 package buffer
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -59,7 +60,9 @@ var _ = Describe("Buffer interface", func() {
 				Timestamp: time.Date(2019, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(0))
+			pos, err := fullBuf.elementPosition(el)
+			Expect(err).To(BeNil())
+			Expect(pos).To(Equal(0))
 		})
 
 		It("returns position when element should be in the middle", func() {
@@ -67,7 +70,9 @@ var _ = Describe("Buffer interface", func() {
 				Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(2))
+			pos, err := fullBuf.elementPosition(el)
+			Expect(err).To(BeNil())
+			Expect(pos).To(Equal(2))
 		})
 
 		It("returns position when element should be last and buffer is full", func() {
@@ -75,7 +80,9 @@ var _ = Describe("Buffer interface", func() {
 				Timestamp: time.Date(2013, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(3))
+			pos, err := fullBuf.elementPosition(el)
+			Expect(err).To(BeNil())
+			Expect(pos).To(Equal(3))
 		})
 
 		It("returns position when element should be last and buffer is not full", func() {
@@ -83,39 +90,45 @@ var _ = Describe("Buffer interface", func() {
 				Timestamp: time.Date(2010, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(halfBuf.elementPosition(el)).To(Equal(2))
+			pos, err := halfBuf.elementPosition(el)
+			Expect(err).To(BeNil())
+			Expect(pos).To(Equal(2))
 		})
 
-		It("returns -1 when element already exists and is first", func() {
+		It("returns error when element already exists and is first", func() {
 			el := Element{
 				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(-1))
+			_, err := fullBuf.elementPosition(el)
+			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
 		})
 
-		It("returns -1 when element already exists and is in the middle", func() {
+		It("returns error when element already exists and is in the middle", func() {
 			el := Element{
 				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(-1))
+			_, err := fullBuf.elementPosition(el)
+			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
 		})
 
-		It("returns -1 when element already exists and is last", func() {
+		It("returns error when element already exists and is last", func() {
 			el := Element{
 				Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(-1))
+			_, err := fullBuf.elementPosition(el)
+			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
 		})
 
-		It("returns -1 when element is too old and buffer is full", func() {
+		It("returns error when element is too old and buffer is full", func() {
 			el := Element{
 				Timestamp: time.Date(2010, time.October, 29, 0, 0, 0, 0, time.UTC),
 			}
 
-			Expect(fullBuf.elementPosition(el)).To(Equal(-1))
+			_, err := fullBuf.elementPosition(el)
+			Expect(err).To(Equal(fmt.Errorf(tooOldElementErrFmt)))
 		})
 	})
 
@@ -142,7 +155,7 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(0)
+				Expect(buf.shiftElements(0)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
@@ -154,7 +167,7 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(1)
+				Expect(buf.shiftElements(1)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
@@ -166,17 +179,17 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(3)
+				Expect(buf.shiftElements(3)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
 
 			It("doesn't shift any element if index is lower than 0", func() {
-				// TODO: not implemented
+				Expect(buf.shiftElements(-1)).To(Equal(fmt.Errorf(indexOutOfRangeErrFmt)))
 			})
 
 			It("doesn't shift any elements if index is greater then buffer size", func() {
-				// TODO: not implemented
+				Expect(buf.shiftElements(len(buf.Elements))).To(Equal(fmt.Errorf(indexOutOfRangeErrFmt)))
 			})
 		})
 
@@ -201,7 +214,7 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(0)
+				Expect(buf.shiftElements(0)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
@@ -213,7 +226,7 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(1)
+				Expect(buf.shiftElements(1)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
@@ -225,17 +238,9 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(2)
+				Expect(buf.shiftElements(2)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
-			})
-
-			It("doesn't shift any element if index is lower than 0", func() {
-				// TODO: not implemented
-			})
-
-			It("doesn't shift any elements if index is greater then buffer size", func() {
-				// TODO: not implemented
 			})
 
 			It("doesn't shift any element if index is greater then buffer len but lower then buffer size", func() {
@@ -249,7 +254,7 @@ var _ = Describe("Buffer interface", func() {
 				expectedElements := make([]Element, 4)
 				expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-				buf.shiftElements(2)
+				Expect(buf.shiftElements(2)).To(Succeed())
 
 				Expect(buf.Elements).To(Equal(expectedElements))
 			})
@@ -276,7 +281,7 @@ var _ = Describe("Buffer interface", func() {
 
 			el := Element{Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
-			buf.Add(el)
+			Expect(buf.Add(el)).To(Succeed())
 
 			Expect(buf.Elements).To(Equal(expectedElements))
 		})
