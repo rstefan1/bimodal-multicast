@@ -150,3 +150,12 @@ func (buf *Buffer) Messages() []interface{} {
 
 	return m
 }
+
+// Length returns number of elements in buffer
+func (buf *Buffer) Length() int {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
+	l := buf.Len
+	return l
+}
