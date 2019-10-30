@@ -17,7 +17,14 @@ limitations under the License.
 package buffer
 
 import (
+	"fmt"
 	"sync"
+)
+
+const (
+	indexOutOfRangeErrFmt = "index out of range"
+	alreadyExistsErrFmt   = "already exists"
+	tooOldElementErrFmt   = "element is too old and buffer is full"
 )
 
 // Buffer is the buffer with messages
@@ -37,24 +44,28 @@ func NewBuffer(size int) *Buffer {
 }
 
 // elementPosition gets the element position in buffer
-func (buf *Buffer) elementPosition(el Element) int {
+func (buf *Buffer) elementPosition(el Element) (int, error) {
 	for i := 0; i < buf.Len; i++ {
 		if el.Timestamp.String() == buf.Elements[i].Timestamp.String() {
-			return -1
+			return -1, fmt.Errorf(alreadyExistsErrFmt)
 		} else if el.Timestamp.String() > buf.Elements[i].Timestamp.String() {
-			return i
+			return i, nil
 		}
 	}
 
 	if buf.Len < len(buf.Elements) {
-		return buf.Len
+		return buf.Len, nil
 	}
 
-	return -1
+	return -1, fmt.Errorf(tooOldElementErrFmt)
 }
 
 // shiftElements shifts elements from given index to right
-func (buf *Buffer) shiftElements(index int) {
+func (buf *Buffer) shiftElements(index int) error {
+	if index < 0 || index >= len(buf.Elements) {
+		return fmt.Errorf(indexOutOfRangeErrFmt)
+	}
+
 	lastElPos := buf.Len
 
 	if buf.Len == len(buf.Elements) {
@@ -64,20 +75,26 @@ func (buf *Buffer) shiftElements(index int) {
 	for i := lastElPos; i > index; i-- {
 		buf.Elements[i] = buf.Elements[i-1]
 	}
+
+	return nil
 }
 
 // Add adds the given element in buffer
-func (buf *Buffer) Add(el Element) {
+func (buf *Buffer) Add(el Element) error {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 
-	pos := buf.elementPosition(el)
-	if pos == -1 {
-		return
+	pos, err := buf.elementPosition(el)
+	if err != nil {
+		return err
 	}
 
-	buf.shiftElements(pos)
+	if err := buf.shiftElements(pos); err != nil {
+		return err
+	}
 
 	buf.Elements[pos] = el
 	buf.Len++
+
+	return nil
 }
