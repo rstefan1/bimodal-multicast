@@ -30,7 +30,7 @@ type Element struct {
 	Timestamp    time.Time   `json:"timestamp"`
 	Msg          interface{} `json:"msg"`
 	CallbackType string      `json:"callback_type"`
-	GossipCount  int64       `json:"gossip_count"`
+	GossipCount  int64       `json:"gossip_count"` // number of rounds since the element is in buffer
 }
 
 // generateIDFromMsg returns an ID consisting of a hash of the original string,
@@ -44,7 +44,7 @@ func generateIDFromMsg(s string) (string, error) {
 
 	sha1Hash := hex.EncodeToString(h.Sum(nil))
 
-	id := sha1Hash + "-" + time.Now().Format("20060102150405") + "-" + string(rand.Int31())
+	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31())
 
 	return id, nil
 }

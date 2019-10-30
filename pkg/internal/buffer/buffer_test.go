@@ -95,33 +95,6 @@ var _ = Describe("Buffer interface", func() {
 			Expect(pos).To(Equal(2))
 		})
 
-		It("returns error when element already exists and is first", func() {
-			el := Element{
-				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
-			}
-
-			_, err := fullBuf.elementPosition(el)
-			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
-		})
-
-		It("returns error when element already exists and is in the middle", func() {
-			el := Element{
-				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
-			}
-
-			_, err := fullBuf.elementPosition(el)
-			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
-		})
-
-		It("returns error when element already exists and is last", func() {
-			el := Element{
-				Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC),
-			}
-
-			_, err := fullBuf.elementPosition(el)
-			Expect(err).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
-		})
-
 		It("returns error when element is too old and buffer is full", func() {
 			el := Element{
 				Timestamp: time.Date(2010, time.October, 29, 0, 0, 0, 0, time.UTC),
@@ -262,28 +235,70 @@ var _ = Describe("Buffer interface", func() {
 	})
 
 	Describe("Add function", func() {
-		It("adds the new element in buffer", func() {
-			buf := &Buffer{
+		var (
+			buf *Buffer
+		)
+
+		BeforeEach(func() {
+			buf = &Buffer{
 				Elements: make([]Element, 4),
 				Len:      4,
 				Mux:      &sync.Mutex{},
 			}
-			buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			buf.Elements[2] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			buf.Elements[3] = Element{Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			buf.Elements[0] = Element{
+				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2018",
+			}
+			buf.Elements[1] = Element{
+				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2016",
+			}
+			buf.Elements[2] = Element{
+				Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2014",
+			}
+			buf.Elements[3] = Element{
+				Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2012",
+			}
+		})
 
+		It("adds the new element in buffer", func() {
 			expectedElements := make([]Element, 4)
-			expectedElements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			expectedElements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			expectedElements[2] = Element{Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC)}
-			expectedElements[3] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			expectedElements[0] = Element{
+				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2018",
+			}
+			expectedElements[1] = Element{
+				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2016",
+			}
+			expectedElements[2] = Element{
+				Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2015",
+			}
+			expectedElements[3] = Element{
+				Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2014",
+			}
 
-			el := Element{Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC)}
+			el := Element{
+				Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2015",
+			}
 
 			Expect(buf.Add(el)).To(Succeed())
 
 			Expect(buf.Elements).To(Equal(expectedElements))
+		})
+
+		It("returns error when buffer already contains given element", func() {
+			el := Element{
+				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+				ID:        "2016",
+			}
+
+			Expect(buf.Add(el)).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
 		})
 	})
 
@@ -299,9 +314,9 @@ var _ = Describe("Buffer interface", func() {
 			fullBuf.Elements[2] = Element{ID: "107"}
 			fullBuf.Elements[3] = Element{ID: "104"}
 
-			expectedsDigests := [4]string{"100", "110", "107", "104"}
+			expectedsDigests := []string{"100", "110", "107", "104"}
 
-			Expect(fullBuf.Digests()).To(ConsistOf(expectedsDigests))
+			Expect(fullBuf.Digests()).To(Equal(expectedsDigests))
 		})
 
 		It("returns proper digests when buffer is not full", func() {
@@ -316,6 +331,70 @@ var _ = Describe("Buffer interface", func() {
 			expectedsDigests := [2]string{"204", "201"}
 
 			Expect(halfBuf.Digests()).To(ConsistOf(expectedsDigests))
+		})
+	})
+
+	Describe("exists function", func() {
+		buf := &Buffer{
+			Elements: make([]Element, 4),
+			Len:      4,
+			Mux:      &sync.Mutex{},
+		}
+		buf.Elements[0] = Element{ID: "100"}
+		buf.Elements[1] = Element{ID: "110"}
+		buf.Elements[2] = Element{ID: "107"}
+		buf.Elements[3] = Element{ID: "104"}
+
+		It("return false if buffer doesn't contain the element", func() {
+			el := Element{ID: "90"}
+
+			e, _ := buf.contains(el)
+			Expect(e).To(BeFalse())
+		})
+
+		It("return true if buffer contains the element and it is first", func() {
+			el := Element{ID: "100"}
+
+			e, pos := buf.contains(el)
+			Expect(e).To(BeTrue())
+			Expect(pos).To(Equal(0))
+		})
+
+		It("return true if buffer contains the element and it is in the middle", func() {
+			el := Element{ID: "107"}
+
+			e, pos := buf.contains(el)
+			Expect(e).To(BeTrue())
+			Expect(pos).To(Equal(2))
+		})
+
+		It("return true if buffer contains the element and it is last", func() {
+			el := Element{ID: "104"}
+
+			e, pos := buf.contains(el)
+			Expect(e).To(BeTrue())
+			Expect(pos).To(Equal(3))
+		})
+	})
+
+	Describe("IncrementGoosipCount function", func() {
+		It("increments gossip count for all elements from buffer", func() {
+			buf := &Buffer{
+				Elements: make([]Element, 4),
+				Len:      3,
+				Mux:      &sync.Mutex{},
+			}
+			buf.Elements[0] = Element{GossipCount: int64(100)}
+			buf.Elements[1] = Element{GossipCount: int64(200)}
+			buf.Elements[2] = Element{GossipCount: int64(300)}
+
+			expectedElements := make([]Element, 4)
+			expectedElements[0] = Element{GossipCount: int64(101)}
+			expectedElements[1] = Element{GossipCount: int64(201)}
+			expectedElements[2] = Element{GossipCount: int64(301)}
+
+			buf.IncrementGossipCount()
+			Expect(buf.Elements).To(Equal(expectedElements))
 		})
 	})
 })
