@@ -50,13 +50,13 @@ func generateIDFromMsg(s string) (string, error) {
 }
 
 // NewElement creates new buffer element with given message and callback type
-func NewElement(msg interface{}, cbType string) (*Element, error) {
+func NewElement(msg interface{}, cbType string) (Element, error) {
 	id, err := generateIDFromMsg(fmt.Sprintf("%v", msg))
 	if err != nil {
-		return nil, err
+		return Element{}, err
 	}
 
-	return &Element{
+	return Element{
 		ID:           id,
 		Timestamp:    time.Now(),
 		Msg:          msg,
