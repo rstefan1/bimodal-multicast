@@ -43,12 +43,22 @@ func NewBuffer(size int) *Buffer {
 	}
 }
 
+// contains returns a boolean representing if given element already exists in buffer or not
+// and an int representing element position in buffer
+func (buf *Buffer) contains(el Element) (bool, int) {
+	for i := 0; i < buf.Len; i++ {
+		if buf.Elements[i].ID == el.ID {
+			return true, i
+		}
+	}
+
+	return false, -1
+}
+
 // elementPosition gets the element position in buffer
 func (buf *Buffer) elementPosition(el Element) (int, error) {
 	for i := 0; i < buf.Len; i++ {
-		if el.Timestamp.String() == buf.Elements[i].Timestamp.String() {
-			return -1, fmt.Errorf(alreadyExistsErrFmt)
-		} else if el.Timestamp.String() > buf.Elements[i].Timestamp.String() {
+		if el.Timestamp.String() >= buf.Elements[i].Timestamp.String() {
 			return i, nil
 		}
 	}
@@ -84,6 +94,10 @@ func (buf *Buffer) Add(el Element) error {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 
+	if e, _ := buf.contains(el); e {
+		return fmt.Errorf(alreadyExistsErrFmt)
+	}
+
 	pos, err := buf.elementPosition(el)
 	if err != nil {
 		return err
@@ -99,8 +113,11 @@ func (buf *Buffer) Add(el Element) error {
 	return nil
 }
 
-// Digests returns an array with elements ids
+// Digests returns a slice with elements ids
 func (buf *Buffer) Digests() []string {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
 	d := make([]string, buf.Len)
 
 	for i := 0; i < buf.Len; i++ {
@@ -108,4 +125,14 @@ func (buf *Buffer) Digests() []string {
 	}
 
 	return d
+}
+
+// IncrementGossipCount increments gossip count for each elements from buffer
+func (buf *Buffer) IncrementGossipCount() {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
+	for i := 0; i < buf.Len; i++ {
+		buf.Elements[i].GossipCount++
+	}
 }
