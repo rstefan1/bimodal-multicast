@@ -98,3 +98,14 @@ func (buf *Buffer) Add(el Element) error {
 
 	return nil
 }
+
+// Digests returns an array with elements ids
+func (buf *Buffer) Digests() []string {
+	d := make([]string, buf.Len)
+
+	for i := 0; i < buf.Len; i++ {
+		d[i] = buf.Elements[i].ID
+	}
+
+	return d
+}
