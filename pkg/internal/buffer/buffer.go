@@ -159,3 +159,20 @@ func (buf *Buffer) Length() int {
 	l := buf.Len
 	return l
 }
+
+// ElementsFromIDs returns a slice with elements from given IDs list
+func (buf *Buffer) ElementsFromIDs(digests []string) []Element {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
+	// TODO not implemented
+
+	return []Element{}
+}
+
+// MissingIDs returns the disjunction between given slices: a - b
+func MissingIDs(a []string, b []string) []string {
+	// TODO not implemented
+
+	return []string{}
+}

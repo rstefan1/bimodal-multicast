@@ -84,15 +84,15 @@ func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 
 // DefaultRegistry is a default callbacks registry
 type DefaultRegistry struct {
-	callbacks map[string]func(buffer.Message, interface{}, *log.Logger) error
+	callbacks map[string]func(buffer.Element, interface{}, *log.Logger) error
 }
 
 // NewDefaultRegistry creates a default callback registry
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
 
-	r.callbacks = map[string]func(buffer.Message, interface{}, *log.Logger) error{
-		ADDPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
+	r.callbacks = map[string]func(buffer.Element, interface{}, *log.Logger) error{
+		ADDPEER: func(msg buffer.Element, peersBuf interface{}, logger *log.Logger) error {
 			// extract addr and peer from `add peer` message
 			addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
 			if err != nil {
@@ -109,7 +109,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 		},
 
 		// nolint:unparam
-		REMOVEPEER: func(msg buffer.Message, peersBuf interface{}, logger *log.Logger) error {
+		REMOVEPEER: func(msg buffer.Element, peersBuf interface{}, logger *log.Logger) error {
 			// extract addr and peer from `remove peer` message
 			addr, port, err := DecomposeRemovePeerMessage(msg.Msg.(string))
 			if err != nil {
@@ -128,7 +128,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 }
 
 // GetCallback returns a default callback from registry
-func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Message, interface{}, *log.Logger) error, error) {
+func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
@@ -136,7 +136,7 @@ func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Message, interface{
 }
 
 // RunCallbacks runs default callbacks.
-func (r *DefaultRegistry) RunCallbacks(m buffer.Message, peerBuf *peer.Buffer, logger *log.Logger) error {
+func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, logger *log.Logger) error {
 
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCallback(m.CallbackType)

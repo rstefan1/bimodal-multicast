@@ -63,6 +63,11 @@ var _ = Describe("BMMC Config", func() {
 			cfg.Port = ""
 			Expect(cfg.validate()).To(Equal(fmt.Errorf(emptyPortErr)))
 		})
+
+		It("returns error when buffer size is invalid", func() {
+			cfg.BufferSize = 0
+			Expect(cfg.validate()).To(Equal(fmt.Errorf(invalidBufSizeErr)))
+		})
 	})
 
 	Describe("fillEmptyFields func", func() {

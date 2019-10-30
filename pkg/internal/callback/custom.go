@@ -53,7 +53,7 @@ func (r *CustomRegistry) GetCallback(t string) (func(interface{}, *log.Logger) e
 }
 
 // RunCallbacks runs custom callbacks.
-func (r *CustomRegistry) RunCallbacks(m buffer.Message, logger *log.Logger) error {
+func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) error {
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCallback(m.CallbackType)
 	if err != nil {

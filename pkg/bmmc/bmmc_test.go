@@ -122,7 +122,7 @@ var _ = Describe("BMMC", func() {
 
 			// Add a message in first node.
 			// Both nodes must have this message.
-			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
+			Expect(node1.Add(msg, callbackType)).To(Succeed())
 
 			Eventually(getBufferFn(node1)).Should(ConsistOf(expectedBuf))
 			Eventually(getBufferFn(node2)).Should(ConsistOf(expectedBuf))
@@ -188,7 +188,7 @@ var _ = Describe("BMMC", func() {
 				expectedBuf = append(expectedBuf, msg)
 
 				randomNode := rand.Intn(len)
-				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+				err := nodes[randomNode].Add(msg, callback.NOCALLBACK)
 				Expect(err).To(BeNil())
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
 			})
@@ -207,7 +207,7 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNode].Add(msg, callback.NOCALLBACK)
 					Expect(err).To(BeNil())
 				}
 
@@ -231,7 +231,7 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNodes[i]].Add(msg, callback.NOCALLBACK)
 					Expect(err).To(BeNil())
 				}
 			})
