@@ -136,3 +136,17 @@ func (buf *Buffer) IncrementGossipCount() {
 		buf.Elements[i].GossipCount++
 	}
 }
+
+// Messages returns a slice with messages for each element in buffer
+func (buf *Buffer) Messages() []interface{} {
+	buf.Mux.Lock()
+	defer buf.Mux.Unlock()
+
+	m := make([]interface{}, buf.Len)
+
+	for i := 0; i < buf.Len; i++ {
+		m[i] = buf.Elements[i].Msg
+	}
+
+	return m
+}
