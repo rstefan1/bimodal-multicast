@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
 const (
@@ -60,14 +62,14 @@ func fullHost(addr, port string) string {
 }
 
 func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
-	gossipDigestBuffer, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
+	gossipIDs, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
 	}
 
-	msgDigestBuffer := b.messageBuffer.DigestBuffer()
-	missingDigestBuffer := gossipDigestBuffer.GetMissingDigests(msgDigestBuffer)
+	msgIDs := b.messageBuffer.Digests()
+	missingIDs := buffer.MissingIDs(msgIDs, gossipIDs)
 
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
@@ -75,12 +77,12 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if missingDigestBuffer.Length() > 0 {
+	if len(missingIDs) > 0 {
 		solicitationMsg := HTTPSolicitation{
 			Addr:        hostAddr,
 			Port:        hostPort,
 			RoundNumber: tRoundNumber,
-			Digests:     *missingDigestBuffer,
+			IDs:         missingIDs,
 		}
 
 		err = b.sendSolicitation(solicitationMsg, tAddr, tPort)
@@ -92,12 +94,12 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
-	missingDigestBuffer, tAddr, tPort, _, err := b.receiveSolicitation(r)
+	missingDigests, tAddr, tPort, _, err := b.receiveSolicitation(r)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
-	missingMsgBuffer := missingDigestBuffer.GetMissingMessageBuffer(b.messageBuffer)
+	missingElements := b.messageBuffer.ElementsFromIDs(missingDigests)
 
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
@@ -108,7 +110,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	synchronizationMsg := HTTPSynchronization{
 		Addr:     hostAddr,
 		Port:     hostPort,
-		Messages: *missingMsgBuffer,
+		Elements: missingElements,
 	}
 
 	err = b.sendSynchronization(synchronizationMsg, tAddr, tPort)
@@ -125,14 +127,14 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rcvMsgBuf, _, _, err := b.receiveSynchronization(r)
+	rcvElements, _, _, err := b.receiveSynchronization(r)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
 		return
 	}
 
-	for _, m := range rcvMsgBuf.Messages {
-		err = b.messageBuffer.AddMessage(m)
+	for _, m := range rcvElements {
+		err = b.messageBuffer.Add(m)
 		if err != nil {
 			b.config.Logger.Printf(syncBufferLogErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber(), err)
 		} else {

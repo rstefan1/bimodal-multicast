@@ -33,9 +33,9 @@ const (
 
 // HTTPSynchronization is synchronization message for http server
 type HTTPSynchronization struct {
-	Addr     string               `json:"addr"`
-	Port     string               `json:"port"`
-	Messages buffer.MessageBuffer `json:"messages"`
+	Addr     string           `json:"addr"`
+	Port     string           `json:"port"`
+	Elements []buffer.Element `json:"elements"`
 }
 
 func synchronizationHTTPPath(addr, port string) string {
@@ -43,7 +43,7 @@ func synchronizationHTTPPath(addr, port string) string {
 }
 
 // receiveSynchronization receives http solicitation message
-func (b *BMMC) receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, string, string, error) {
+func (b *BMMC) receiveSynchronization(r *http.Request) ([]buffer.Element, string, string, error) {
 	var t HTTPSynchronization
 
 	decoder := json.NewDecoder(r.Body)
@@ -51,7 +51,7 @@ func (b *BMMC) receiveSynchronization(r *http.Request) (*buffer.MessageBuffer, s
 		return nil, "", "", fmt.Errorf(httpSynchronizationDecodeErrFmt, err)
 	}
 
-	return &t.Messages, t.Addr, t.Port, nil
+	return t.Elements, t.Addr, t.Port, nil
 }
 
 // sendSynchronization send http synchronization message

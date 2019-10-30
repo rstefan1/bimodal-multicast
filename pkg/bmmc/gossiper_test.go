@@ -32,12 +32,12 @@ var _ = Describe("Gossiper", func() {
 			peerBuf := peer.NewPeerBuffer()
 			Expect(peerBuf.AddPeer(peer.NewPeer("localhost", "19999"))).To(Succeed())
 
-			msgBuf := buffer.NewMessageBuffer()
+			msgBuf := buffer.NewBuffer(25)
 
-			msg, err := buffer.NewMessage("awesome message", "awesome-callback")
+			msg, err := buffer.NewElement("awesome message", "awesome-callback")
 			Expect(err).To(BeNil())
 
-			Expect(msgBuf.AddMessage(msg)).To(Succeed())
+			Expect(msgBuf.Add(msg)).To(Succeed())
 
 			b = &BMMC{
 				peerBuffer:    peerBuf,
@@ -54,7 +54,7 @@ var _ = Describe("Gossiper", func() {
 		})
 
 		It("returns 0 if messageBuffer's length is 0", func() {
-			b.messageBuffer = buffer.NewMessageBuffer()
+			b.messageBuffer = buffer.NewBuffer(25)
 			Expect(b.computeGossipLen()).To(Equal(0))
 		})
 

@@ -29,8 +29,9 @@ const (
 )
 
 const (
-	emptyAddrErr = "address must not be empty"
-	emptyPortErr = "port must not be empty"
+	emptyAddrErr      = "address must not be empty"
+	emptyPortErr      = "port must not be empty"
+	invalidBufSizeErr = "invalid buffer size"
 )
 
 // Config is the config for the protocol
@@ -53,6 +54,9 @@ type Config struct {
 	// Gossip round duration
 	// Optional
 	RoundDuration time.Duration
+	// Buffer size
+	// Required
+	BufferSize int
 }
 
 // validate validates given config
@@ -60,9 +64,15 @@ func (cfg *Config) validate() error {
 	if len(cfg.Addr) == 0 {
 		return fmt.Errorf(emptyAddrErr)
 	}
+
 	if len(cfg.Port) == 0 {
 		return fmt.Errorf(emptyPortErr)
 	}
+
+	if cfg.BufferSize <= 0 {
+		return fmt.Errorf(invalidBufSizeErr)
+	}
+
 	return nil
 }
 
