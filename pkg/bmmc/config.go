@@ -81,12 +81,15 @@ func (cfg *Config) fillEmptyFields() {
 	if cfg.Beta == 0 {
 		cfg.Beta = defaultBeta
 	}
+
 	if cfg.Logger == nil {
 		cfg.Logger = log.New(os.Stdout, "", 0)
 	}
+
 	if cfg.RoundDuration == 0 {
 		cfg.RoundDuration = defaultRoundDuration
 	}
+
 	if cfg.Callbacks == nil {
 		cfg.Callbacks = map[string]func(interface{}, *log.Logger) error{}
 	}

@@ -59,6 +59,7 @@ func (peerBuffer *Buffer) Length() int {
 	defer peerBuffer.mux.Unlock()
 
 	l := len(peerBuffer.peers)
+
 	return l
 }
 
@@ -70,6 +71,7 @@ func (peerBuffer *Buffer) alreadyExists(peer Peer) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -87,6 +89,7 @@ func (peerBuffer *Buffer) AddPeer(peer Peer) error {
 	}
 
 	peerBuffer.peers = append(peerBuffer.peers, peer)
+
 	return nil
 }
 
@@ -95,7 +98,7 @@ func (peerBuffer *Buffer) RemovePeer(peer Peer) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
-	pos := -1
+	pos := -14
 
 	for i, p := range peerBuffer.peers {
 		if p.addr == peer.addr && p.port == peer.port {
@@ -130,5 +133,6 @@ func (peerBuffer *Buffer) GetRandom() (string, string, int) {
 	defer peerBuffer.mux.Unlock()
 
 	r := rand.Intn(len(peerBuffer.peers))
+
 	return peerBuffer.peers[r].addr, peerBuffer.peers[r].port, r
 }

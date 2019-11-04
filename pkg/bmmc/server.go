@@ -54,6 +54,7 @@ func addrPort(s string) (string, string, error) {
 
 	addr := host[0]
 	port := host[1]
+
 	return addr, port, nil
 }
 
@@ -98,6 +99,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
+
 	missingElements := b.messageBuffer.ElementsFromIDs(missingDigest)
 
 	hostAddr, hostPort, err := addrPort(r.Host)

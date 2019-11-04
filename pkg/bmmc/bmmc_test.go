@@ -54,6 +54,7 @@ func interfaceToString(b []interface{}) []string {
 	for i, v := range b {
 		s[i] = fmt.Sprint(v)
 	}
+
 	return s
 }
 

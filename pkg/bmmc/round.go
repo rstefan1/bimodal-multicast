@@ -45,6 +45,7 @@ func (r *GossipRound) Increment() {
 	defer r.Mux.Unlock()
 
 	r.Number++
+
 	if r.Number > maxRoundNumber {
 		r.Number = int64(1)
 	}
@@ -56,5 +57,6 @@ func (r *GossipRound) GetNumber() int64 {
 	defer r.Mux.Unlock()
 
 	n := r.Number
+
 	return n
 }
