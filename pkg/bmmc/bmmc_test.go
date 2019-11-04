@@ -85,9 +85,10 @@ func suggestPort() string {
 
 func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
 	b, err := bmmc.New(&bmmc.Config{
-		Addr:      addr,
-		Port:      port,
-		Callbacks: cbCustomRegistry,
+		Addr:       addr,
+		Port:       port,
+		Callbacks:  cbCustomRegistry,
+		BufferSize: 32,
 	})
 	Expect(err).To(BeNil())
 

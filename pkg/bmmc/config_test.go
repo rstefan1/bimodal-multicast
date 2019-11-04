@@ -39,6 +39,7 @@ func newDummyConfig() *Config {
 			},
 		},
 		RoundDuration: time.Millisecond * 100,
+		BufferSize:    32,
 	}
 }
 
