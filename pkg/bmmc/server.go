@@ -82,7 +82,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 			Addr:        hostAddr,
 			Port:        hostPort,
 			RoundNumber: tRoundNumber,
-			IDs:         missingIDs,
+			Digest:      missingIDs,
 		}
 
 		err = b.sendSolicitation(solicitationMsg, tAddr, tPort)
