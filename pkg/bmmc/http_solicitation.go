@@ -34,7 +34,7 @@ type HTTPSolicitation struct {
 	Addr        string       `json:"addr"`
 	Port        string       `json:"port"`
 	RoundNumber *GossipRound `json:"roundNumber"`
-	IDs         []string     `json:"ids"`
+	Digest      []string     `json:"digest"`
 }
 
 func solicitationHTTPPath(addr, port string) string {
@@ -50,7 +50,7 @@ func (b *BMMC) receiveSolicitation(r *http.Request) ([]string, string, string, *
 		return nil, "", "", nil, fmt.Errorf(httpSolicitationDecodingErrFmt, err)
 	}
 
-	return t.IDs, t.Addr, t.Port, t.RoundNumber, nil
+	return t.Digest, t.Addr, t.Port, t.RoundNumber, nil
 }
 
 // sendSolicitation send http solicitation message

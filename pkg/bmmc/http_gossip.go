@@ -34,7 +34,7 @@ type HTTPGossip struct {
 	Addr        string       `json:"addr"`
 	Port        string       `json:"port"`
 	RoundNumber *GossipRound `json:"roundNumber"`
-	IDs         []string     `json:"ids"`
+	Digest      []string     `json:"digest"`
 }
 
 func gossipHTTPPath(addr, port string) string {
@@ -50,7 +50,7 @@ func (b *BMMC) receiveGossip(r *http.Request) ([]string, string, string, *Gossip
 		return nil, "", "", nil, fmt.Errorf(httpGossipDecodingErrFmt, err)
 	}
 
-	return t.IDs, t.Addr, t.Port, t.RoundNumber, nil
+	return t.Digest, t.Addr, t.Port, t.RoundNumber, nil
 }
 
 // sendGossip sends a HTTP gossip message
