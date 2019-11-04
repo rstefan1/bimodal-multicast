@@ -62,14 +62,14 @@ func fullHost(addr, port string) string {
 }
 
 func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
-	gossipIDs, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
+	gossipDigest, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 		return
 	}
 
-	msgIDs := b.messageBuffer.Digest()
-	missingIDs := buffer.MissingStrings(gossipIDs, msgIDs)
+	digest := b.messageBuffer.Digest()
+	missingDigest := buffer.MissingStrings(gossipDigest, digest)
 
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
@@ -77,16 +77,15 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(missingIDs) > 0 {
+	if len(missingDigest) > 0 {
 		solicitationMsg := HTTPSolicitation{
 			Addr:        hostAddr,
 			Port:        hostPort,
 			RoundNumber: tRoundNumber,
-			Digest:      missingIDs,
+			Digest:      missingDigest,
 		}
 
-		err = b.sendSolicitation(solicitationMsg, tAddr, tPort)
-		if err != nil {
+		if err = b.sendSolicitation(solicitationMsg, tAddr, tPort); err != nil {
 			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
 			return
 		}
@@ -94,12 +93,12 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
-	missingDigests, tAddr, tPort, _, err := b.receiveSolicitation(r)
+	missingDigest, tAddr, tPort, _, err := b.receiveSolicitation(r)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
-	missingElements := b.messageBuffer.ElementsFromIDs(missingDigests)
+	missingElements := b.messageBuffer.ElementsFromIDs(missingDigest)
 
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
@@ -113,8 +112,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 		Elements: missingElements,
 	}
 
-	err = b.sendSynchronization(synchronizationMsg, tAddr, tPort)
-	if err != nil {
+	if err = b.sendSynchronization(synchronizationMsg, tAddr, tPort); err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 		return
 	}
@@ -186,6 +184,8 @@ func (b *BMMC) startServer(stop <-chan struct{}) error {
 		b.config.Logger.Printf(stopServerLogFmt, b.server.Addr)
 	}()
 
+	// TODO return err chan
 	// return <-errChan
+
 	return nil
 }
