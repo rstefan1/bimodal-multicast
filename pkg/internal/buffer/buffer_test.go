@@ -445,4 +445,35 @@ var _ = Describe("Buffer interface", func() {
 			Expect(buf.Length()).To(Equal(2))
 		})
 	})
+
+	Describe("ElementsFromIDs function", func() {
+		It("return elements from buffer", func() {
+			buf := &Buffer{
+				Elements: make([]Element, 10),
+				Len:      10,
+				Mux:      &sync.Mutex{},
+			}
+			buf.Elements[0] = Element{ID: "100"}
+			buf.Elements[1] = Element{ID: "101"}
+			buf.Elements[2] = Element{ID: "102"}
+			buf.Elements[3] = Element{ID: "103"}
+			buf.Elements[4] = Element{ID: "104"}
+			buf.Elements[5] = Element{ID: "105"}
+			buf.Elements[6] = Element{ID: "106"}
+			buf.Elements[7] = Element{ID: "107"}
+			buf.Elements[8] = Element{ID: "108"}
+			buf.Elements[9] = Element{ID: "109"}
+
+			digest := []string{"100", "109", "105", "200", "106"}
+
+			expectedElements := []Element{
+				Element{ID: "100"},
+				Element{ID: "105"},
+				Element{ID: "106"},
+				Element{ID: "109"},
+			}
+
+			Expect(buf.ElementsFromIDs(digest)).To(Equal(expectedElements))
+		})
+	})
 })
