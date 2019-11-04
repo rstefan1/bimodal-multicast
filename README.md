@@ -122,7 +122,7 @@ When beta is 0.5 and loss is 30% (after 20 retries):
 
 
 ## Roadmap to v0.4
- - [ ] Circular buffers
+ - [x] Circular buffers
 
 
 ## Roadmap to v1.0
