@@ -113,8 +113,8 @@ func (buf *Buffer) Add(el Element) error {
 	return nil
 }
 
-// Digests returns a slice with elements ids
-func (buf *Buffer) Digests() []string {
+// Digest returns a slice with elements ids
+func (buf *Buffer) Digest() []string {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 

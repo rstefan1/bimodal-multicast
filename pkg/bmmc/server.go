@@ -68,7 +68,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msgIDs := b.messageBuffer.Digests()
+	msgIDs := b.messageBuffer.Digest()
 	missingIDs := buffer.MissingStrings(gossipIDs, msgIDs)
 
 	hostAddr, hostPort, err := addrPort(r.Host)

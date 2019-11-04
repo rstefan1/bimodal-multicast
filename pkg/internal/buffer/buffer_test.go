@@ -302,8 +302,8 @@ var _ = Describe("Buffer interface", func() {
 		})
 	})
 
-	Describe("Digests function", func() {
-		It("returns proper digests when buffer is full", func() {
+	Describe("Digest function", func() {
+		It("returns proper digest when buffer is full", func() {
 			fullBuf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      4,
@@ -314,12 +314,12 @@ var _ = Describe("Buffer interface", func() {
 			fullBuf.Elements[2] = Element{ID: "107"}
 			fullBuf.Elements[3] = Element{ID: "104"}
 
-			expectedsDigests := []string{"100", "110", "107", "104"}
+			expectedDigest := []string{"100", "110", "107", "104"}
 
-			Expect(fullBuf.Digests()).To(Equal(expectedsDigests))
+			Expect(fullBuf.Digest()).To(Equal(expectedDigest))
 		})
 
-		It("returns proper digests when buffer is not full", func() {
+		It("returns proper digest when buffer is not full", func() {
 			halfBuf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      2,
@@ -328,9 +328,9 @@ var _ = Describe("Buffer interface", func() {
 			halfBuf.Elements[0] = Element{ID: "204"}
 			halfBuf.Elements[1] = Element{ID: "201"}
 
-			expectedsDigests := [2]string{"204", "201"}
+			expectedDigest := [2]string{"204", "201"}
 
-			Expect(halfBuf.Digests()).To(ConsistOf(expectedsDigests))
+			Expect(halfBuf.Digest()).To(ConsistOf(expectedDigest))
 		})
 	})
 
