@@ -73,7 +73,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 					Addr:        b.config.Addr,
 					Port:        b.config.Port,
 					RoundNumber: b.gossipRound,
-					IDs:         b.messageBuffer.Digests(),
+					IDs:         b.messageBuffer.Digest(),
 				}
 
 				err := b.sendGossip(gossipMsg, destAddr, destPort)
