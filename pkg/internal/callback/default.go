@@ -58,6 +58,7 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 
 	addr := host[1]
 	port := host[2]
+
 	return addr, port, nil
 }
 
@@ -79,6 +80,7 @@ func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 
 	addr := host[1]
 	port := host[2]
+
 	return addr, port, nil
 }
 
@@ -105,6 +107,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			}
 
 			logger.Printf(peerAddedLogFmt, addr, port)
+
 			return nil
 		},
 
@@ -120,6 +123,7 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			peersBuf.(*peer.Buffer).RemovePeer(peer.NewPeer(addr, port))
 
 			logger.Printf(peerRemovedLogFmt, addr, port)
+
 			return nil
 		},
 	}
@@ -132,12 +136,12 @@ func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, interface{
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
+
 	return nil, errors.New(inexistentDefaultCallbackErr)
 }
 
 // RunCallbacks runs default callbacks.
 func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, logger *log.Logger) error {
-
 	// get callback from callbacks registry
 	callbackFn, err := r.GetCallback(m.CallbackType)
 	if err != nil {
@@ -147,6 +151,7 @@ func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, l
 
 	// TODO find a way to remove the following switch
 	var p interface{}
+
 	switch m.CallbackType {
 	case ADDPEER:
 		p = peerBuf
@@ -157,8 +162,7 @@ func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, l
 	}
 
 	// run callback function
-	err = callbackFn(m, p, logger)
-	if err != nil {
+	if err = callbackFn(m, p, logger); err != nil {
 		return err
 	}
 

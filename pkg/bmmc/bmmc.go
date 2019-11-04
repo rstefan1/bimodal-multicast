@@ -83,6 +83,7 @@ func New(cfg *Config) (*BMMC, error) {
 	if err != nil {
 		return nil, fmt.Errorf(createCustomCRErrFmt, err)
 	}
+
 	cbDefaultRegistry, err := callback.NewDefaultRegistry()
 	if err != nil {
 		return nil, fmt.Errorf(createDefaultCRErrFmt, err)
@@ -103,6 +104,7 @@ func New(cfg *Config) (*BMMC, error) {
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),
 	}
+
 	b.server = b.newServer()
 
 	return b, nil
@@ -147,6 +149,7 @@ func (b *BMMC) Add(msg interface{}, callbackType string) error {
 		b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
 
 	b.runCallbacks(m, b.config.Addr, b.config.Port)
+
 	return nil
 }
 
@@ -206,15 +209,12 @@ func (b *BMMC) GetPeers() []string {
 
 func (b *BMMC) runCallbacks(m buffer.Element, hostAddr, hostPort string) {
 	// TODO remove hostAddr and hostport from func args. These are used only for logging
-
 	if m.CallbackType != callback.NOCALLBACK {
-		err := b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger)
-		if err != nil {
+		if err := b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger); err != nil {
 			b.config.Logger.Printf(runDefaultCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
 		}
 
-		err = b.customCallbacks.RunCallbacks(m, b.config.Logger)
-		if err != nil {
+		if err := b.customCallbacks.RunCallbacks(m, b.config.Logger); err != nil {
 			b.config.Logger.Printf(runCustomCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
 		}
 	}

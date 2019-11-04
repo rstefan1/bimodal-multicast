@@ -467,10 +467,10 @@ var _ = Describe("Buffer interface", func() {
 			digest := []string{"100", "109", "105", "200", "106"}
 
 			expectedElements := []Element{
-				Element{ID: "100"},
-				Element{ID: "105"},
-				Element{ID: "106"},
-				Element{ID: "109"},
+				{ID: "100"},
+				{ID: "105"},
+				{ID: "106"},
+				{ID: "109"},
 			}
 
 			Expect(buf.ElementsFromIDs(digest)).To(Equal(expectedElements))

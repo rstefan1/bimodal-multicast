@@ -41,6 +41,7 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*Cus
 
 	r := &CustomRegistry{}
 	r.callbacks = cb
+
 	return r, nil
 }
 
@@ -49,6 +50,7 @@ func (r *CustomRegistry) GetCallback(t string) (func(interface{}, *log.Logger) e
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
+
 	return nil, errors.New(inexistentCustomCallbackErr)
 }
 
@@ -62,8 +64,7 @@ func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) erro
 	}
 
 	// run callback function
-	err = callbackFn(m.Msg, logger)
-	if err != nil {
+	if err = callbackFn(m.Msg, logger); err != nil {
 		return err
 	}
 

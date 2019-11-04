@@ -29,10 +29,13 @@ const (
 func (b *BMMC) randomlySelectPeer() (string, string) {
 	for {
 		addr, port, i := b.peerBuffer.GetRandom()
+
 		if b.selectedPeers[i] {
 			continue
 		}
+
 		b.selectedPeers[i] = true
+
 		return addr, port
 	}
 }
@@ -51,6 +54,7 @@ func (b *BMMC) computeGossipLen() int {
 	if b.peerBuffer.Length() == 0 || b.messageBuffer.Length() == 0 || b.config.Beta == 0 {
 		return 0
 	}
+
 	return int(b.config.Beta*float64(b.peerBuffer.Length())) + 1
 }
 

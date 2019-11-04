@@ -157,6 +157,7 @@ func (buf *Buffer) Length() int {
 	defer buf.Mux.Unlock()
 
 	l := buf.Len
+
 	return l
 }
 
