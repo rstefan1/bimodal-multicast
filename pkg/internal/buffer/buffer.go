@@ -43,6 +43,17 @@ func NewBuffer(size int) *Buffer {
 	}
 }
 
+// containsString tells whether a contains x.
+func containsString(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+
+	return false
+}
+
 // contains returns a boolean representing if given element already exists in buffer or not
 // and an int representing element position in buffer
 func (buf *Buffer) contains(el Element) (bool, int) {
@@ -161,13 +172,19 @@ func (buf *Buffer) Length() int {
 }
 
 // ElementsFromIDs returns a slice with elements from given IDs list
-func (buf *Buffer) ElementsFromIDs(digests []string) []Element {
+func (buf *Buffer) ElementsFromIDs(digest []string) []Element {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 
-	// TODO not implemented
+	el := []Element{}
 
-	return []Element{}
+	for i := 0; i < buf.Len; i++ {
+		if containsString(digest, buf.Elements[i].ID) {
+			el = append(el, buf.Elements[i])
+		}
+	}
+
+	return el
 }
 
 // MissingIDs returns the disjunction between given slices: a - b
