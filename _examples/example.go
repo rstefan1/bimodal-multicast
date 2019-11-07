@@ -58,12 +58,13 @@ func main() {
 	}
 
 	cfg := &bmmc.Config{
-		Addr:      addr,
-		Port:      port,
-		Callbacks: callbacks,
-		Beta:      0.25,
-		// Logger:    log.New(logFile, "", 0),
-		// RoundDuration: time.Second * 2,
+		Addr:       addr,
+		Port:       port,
+		Callbacks:  callbacks,
+		Beta:       0.25,
+		BufferSize: 1024,
+		// Logger:     log.New(logFile, "", 0),
+		// RoundDuration:  time.Second * 2,
 	}
 
 	node, err := bmmc.New(cfg)
@@ -137,7 +138,7 @@ func main() {
 			message := args[1]
 			cbType := args[2]
 
-			err := node.AddMessage(message, cbType)
+			err := node.Add(message, cbType)
 			if err != nil {
 				fmt.Println("Error at adding message in buffer:", err)
 			}
