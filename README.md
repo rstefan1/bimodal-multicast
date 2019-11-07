@@ -108,26 +108,6 @@ When beta is 0.5 and loss is 30% (after 20 retries):
 ![Alt text](docs/metrics/b_50_l_30.png)
 
 
-## Roadmap to v0.2
- - [x] create an instance of Bimodal Multicast Protocol, start it,
- stop it, add message and retrieve all messages
- - [x] metrics
- - [x] register callbacks for each messages
- - [x] add and remove peers via protocol
- - [x] synchronize all types of messages (bool, string, int, complex structs, etc.)
- 
- 
-## Roadmap to v0.3
- - [x] Refactor
-
-
-## Roadmap to v0.4
- - [x] Circular buffers
-
-
-## Roadmap to v1.0
- - [ ] Publisher - subscriber pattern
-
 
 ## Contributing
 
