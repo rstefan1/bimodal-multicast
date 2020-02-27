@@ -23,12 +23,6 @@ generate:
 lint:
 	$(BINDIR)/golangci-lint run ./pkg/...
 
-# Export metrics
-export-metrics:
-	rm -r metrics/logs
-	go run metrics/metrics.go
-	python3 metrics/metrics.py
-
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)
 	GOBIN=$(BINDIR) go get -u github.com/onsi/ginkgo/ginkgo

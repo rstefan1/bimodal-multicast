@@ -101,13 +101,6 @@ For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
 ```
 
 
-## Performance
-
-When beta is 0.5 and loss is 30% (after 20 retries):
-
-![Alt text](docs/metrics/b_50_l_30.png)
-
-
 
 ## Contributing
 
