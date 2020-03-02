@@ -1,6 +1,6 @@
 # Bimodal Multicast Protocol
 
-[![Build Status](https://semaphoreci.com/api/v1/rstefan1-11/bimodal-multicast/branches/master/shields_badge.svg)](https://semaphoreci.com/rstefan1-11/bimodal-multicast)
+![Build](https://github.com/rstefan1/bimodal-multicast/workflows/go/badge.svg)
 
 This is an implementation of the Bimodal Multicast Protocol written in GO.
 
