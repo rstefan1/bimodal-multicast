@@ -1,6 +1,6 @@
 # Bimodal Multicast Protocol
 
-![Build](https://github.com/rstefan1/bimodal-multicast/workflows/go/badge.svg)
+![Build](https://github.com/rstefan1/bimodal-multicast/workflows/Build/badge.svg)
 
 This is an implementation of the Bimodal Multicast Protocol written in GO.
 
