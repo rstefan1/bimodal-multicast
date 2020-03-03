@@ -132,7 +132,7 @@ func (b *BMMC) Stop() {
 	close(b.stop)
 }
 
-// Add adds new message in messages buffer.
+// AddMessage adds new message in messages buffer.
 func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType)
 	if err != nil {
