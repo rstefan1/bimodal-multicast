@@ -17,6 +17,7 @@ limitations under the License.
 package callback
 
 import (
+	"errors"
 	"log"
 	"reflect"
 
@@ -80,6 +81,58 @@ var _ = Describe("Custom Callback interface", func() {
 			fn, err := r.GetCallback("inexistent-callback")
 			Expect(err).NotTo(BeNil())
 			Expect(fn).To(BeNil())
+		})
+	})
+
+	Describe("ValidateCustomCallbacks func", func() {
+		It("returns error when callbacks contain a `add-peer` type", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{
+				"a-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"add-peer": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"another-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+			}
+
+			Expect(ValidateCustomCallbacks(cb)).To(Equal(
+				errors.New("\"add-peer\" callback type is not allowed")))
+		})
+
+		It("returns error when callbacks contain a `remove-peer` type", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{
+				"a-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"remove-peer": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"another-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+			}
+
+			Expect(ValidateCustomCallbacks(cb)).To(Equal(
+				errors.New("\"remove-peer\" callback type is not allowed")))
+		})
+
+		It("doesn't return error when all callback are valid", func() {
+			cb := map[string]func(interface{}, *log.Logger) error{
+				"a-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"valid-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+				"another-valid-callback": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+			}
+
+			Expect(ValidateCustomCallbacks(cb)).To(Succeed())
 		})
 	})
 })

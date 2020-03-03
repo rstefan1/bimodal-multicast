@@ -70,6 +70,15 @@ var _ = Describe("BMMC Config", func() {
 			cfg.BufferSize = 0
 			Expect(cfg.validate()).To(Equal(fmt.Errorf(invalidBufSizeErr)))
 		})
+
+		It("returns error when callback map contains an invalid callback (a default callback)", func() {
+			cfg.Callbacks = map[string]func(interface{}, *log.Logger) error{
+				"add-peer": func(_ interface{}, _ *log.Logger) error {
+					return nil
+				},
+			}
+			Expect(cfg.validate()).To(Equal(fmt.Errorf("\"add-peer\" callback type is not allowed")))
+		})
 	})
 
 	Describe("fillEmptyFields func", func() {

@@ -70,3 +70,15 @@ func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) erro
 
 	return nil
 }
+
+// ValidateCustomCallbacks validates custom callbacks
+func ValidateCustomCallbacks(customCallbacks map[string]func(interface{}, *log.Logger) error) error {
+	// don't allow to use default callbacks types as custom callback types
+	for customType := range customCallbacks {
+		if _, exists := defaultCallbacks[customType]; exists {
+			return errors.New("\"" + customType + "\" callback type is not allowed")
+		}
+	}
+
+	return nil
+}

@@ -40,6 +40,14 @@ const (
 	removePrefix = "remove"
 )
 
+var (
+	// nolint: gochecknoglobals
+	defaultCallbacks = map[string]func(buffer.Element, *peer.Buffer, *log.Logger) error{
+		ADDPEER:    addPeerCallback,
+		REMOVEPEER: removePeerCallback,
+	}
+)
+
 // ComposeAddPeerMessage returns a `add peer` message with given addr and port
 func ComposeAddPeerMessage(addr, port string) string {
 	return fmt.Sprintf("%s/%s/%s", addPrefix, addr, port)
@@ -86,63 +94,20 @@ func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 
 // DefaultRegistry is a default callbacks registry
 type DefaultRegistry struct {
-	callbacks map[string]func(buffer.Element, interface{}, *log.Logger) error
+	callbacks map[string]func(buffer.Element, *peer.Buffer, *log.Logger) error
 }
 
 // NewDefaultRegistry creates a default callback registry
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
 
-	r.callbacks = map[string]func(buffer.Element, interface{}, *log.Logger) error{
-		ADDPEER: func(msg buffer.Element, peersBuf interface{}, logger *log.Logger) error {
-			// extract addr and peer from `add peer` message
-			addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
-			if err != nil {
-				return err
-			}
-
-			// add peer in buffer
-			p, err := peer.NewPeer(addr, port)
-			if err != nil {
-				return err
-			}
-
-			if err = peersBuf.(*peer.Buffer).AddPeer(p); err != nil {
-				return err
-			}
-
-			logger.Printf(peerAddedLogFmt, addr, port)
-
-			return nil
-		},
-
-		// nolint:unparam
-		REMOVEPEER: func(msg buffer.Element, peersBuf interface{}, logger *log.Logger) error {
-			// extract addr and peer from `remove peer` message
-			addr, port, err := DecomposeRemovePeerMessage(msg.Msg.(string))
-			if err != nil {
-				return err
-			}
-
-			// remove the peer from buffer
-			p, err := peer.NewPeer(addr, port)
-			if err != nil {
-				return err
-			}
-
-			peersBuf.(*peer.Buffer).RemovePeer(p)
-
-			logger.Printf(peerRemovedLogFmt, addr, port)
-
-			return nil
-		},
-	}
+	r.callbacks = defaultCallbacks
 
 	return r, nil
 }
 
 // GetCallback returns a default callback from registry
-func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, interface{}, *log.Logger) error, error) {
+func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, *peer.Buffer, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
@@ -152,29 +117,58 @@ func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, interface{
 
 // RunCallbacks runs default callbacks.
 func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, logger *log.Logger) error {
-	// get callback from callbacks registry
 	callbackFn, err := r.GetCallback(m.CallbackType)
 	if err != nil {
 		// dont't return err if default registry haven't given callback
 		return nil
 	}
 
-	// TODO find a way to remove the following switch
-	var p interface{}
-
-	switch m.CallbackType {
-	case ADDPEER:
-		p = peerBuf
-	case REMOVEPEER:
-		p = peerBuf
-	default:
-		p = nil
-	}
-
 	// run callback function
-	if err = callbackFn(m, p, logger); err != nil {
+	if err = callbackFn(m, peerBuf, logger); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logger) error {
+	// extract addr and peer from `add peer` message
+	addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
+	if err != nil {
+		return err
+	}
+
+	// add peer in buffer
+	p, err := peer.NewPeer(addr, port)
+	if err != nil {
+		return err
+	}
+
+	if err = peersBuf.AddPeer(p); err != nil {
+		return err
+	}
+
+	logger.Printf(peerAddedLogFmt, addr, port)
+
+	return nil
+}
+
+func removePeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logger) error {
+	// extract addr and peer from `remove peer` message
+	addr, port, err := DecomposeRemovePeerMessage(msg.Msg.(string))
+	if err != nil {
+		return err
+	}
+
+	// remove the peer from buffer
+	p, err := peer.NewPeer(addr, port)
+	if err != nil {
+		return err
+	}
+
+	peersBuf.RemovePeer(p)
+
+	logger.Printf(peerRemovedLogFmt, addr, port)
 
 	return nil
 }
