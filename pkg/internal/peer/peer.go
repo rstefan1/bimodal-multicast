@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
 // MAXPEERS is the maximum number of peers in buffer
@@ -38,11 +40,19 @@ type Buffer struct {
 }
 
 // NewPeer creates a Peer
-func NewPeer(addr, port string) Peer {
+func NewPeer(addr, port string) (Peer, error) {
+	if err := validators.AddrValidator()(addr); err != nil {
+		return Peer{}, err
+	}
+
+	if err := validators.PortAsStringValidator()(port); err != nil {
+		return Peer{}, err
+	}
+
 	return Peer{
 		addr: addr,
 		port: port,
-	}
+	}, nil
 }
 
 // NewPeerBuffer creates a PeerBuffer

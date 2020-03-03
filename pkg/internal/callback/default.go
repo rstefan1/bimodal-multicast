@@ -102,7 +102,12 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			}
 
 			// add peer in buffer
-			if err = peersBuf.(*peer.Buffer).AddPeer(peer.NewPeer(addr, port)); err != nil {
+			p, err := peer.NewPeer(addr, port)
+			if err != nil {
+				return err
+			}
+
+			if err = peersBuf.(*peer.Buffer).AddPeer(p); err != nil {
 				return err
 			}
 
@@ -120,7 +125,12 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 			}
 
 			// remove the peer from buffer
-			peersBuf.(*peer.Buffer).RemovePeer(peer.NewPeer(addr, port))
+			p, err := peer.NewPeer(addr, port)
+			if err != nil {
+				return err
+			}
+
+			peersBuf.(*peer.Buffer).RemovePeer(p)
 
 			logger.Printf(peerRemovedLogFmt, addr, port)
 

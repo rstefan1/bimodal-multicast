@@ -17,6 +17,7 @@ limitations under the License.
 package bmmc
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -57,12 +58,12 @@ var _ = Describe("BMMC Config", func() {
 
 		It("returns error when addr is empty", func() {
 			cfg.Addr = ""
-			Expect(cfg.validate()).To(Equal(fmt.Errorf(emptyAddrErr)))
+			Expect(cfg.validate()).To(Equal(errors.New("empty address")))
 		})
 
 		It("returns error when port is empty", func() {
 			cfg.Port = ""
-			Expect(cfg.validate()).To(Equal(fmt.Errorf(emptyPortErr)))
+			Expect(cfg.validate()).To(Equal(errors.New("port must be an integer number")))
 		})
 
 		It("returns error when buffer size is invalid", func() {

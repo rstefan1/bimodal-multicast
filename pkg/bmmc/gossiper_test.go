@@ -29,8 +29,11 @@ var _ = Describe("Gossiper", func() {
 		var b *BMMC
 
 		BeforeEach(func() {
+			p, err := peer.NewPeer("localhost", "19999")
+			Expect(err).To(BeNil())
+
 			peerBuf := peer.NewPeerBuffer()
-			Expect(peerBuf.AddPeer(peer.NewPeer("localhost", "19999"))).To(Succeed())
+			Expect(peerBuf.AddPeer(p)).To(Succeed())
 
 			msgBuf := buffer.NewBuffer(25)
 

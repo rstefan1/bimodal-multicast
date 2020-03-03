@@ -155,9 +155,12 @@ func (b *BMMC) Add(msg interface{}, callbackType string) error {
 
 // AddPeer adds new peer in peers buffer
 func (b *BMMC) AddPeer(addr, port string) error {
-	if err := b.peerBuffer.AddPeer(
-		peer.NewPeer(addr, port),
-	); err != nil {
+	p, err := peer.NewPeer(addr, port)
+	if err != nil {
+		return fmt.Errorf(addPeerErrFmt, addr, port, err)
+	}
+
+	if err = b.peerBuffer.AddPeer(p); err != nil {
 		return fmt.Errorf(addPeerErrFmt, addr, port, err)
 	}
 
@@ -178,9 +181,12 @@ func (b *BMMC) AddPeer(addr, port string) error {
 
 // RemovePeer removes given peer from peers buffer
 func (b *BMMC) RemovePeer(addr, port string) error {
-	b.peerBuffer.RemovePeer(
-		peer.NewPeer(addr, port),
-	)
+	p, err := peer.NewPeer(addr, port)
+	if err != nil {
+		return fmt.Errorf(removePeerErrFmt, addr, port, err)
+	}
+
+	b.peerBuffer.RemovePeer(p)
 
 	msg, err := buffer.NewElement(
 		callback.ComposeRemovePeerMessage(addr, port),

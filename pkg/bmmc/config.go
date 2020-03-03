@@ -21,6 +21,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
 const (
@@ -29,8 +31,6 @@ const (
 )
 
 const (
-	emptyAddrErr      = "address must not be empty"
-	emptyPortErr      = "port must not be empty"
 	invalidBufSizeErr = "invalid buffer size"
 )
 
@@ -61,12 +61,12 @@ type Config struct {
 
 // validate validates given config
 func (cfg *Config) validate() error {
-	if len(cfg.Addr) == 0 {
-		return fmt.Errorf(emptyAddrErr)
+	if err := validators.AddrValidator()(cfg.Addr); err != nil {
+		return err
 	}
 
-	if len(cfg.Port) == 0 {
-		return fmt.Errorf(emptyPortErr)
+	if err := validators.PortAsStringValidator()(cfg.Port); err != nil {
+		return err
 	}
 
 	if cfg.BufferSize <= 0 {
