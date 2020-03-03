@@ -18,6 +18,7 @@ package buffer
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -392,6 +393,27 @@ var _ = Describe("Buffer interface", func() {
 			expectedElements[0] = Element{GossipCount: int64(101)}
 			expectedElements[1] = Element{GossipCount: int64(201)}
 			expectedElements[2] = Element{GossipCount: int64(301)}
+
+			buf.IncrementGossipCount()
+			Expect(buf.Elements).To(Equal(expectedElements))
+		})
+
+		It("doesn't increment gossip count when it is equal with MAX_INT_64", func() {
+			buf := &Buffer{
+				Elements: []Element{
+					{GossipCount: int64(math.MaxInt64 - 2)},
+					{GossipCount: int64(math.MaxInt64 - 1)},
+					{GossipCount: int64(math.MaxInt64)},
+				},
+				Len: 3,
+				Mux: &sync.Mutex{},
+			}
+
+			expectedElements := []Element{
+				{GossipCount: int64(math.MaxInt64 - 1)},
+				{GossipCount: int64(math.MaxInt64)},
+				{GossipCount: int64(math.MaxInt64)},
+			}
 
 			buf.IncrementGossipCount()
 			Expect(buf.Elements).To(Equal(expectedElements))

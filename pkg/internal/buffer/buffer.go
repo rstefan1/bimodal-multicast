@@ -18,6 +18,7 @@ package buffer
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
@@ -133,7 +134,9 @@ func (buf *Buffer) IncrementGossipCount() {
 	defer buf.Mux.Unlock()
 
 	for i := 0; i < buf.Len; i++ {
-		buf.Elements[i].GossipCount++
+		if buf.Elements[i].GossipCount < math.MaxInt64 {
+			buf.Elements[i].GossipCount++
+		}
 	}
 }
 
