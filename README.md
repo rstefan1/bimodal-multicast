@@ -42,7 +42,7 @@ import (
                 return nil
             },
         },
-        BufferSize: 32,
+        BufferSize: 2048,
     }
 ```
 

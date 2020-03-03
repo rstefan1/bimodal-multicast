@@ -138,7 +138,7 @@ func main() {
 			message := args[1]
 			cbType := args[2]
 
-			err := node.Add(message, cbType)
+			err := node.AddMessage(message, cbType)
 			if err != nil {
 				fmt.Println("Error at adding message in buffer:", err)
 			}

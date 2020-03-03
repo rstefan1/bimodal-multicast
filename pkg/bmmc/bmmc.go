@@ -133,7 +133,7 @@ func (b *BMMC) Stop() {
 }
 
 // Add adds new message in messages buffer.
-func (b *BMMC) Add(msg interface{}, callbackType string) error {
+func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType)
 	if err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
