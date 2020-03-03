@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
@@ -71,6 +72,10 @@ func (cfg *Config) validate() error {
 
 	if cfg.BufferSize <= 0 {
 		return fmt.Errorf(invalidBufSizeErr)
+	}
+
+	if err := callback.ValidateCustomCallbacks(cfg.Callbacks); err != nil {
+		return err
 	}
 
 	return nil
