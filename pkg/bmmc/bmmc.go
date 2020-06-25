@@ -30,20 +30,20 @@ const (
 	// NOCALLBACK is callback type for messages without callback
 	NOCALLBACK = callback.NOCALLBACK
 
-	addPeerErrFmt    = "error at adding the peer %s/%s: %s"
-	removePeerErrFmt = "error at removing the peer %s/%s: %s"
+	addPeerErrFmt    = "error at adding the peer %s/%s: %w"
+	removePeerErrFmt = "error at removing the peer %s/%s: %w"
 
 	runDefaultCallbackErrFmt = "error at calling default callback at %s:%s for message %s in round %d"
 	runCustomCallbackErrFmt  = "error at calling custom callback at %s:%s for message %s in round %d"
 
-	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %s"
-	createDefaultCRErrFmt = "error at creating new default callbacks registry: %s"
+	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %w"
+	createDefaultCRErrFmt = "error at creating new default callbacks registry: %w"
 
 	// netClientTimeout is the timeout for http client
 	netClientTimeout = time.Second * 10
 )
 
-// BMMC is the bimodal multicast protocol
+// BMMC is the bimodal multicast protocol.
 type BMMC struct {
 	// protocol config
 	config *Config
@@ -68,7 +68,7 @@ type BMMC struct {
 	selectedPeers []bool
 }
 
-// New creates a new instance for the protocol
+// New creates a new instance for the protocol.
 func New(cfg *Config) (*BMMC, error) {
 	// validate given config
 	if err := cfg.validate(); err != nil {
@@ -110,7 +110,7 @@ func New(cfg *Config) (*BMMC, error) {
 	return b, nil
 }
 
-// Start starts the gossip server and the http server
+// Start starts the gossip server and the http server.
 func (b *BMMC) Start() error {
 	b.stop = make(chan struct{})
 
@@ -127,7 +127,7 @@ func (b *BMMC) Start() error {
 	return nil
 }
 
-// Stop stops the gossip server and the http server
+// Stop stops the gossip server and the http server.
 func (b *BMMC) Stop() {
 	close(b.stop)
 }
@@ -153,7 +153,7 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	return nil
 }
 
-// AddPeer adds new peer in peers buffer
+// AddPeer adds new peer in peers buffer.
 func (b *BMMC) AddPeer(addr, port string) error {
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
@@ -179,7 +179,7 @@ func (b *BMMC) AddPeer(addr, port string) error {
 	return nil
 }
 
-// RemovePeer removes given peer from peers buffer
+// RemovePeer removes given peer from peers buffer.
 func (b *BMMC) RemovePeer(addr, port string) error {
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
@@ -203,12 +203,12 @@ func (b *BMMC) RemovePeer(addr, port string) error {
 	return nil
 }
 
-// GetMessages returns a slice with all messages from messages buffer
+// GetMessages returns a slice with all messages from messages buffer.
 func (b *BMMC) GetMessages() []interface{} {
 	return b.messageBuffer.Messages()
 }
 
-// GetPeers returns an array with all peers from peers buffer
+// GetPeers returns an array with all peers from peers buffer.
 func (b *BMMC) GetPeers() []string {
 	return b.peerBuffer.GetPeers()
 }

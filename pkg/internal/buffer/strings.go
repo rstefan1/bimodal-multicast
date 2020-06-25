@@ -27,7 +27,7 @@ func ContainsString(a []string, x string) bool {
 	return false
 }
 
-// MissingStrings returns the disjunction between given slices: a - b
+// MissingStrings returns the disjunction between given slices: a - b.
 func MissingStrings(a []string, b []string) []string {
 	s := []string{}
 

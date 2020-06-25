@@ -27,10 +27,6 @@ import (
 )
 
 const (
-	invalidAddPeerMsgErr         = "invalid add peer message"
-	invalidRemovePeerMsgErr      = "invalid remove peer message"
-	inexistentDefaultCallbackErr = "callback doesn't exist in the default registry"
-
 	peerAddedLogFmt   = "peer %s/%s added in the peers buffer"
 	peerRemovedLogFmt = "peer %s/%s removed from the peers buffer"
 
@@ -46,22 +42,26 @@ var (
 		ADDPEER:    addPeerCallback,
 		REMOVEPEER: removePeerCallback,
 	}
+
+	errInvalidAddPeerMsg         = errors.New("invalid add peer message")
+	errInvalidRemovePeerMsg      = errors.New("invalid remove peer message")
+	errInexistentDefaultCallback = errors.New("callback doesn't exist in the default registry")
 )
 
-// ComposeAddPeerMessage returns a `add peer` message with given addr and port
+// ComposeAddPeerMessage returns a `add peer` message with given addr and port.
 func ComposeAddPeerMessage(addr, port string) string {
 	return fmt.Sprintf("%s/%s/%s", addPrefix, addr, port)
 }
 
-// DecomposeAddPeerMessage decomposes given `add peer` message to addr and port
+// DecomposeAddPeerMessage decomposes given `add peer` message to addr and port.
 func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 3 {
-		return "", "", errors.New(invalidAddPeerMsgErr)
+	if len(host) != 3 { // nolint: gomnd
+		return "", "", errInvalidAddPeerMsg
 	}
 
 	if host[0] != addPrefix {
-		return "", "", errors.New(invalidAddPeerMsgErr)
+		return "", "", errInvalidAddPeerMsg
 	}
 
 	addr := host[1]
@@ -70,20 +70,20 @@ func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	return addr, port, nil
 }
 
-// ComposeRemovePeerMessage returns a `remove peer` message with given addr and port
+// ComposeRemovePeerMessage returns a `remove peer` message with given addr and port.
 func ComposeRemovePeerMessage(addr, port string) string {
 	return fmt.Sprintf("%s/%s/%s", removePrefix, addr, port)
 }
 
-// DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port
+// DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port.
 func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 3 {
-		return "", "", errors.New(invalidRemovePeerMsgErr)
+	if len(host) != 3 { // nolint: gomnd
+		return "", "", errInvalidRemovePeerMsg
 	}
 
 	if host[0] != removePrefix {
-		return "", "", errors.New(invalidRemovePeerMsgErr)
+		return "", "", errInvalidRemovePeerMsg
 	}
 
 	addr := host[1]
@@ -92,12 +92,12 @@ func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	return addr, port, nil
 }
 
-// DefaultRegistry is a default callbacks registry
+// DefaultRegistry is a default callbacks registry.
 type DefaultRegistry struct {
 	callbacks map[string]func(buffer.Element, *peer.Buffer, *log.Logger) error
 }
 
-// NewDefaultRegistry creates a default callback registry
+// NewDefaultRegistry creates a default callback registry.
 func NewDefaultRegistry() (*DefaultRegistry, error) {
 	r := &DefaultRegistry{}
 
@@ -106,13 +106,13 @@ func NewDefaultRegistry() (*DefaultRegistry, error) {
 	return r, nil
 }
 
-// GetCallback returns a default callback from registry
+// GetCallback returns a default callback from registry.
 func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, *peer.Buffer, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 
-	return nil, errors.New(inexistentDefaultCallbackErr)
+	return nil, errInexistentDefaultCallback
 }
 
 // RunCallbacks runs default callbacks.

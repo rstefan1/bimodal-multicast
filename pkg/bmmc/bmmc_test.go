@@ -66,7 +66,7 @@ func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logg
 	}
 }
 
-// suggestPort suggests an unused port
+// suggestPort suggests an unused port.
 func suggestPort() string {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {

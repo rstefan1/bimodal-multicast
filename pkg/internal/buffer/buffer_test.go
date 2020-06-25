@@ -17,7 +17,6 @@ limitations under the License.
 package buffer
 
 import (
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -102,7 +101,7 @@ var _ = Describe("Buffer interface", func() {
 			}
 
 			_, err := fullBuf.elementPosition(el)
-			Expect(err).To(Equal(fmt.Errorf(tooOldElementErrFmt)))
+			Expect(err).To(MatchError(errTooOldElement))
 		})
 	})
 
@@ -159,11 +158,11 @@ var _ = Describe("Buffer interface", func() {
 			})
 
 			It("doesn't shift any element if index is lower than 0", func() {
-				Expect(buf.shiftElements(-1)).To(Equal(fmt.Errorf(indexOutOfRangeErrFmt)))
+				Expect(buf.shiftElements(-1)).To(MatchError(errIndexOutOfRange))
 			})
 
 			It("doesn't shift any elements if index is greater then buffer size", func() {
-				Expect(buf.shiftElements(len(buf.Elements))).To(Equal(fmt.Errorf(indexOutOfRangeErrFmt)))
+				Expect(buf.shiftElements(len(buf.Elements))).To(MatchError(errIndexOutOfRange))
 			})
 		})
 
@@ -299,7 +298,7 @@ var _ = Describe("Buffer interface", func() {
 				ID:        "2016",
 			}
 
-			Expect(buf.Add(el)).To(Equal(fmt.Errorf(alreadyExistsErrFmt)))
+			Expect(buf.Add(el)).To(MatchError(errAlreadyExists))
 		})
 	})
 

@@ -17,7 +17,7 @@ limitations under the License.
 package bmmc
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -31,11 +31,11 @@ const (
 	defaultRoundDuration = time.Millisecond * 100
 )
 
-const (
-	invalidBufSizeErr = "invalid buffer size"
+var (
+	errInvalidBufSize = errors.New("invalid buffer size")
 )
 
-// Config is the config for the protocol
+// Config is the config for the protocol.
 type Config struct {
 	// Addr is HTTP address for node which runs http servers
 	// Required
@@ -60,7 +60,7 @@ type Config struct {
 	BufferSize int
 }
 
-// validate validates given config
+// validate validates given config.
 func (cfg *Config) validate() error {
 	if err := validators.AddrValidator()(cfg.Addr); err != nil {
 		return err
@@ -71,7 +71,7 @@ func (cfg *Config) validate() error {
 	}
 
 	if cfg.BufferSize <= 0 {
-		return fmt.Errorf(invalidBufSizeErr)
+		return errInvalidBufSize
 	}
 
 	if err := callback.ValidateCustomCallbacks(cfg.Callbacks); err != nil {

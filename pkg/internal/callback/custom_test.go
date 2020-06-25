@@ -98,8 +98,8 @@ var _ = Describe("Custom Callback interface", func() {
 				},
 			}
 
-			Expect(ValidateCustomCallbacks(cb)).To(Equal(
-				errors.New("\"add-peer\" callback type is not allowed")))
+			Expect(ValidateCustomCallbacks(cb)).To(MatchError(
+				errors.New("callback type is not allowed")))
 		})
 
 		It("returns error when callbacks contain a `remove-peer` type", func() {
@@ -115,8 +115,8 @@ var _ = Describe("Custom Callback interface", func() {
 				},
 			}
 
-			Expect(ValidateCustomCallbacks(cb)).To(Equal(
-				errors.New("\"remove-peer\" callback type is not allowed")))
+			Expect(ValidateCustomCallbacks(cb)).To(MatchError(
+				errors.New("callback type is not allowed")))
 		})
 
 		It("doesn't return error when all callback are valid", func() {
