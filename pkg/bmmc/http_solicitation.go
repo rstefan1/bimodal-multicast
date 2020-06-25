@@ -24,12 +24,12 @@ import (
 )
 
 const (
-	httpSolicitationDecodingErrFmt = "error at decoding http solicitation message in HTTP Server: %s"
-	httpSolicitationMarshalErrFmt  = "error at marshal http solicitation in HTTP Server: %s"
-	httpSolicitationSendErrFmt     = "error at sending http soliccitation message in HTTP Server: %s"
+	httpSolicitationDecodingErrFmt = "error at decoding http solicitation message in HTTP Server: %w"
+	httpSolicitationMarshalErrFmt  = "error at marshal http solicitation in HTTP Server: %w"
+	httpSolicitationSendLogFmt     = "error at sending http soliccitation message in HTTP Server: %s"
 )
 
-// HTTPSolicitation is solicitation message for http server
+// HTTPSolicitation is solicitation message for http server.
 type HTTPSolicitation struct {
 	Addr        string       `json:"addr"`
 	Port        string       `json:"port"`
@@ -41,7 +41,7 @@ func solicitationHTTPPath(addr, port string) string {
 	return fmt.Sprintf("http://%s:%s%s", addr, port, solicitationRoute)
 }
 
-// receiveSolicitation receives http solicitation message
+// receiveSolicitation receives http solicitation message.
 func (b *BMMC) receiveSolicitation(r *http.Request) ([]string, string, string, *GossipRound, error) {
 	var t HTTPSolicitation
 
@@ -53,7 +53,7 @@ func (b *BMMC) receiveSolicitation(r *http.Request) ([]string, string, string, *
 	return t.Digest, t.Addr, t.Port, t.RoundNumber, nil
 }
 
-// sendSolicitation send http solicitation message
+// sendSolicitation send http solicitation message.
 func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string) error {
 	jsonSolicitation, err := json.Marshal(solicitation)
 	if err != nil {
@@ -63,7 +63,7 @@ func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string
 	go func() {
 		resp, err := b.netClient.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation))
 		if err != nil {
-			b.config.Logger.Printf(httpSolicitationSendErrFmt, err)
+			b.config.Logger.Printf(httpSolicitationSendLogFmt, err)
 			return
 		}
 		defer resp.Body.Close() // nolint:errcheck

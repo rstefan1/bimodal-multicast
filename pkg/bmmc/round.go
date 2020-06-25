@@ -22,16 +22,16 @@ import (
 )
 
 const (
-	maxRoundNumber = int64(math.MaxInt64 - 10)
+	maxRoundNumber = int64(math.MaxInt64 - 10) // nolint: gomnd
 )
 
-// GossipRound is the number of gossiper rounds
+// GossipRound is the number of gossiper rounds.
 type GossipRound struct {
 	Number int64       `json:"number"`
 	Mux    *sync.Mutex `json:"mux"`
 }
 
-// NewGossipRound creates new GossipRound
+// NewGossipRound creates new GossipRound.
 func NewGossipRound() *GossipRound {
 	return &GossipRound{
 		Number: int64(0),
@@ -39,7 +39,7 @@ func NewGossipRound() *GossipRound {
 	}
 }
 
-// Increment increments the gossip round numbers
+// Increment increments the gossip round numbers.
 func (r *GossipRound) Increment() {
 	r.Mux.Lock()
 	defer r.Mux.Unlock()
@@ -51,7 +51,7 @@ func (r *GossipRound) Increment() {
 	}
 }
 
-// GetNumber returns the gossip round numbers
+// GetNumber returns the gossip round numbers.
 func (r *GossipRound) GetNumber() int64 {
 	r.Mux.Lock()
 	defer r.Mux.Unlock()

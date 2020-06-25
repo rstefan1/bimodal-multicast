@@ -18,7 +18,6 @@ package bmmc
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -27,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// newDummyConfig creates new dummy bmmc config
+// newDummyConfig creates new dummy bmmc config.
 func newDummyConfig() *Config {
 	return &Config{
 		Addr:   "localhost",
@@ -68,7 +67,7 @@ var _ = Describe("BMMC Config", func() {
 
 		It("returns error when buffer size is invalid", func() {
 			cfg.BufferSize = 0
-			Expect(cfg.validate()).To(Equal(fmt.Errorf(invalidBufSizeErr)))
+			Expect(cfg.validate()).To(MatchError(errInvalidBufSize))
 		})
 
 		It("returns error when callback map contains an invalid callback (a default callback)", func() {
@@ -77,7 +76,7 @@ var _ = Describe("BMMC Config", func() {
 					return nil
 				},
 			}
-			Expect(cfg.validate()).To(Equal(fmt.Errorf("\"add-peer\" callback type is not allowed")))
+			Expect(cfg.validate()).To(MatchError(errors.New("callback type is not allowed")))
 		})
 	})
 

@@ -39,17 +39,19 @@ const (
 	syncBufferLogErrFmt = "BMMC %s:%s error at syncing buffer with message %s in round %d: %s"
 	bufferSyncedLogFmt  = "BMMC %s:%s synced buffer with message %s in round %d"
 
-	invalidHostErr = "invalid host"
-
 	gossipRoute          = "/gossip"
 	solicitationRoute    = "/solicitation"
 	synchronizationRoute = "/synchronization"
 )
 
+var (
+	errInvalidHost = errors.New("invalid host")
+)
+
 func addrPort(s string) (string, string, error) {
 	host := strings.Split(s, ":")
-	if len(host) != 2 {
-		return "", "", errors.New(invalidHostErr)
+	if len(host) != 2 { // nolint: gomnd
+		return "", "", errInvalidHost
 	}
 
 	addr := host[0]
@@ -172,11 +174,13 @@ func (b *BMMC) startServer(stop <-chan struct{}) error {
 	go func() {
 		b.config.Logger.Printf(startServerLogFmt, b.server.Addr)
 
-		if err := b.server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := b.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			b.config.Logger.Printf(unableStartServerLogFmt, err)
 			errChan <- err
+
 			return
 		}
+
 		errChan <- nil
 	}()
 

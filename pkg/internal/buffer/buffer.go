@@ -17,25 +17,25 @@ limitations under the License.
 package buffer
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"sync"
 )
 
-const (
-	indexOutOfRangeErrFmt = "index out of range"
-	alreadyExistsErrFmt   = "already exists"
-	tooOldElementErrFmt   = "element is too old and buffer is full"
+var (
+	errIndexOutOfRange = errors.New("index out of range")
+	errAlreadyExists   = errors.New("already exists")
+	errTooOldElement   = errors.New("element is too old and buffer is full")
 )
 
-// Buffer is the buffer with messages
+// Buffer is the buffer with messages.
 type Buffer struct {
 	Elements []Element   `json:"elements"`
 	Len      int         `json:"len"`
 	Mux      *sync.Mutex `json:"mux"`
 }
 
-// NewBuffer creates new buffer
+// NewBuffer creates new buffer.
 func NewBuffer(size int) *Buffer {
 	return &Buffer{
 		Elements: make([]Element, size),
@@ -45,7 +45,7 @@ func NewBuffer(size int) *Buffer {
 }
 
 // contains returns a boolean representing if given element already exists in buffer or not
-// and an int representing element position in buffer
+// and an int representing element position in buffer.
 func (buf *Buffer) contains(el Element) (bool, int) {
 	for i := 0; i < buf.Len; i++ {
 		if buf.Elements[i].ID == el.ID {
@@ -56,7 +56,7 @@ func (buf *Buffer) contains(el Element) (bool, int) {
 	return false, -1
 }
 
-// elementPosition gets the element position in buffer
+// elementPosition gets the element position in buffer.
 func (buf *Buffer) elementPosition(el Element) (int, error) {
 	for i := 0; i < buf.Len; i++ {
 		if el.Timestamp.String() >= buf.Elements[i].Timestamp.String() {
@@ -68,13 +68,13 @@ func (buf *Buffer) elementPosition(el Element) (int, error) {
 		return buf.Len, nil
 	}
 
-	return -1, fmt.Errorf(tooOldElementErrFmt)
+	return -1, errTooOldElement
 }
 
-// shiftElements shifts elements from given index to right
+// shiftElements shifts elements from given index to right.
 func (buf *Buffer) shiftElements(index int) error {
 	if index < 0 || index >= len(buf.Elements) {
-		return fmt.Errorf(indexOutOfRangeErrFmt)
+		return errIndexOutOfRange
 	}
 
 	lastElPos := buf.Len
@@ -90,13 +90,13 @@ func (buf *Buffer) shiftElements(index int) error {
 	return nil
 }
 
-// Add adds the given element in buffer
+// Add adds the given element in buffer.
 func (buf *Buffer) Add(el Element) error {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 
 	if e, _ := buf.contains(el); e {
-		return fmt.Errorf(alreadyExistsErrFmt)
+		return errAlreadyExists
 	}
 
 	pos, err := buf.elementPosition(el)
@@ -114,7 +114,7 @@ func (buf *Buffer) Add(el Element) error {
 	return nil
 }
 
-// Digest returns a slice with elements ids
+// Digest returns a slice with elements ids.
 func (buf *Buffer) Digest() []string {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
@@ -128,7 +128,7 @@ func (buf *Buffer) Digest() []string {
 	return d
 }
 
-// IncrementGossipCount increments gossip count for each elements from buffer
+// IncrementGossipCount increments gossip count for each elements from buffer.
 func (buf *Buffer) IncrementGossipCount() {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
@@ -140,7 +140,7 @@ func (buf *Buffer) IncrementGossipCount() {
 	}
 }
 
-// Messages returns a slice with messages for each element in buffer
+// Messages returns a slice with messages for each element in buffer.
 func (buf *Buffer) Messages() []interface{} {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
@@ -154,7 +154,7 @@ func (buf *Buffer) Messages() []interface{} {
 	return m
 }
 
-// Length returns number of elements in buffer
+// Length returns number of elements in buffer.
 func (buf *Buffer) Length() int {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
@@ -164,7 +164,7 @@ func (buf *Buffer) Length() int {
 	return l
 }
 
-// ElementsFromIDs returns a slice with elements from given IDs list
+// ElementsFromIDs returns a slice with elements from given IDs list.
 func (buf *Buffer) ElementsFromIDs(digest []string) []Element {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()

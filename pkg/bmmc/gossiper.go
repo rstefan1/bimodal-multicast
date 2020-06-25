@@ -25,7 +25,7 @@ const (
 	stopGossiperLogFmt  = "End of gossip round from %s:%s"
 )
 
-// randomlySelectPeer is a helper func that returns a random peer
+// randomlySelectPeer is a helper func that returns a random peer.
 func (b *BMMC) randomlySelectPeer() (string, string) {
 	for {
 		addr, port, i := b.peerBuffer.GetRandom()
@@ -40,7 +40,7 @@ func (b *BMMC) randomlySelectPeer() (string, string) {
 	}
 }
 
-// resetSelectedPeers is a helper func that clear slice with selected peers in gossip round
+// resetSelectedPeers is a helper func that clear slice with selected peers in gossip round.
 func (b *BMMC) resetSelectedPeers() {
 	for i := range b.selectedPeers {
 		b.selectedPeers[i] = false

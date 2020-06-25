@@ -17,8 +17,6 @@ limitations under the License.
 package callback
 
 import (
-	"errors"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -53,7 +51,7 @@ var _ = Describe("Default Callback interface", func() {
 
 	DescribeTable("DecomposeAddPeerMessage helper function returns error", func(msg string) {
 		_, _, err := DecomposeAddPeerMessage(msg)
-		Expect(err).To(Equal(errors.New(invalidAddPeerMsgErr)))
+		Expect(err).To(MatchError(errInvalidAddPeerMsg))
 	},
 		Entry("message is invalid", "add/localhost"),
 		Entry("message is invalid", "add/127.100.120.0"),
@@ -77,7 +75,7 @@ var _ = Describe("Default Callback interface", func() {
 
 	DescribeTable("DecomposeRemovePeerMessage helper function return error", func(msg string) {
 		_, _, err := DecomposeRemovePeerMessage(msg)
-		Expect(err).To(Equal(errors.New(invalidRemovePeerMsgErr)))
+		Expect(err).To(MatchError(errInvalidRemovePeerMsg))
 	},
 		Entry("message is invalid", "remove/localhost"),
 		Entry("message is invalid", "remove/127.100.120.0"),

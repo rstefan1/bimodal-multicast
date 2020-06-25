@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-// Element is an element from messages buffer
+// Element is an element from messages buffer.
 type Element struct {
 	ID           string      `json:"id"`
 	Timestamp    time.Time   `json:"timestamp"`
@@ -34,7 +34,7 @@ type Element struct {
 }
 
 // generateIDFromMsg returns an ID consisting of a hash of the original string,
-// a timestamp and a random number
+// a timestamp and a random number.
 func generateIDFromMsg(s string) (string, error) {
 	h := sha1.New() // nolint: gosec
 
@@ -49,7 +49,7 @@ func generateIDFromMsg(s string) (string, error) {
 	return id, nil
 }
 
-// NewElement creates new buffer element with given message and callback type
+// NewElement creates new buffer element with given message and callback type.
 func NewElement(msg interface{}, cbType string) (Element, error) {
 	id, err := generateIDFromMsg(fmt.Sprintf("%v", msg))
 	if err != nil {

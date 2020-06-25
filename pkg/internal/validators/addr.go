@@ -18,11 +18,15 @@ package validators
 
 import "errors"
 
-// AddrValidator returns an address validator
+var (
+	errEmptyAddress = errors.New("empty address")
+)
+
+// AddrValidator returns an address validator.
 func AddrValidator() func(string) error {
 	return func(addr string) error {
 		if len(addr) == 0 {
-			return errors.New("empty address")
+			return errEmptyAddress
 		}
 
 		return nil

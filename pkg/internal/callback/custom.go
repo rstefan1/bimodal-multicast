@@ -23,20 +23,21 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
-const (
-	nilCallbackMapErr           = "callback map must not be nil"
-	inexistentCustomCallbackErr = "callback doesn't exist in the custom registry"
+var (
+	errNilCallbackMap           = errors.New("callback map must not be nil")
+	errInexistentCustomCallback = errors.New("callback doesn't exist in the custom registry")
+	errNotAlowedCallbackType    = errors.New("callback type is not allowed")
 )
 
-// CustomRegistry is a custom callbacks registry
+// CustomRegistry is a custom callbacks registry.
 type CustomRegistry struct {
 	callbacks map[string]func(interface{}, *log.Logger) error
 }
 
-// NewCustomRegistry creates a custom callback registry
+// NewCustomRegistry creates a custom callback registry.
 func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*CustomRegistry, error) {
 	if cb == nil {
-		return nil, errors.New(nilCallbackMapErr)
+		return nil, errNilCallbackMap
 	}
 
 	r := &CustomRegistry{}
@@ -45,13 +46,13 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*Cus
 	return r, nil
 }
 
-// GetCallback returns a custom callback from registry
+// GetCallback returns a custom callback from registry.
 func (r *CustomRegistry) GetCallback(t string) (func(interface{}, *log.Logger) error, error) {
 	if v, ok := r.callbacks[t]; ok {
 		return v, nil
 	}
 
-	return nil, errors.New(inexistentCustomCallbackErr)
+	return nil, errInexistentCustomCallback
 }
 
 // RunCallbacks runs custom callbacks.
@@ -71,12 +72,12 @@ func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) erro
 	return nil
 }
 
-// ValidateCustomCallbacks validates custom callbacks
+// ValidateCustomCallbacks validates custom callbacks.
 func ValidateCustomCallbacks(customCallbacks map[string]func(interface{}, *log.Logger) error) error {
 	// don't allow to use default callbacks types as custom callback types
 	for customType := range customCallbacks {
 		if _, exists := defaultCallbacks[customType]; exists {
-			return errors.New("\"" + customType + "\" callback type is not allowed")
+			return errNotAlowedCallbackType
 		}
 	}
 

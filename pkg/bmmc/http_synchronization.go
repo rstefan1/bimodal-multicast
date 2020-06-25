@@ -26,12 +26,12 @@ import (
 )
 
 const (
-	httpSynchronizationDecodeErrFmt  = "error at decoding http synchronization message in HTTP Server: %s"
-	httpSynchronizationMarshalErrFmt = "error at marshal http synchronization message in HTTP Server: %s"
+	httpSynchronizationDecodeErrFmt  = "error at decoding http synchronization message in HTTP Server: %w"
+	httpSynchronizationMarshalErrFmt = "error at marshal http synchronization message in HTTP Server: %w"
 	httpSynchronizationSendErrFmt    = "error at sending HTTPSynchronization message in HTTP Server: %s"
 )
 
-// HTTPSynchronization is synchronization message for http server
+// HTTPSynchronization is synchronization message for http server.
 type HTTPSynchronization struct {
 	Addr     string           `json:"addr"`
 	Port     string           `json:"port"`
@@ -42,7 +42,7 @@ func synchronizationHTTPPath(addr, port string) string {
 	return fmt.Sprintf("http://%s:%s%s", addr, port, synchronizationRoute)
 }
 
-// receiveSynchronization receives http solicitation message
+// receiveSynchronization receives http solicitation message.
 func (b *BMMC) receiveSynchronization(r *http.Request) ([]buffer.Element, string, string, error) {
 	var t HTTPSynchronization
 
@@ -54,7 +54,7 @@ func (b *BMMC) receiveSynchronization(r *http.Request) ([]buffer.Element, string
 	return t.Elements, t.Addr, t.Port, nil
 }
 
-// sendSynchronization send http synchronization message
+// sendSynchronization send http synchronization message.
 func (b *BMMC) sendSynchronization(synchronization HTTPSynchronization, addr, port string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {

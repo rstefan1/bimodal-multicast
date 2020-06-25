@@ -24,22 +24,22 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
-// MAXPEERS is the maximum number of peers in buffer
+// MAXPEERS is the maximum number of peers in buffer.
 const MAXPEERS = 4096
 
-// Peer is a peer
+// Peer is a peer.
 type Peer struct {
 	addr string
 	port string
 }
 
-// Buffer is the buffer with peers
+// Buffer is the buffer with peers.
 type Buffer struct {
 	peers []Peer
 	mux   *sync.Mutex
 }
 
-// NewPeer creates a Peer
+// NewPeer creates a Peer.
 func NewPeer(addr, port string) (Peer, error) {
 	if err := validators.AddrValidator()(addr); err != nil {
 		return Peer{}, err
@@ -55,7 +55,7 @@ func NewPeer(addr, port string) (Peer, error) {
 	}, nil
 }
 
-// NewPeerBuffer creates a PeerBuffer
+// NewPeerBuffer creates a PeerBuffer.
 func NewPeerBuffer() *Buffer {
 	return &Buffer{
 		peers: []Peer{},
@@ -63,7 +63,7 @@ func NewPeerBuffer() *Buffer {
 	}
 }
 
-// Length returns length of peers buffer
+// Length returns length of peers buffer.
 func (peerBuffer *Buffer) Length() int {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
@@ -73,7 +73,7 @@ func (peerBuffer *Buffer) Length() int {
 	return l
 }
 
-// alreadyExists return true if the peer already exists in peers buffer
+// alreadyExists return true if the peer already exists in peers buffer.
 func (peerBuffer *Buffer) alreadyExists(peer Peer) bool {
 	// Important! Whoever calls this function must LOCK the buffer
 	for _, p := range peerBuffer.peers {
@@ -85,17 +85,17 @@ func (peerBuffer *Buffer) alreadyExists(peer Peer) bool {
 	return false
 }
 
-// AddPeer adds a peer in peers buffer
+// AddPeer adds a peer in peers buffer.
 func (peerBuffer *Buffer) AddPeer(peer Peer) error {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
 	if len(peerBuffer.peers)+1 >= MAXPEERS {
-		return fmt.Errorf("the buffer is full. Can add up to %d peers", MAXPEERS)
+		return fmt.Errorf("the buffer is full. Can add up to %d peers", MAXPEERS) // nolint: goerr113
 	}
 
 	if peerBuffer.alreadyExists(peer) {
-		return fmt.Errorf("peer %s/%s already exists in peer buffer", peer.addr, peer.port)
+		return fmt.Errorf("peer %s/%s already exists in peer buffer", peer.addr, peer.port) // nolint: goerr113
 	}
 
 	peerBuffer.peers = append(peerBuffer.peers, peer)
@@ -103,7 +103,7 @@ func (peerBuffer *Buffer) AddPeer(peer Peer) error {
 	return nil
 }
 
-// RemovePeer removes a peer from peers buffer
+// RemovePeer removes a peer from peers buffer.
 func (peerBuffer *Buffer) RemovePeer(peer Peer) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
@@ -124,7 +124,7 @@ func (peerBuffer *Buffer) RemovePeer(peer Peer) {
 	}
 }
 
-// GetPeers returns a list of strings that contains peers
+// GetPeers returns a list of strings that contains peers.
 func (peerBuffer *Buffer) GetPeers() []string {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
@@ -137,7 +137,7 @@ func (peerBuffer *Buffer) GetPeers() []string {
 	return p
 }
 
-// GetRandom returns random peer from peers buffer
+// GetRandom returns random peer from peers buffer.
 func (peerBuffer *Buffer) GetRandom() (string, string, int) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
