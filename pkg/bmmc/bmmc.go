@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	// NOCALLBACK is callback type for messages without callback
+	// NOCALLBACK is callback type for messages without callback.
 	NOCALLBACK = callback.NOCALLBACK
 
 	addPeerErrFmt    = "error at adding the peer %s/%s: %w"
@@ -39,7 +39,7 @@ const (
 	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %w"
 	createDefaultCRErrFmt = "error at creating new default callbacks registry: %w"
 
-	// netClientTimeout is the timeout for http client
+	// netClientTimeout is the timeout for http client.
 	netClientTimeout = time.Second * 10
 )
 
@@ -90,6 +90,7 @@ func New(cfg *Config) (*BMMC, error) {
 	}
 
 	// create an instance of the protocol
+	// nolint: exhaustivestruct
 	b := &BMMC{
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),
@@ -137,12 +138,14 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType)
 	if err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
-		return err
+
+		return err // nolint: wrapcheck
 	}
 
 	if err := b.messageBuffer.Add(m); err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
-		return err
+
+		return err // nolint: wrapcheck
 	}
 
 	b.config.Logger.Printf(bufferSyncedLogFmt,

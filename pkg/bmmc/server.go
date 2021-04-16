@@ -44,9 +44,7 @@ const (
 	synchronizationRoute = "/synchronization"
 )
 
-var (
-	errInvalidHost = errors.New("invalid host")
-)
+var errInvalidHost = errors.New("invalid host")
 
 func addrPort(s string) (string, string, error) {
 	host := strings.Split(s, ":")
@@ -68,6 +66,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	gossipDigest, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
+
 		return
 	}
 
@@ -77,6 +76,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
 		b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
+
 		return
 	}
 
@@ -90,6 +90,7 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 
 		if err = b.sendSolicitation(solicitationMsg, tAddr, tPort); err != nil {
 			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
+
 			return
 		}
 	}
@@ -99,6 +100,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	missingDigest, tAddr, tPort, _, err := b.receiveSolicitation(r)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
+
 		return
 	}
 
@@ -107,6 +109,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
+
 		return
 	}
 
@@ -118,6 +121,7 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 
 	if err = b.sendSynchronization(synchronizationMsg, tAddr, tPort); err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
+
 		return
 	}
 }
@@ -126,12 +130,14 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 	hostAddr, hostPort, err := addrPort(r.Host)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
+
 		return
 	}
 
 	rcvElements, _, _, err := b.receiveSynchronization(r)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
+
 		return
 	}
 
@@ -153,6 +159,7 @@ func (b *BMMC) gracefullyShutdown() {
 }
 
 func (b *BMMC) newServer() *http.Server {
+	// nolint: exhaustivestruct
 	return &http.Server{
 		Addr: fullHost("0.0.0.0", b.config.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

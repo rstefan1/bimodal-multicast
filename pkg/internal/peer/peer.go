@@ -108,19 +108,20 @@ func (peerBuffer *Buffer) RemovePeer(peer Peer) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
-	pos := -14
+	pos := -1 // out of buffer
 
 	for i, p := range peerBuffer.peers {
 		if p.addr == peer.addr && p.port == peer.port {
 			pos = i
+
 			break
 		}
 	}
 
 	if pos >= 0 {
-		peerBuffer.peers[pos] = peerBuffer.peers[len(peerBuffer.peers)-1] // Copy last element to index pos.
-		peerBuffer.peers[len(peerBuffer.peers)-1] = Peer{}                // Erase last element (write zero value).
-		peerBuffer.peers = peerBuffer.peers[:len(peerBuffer.peers)-1]     // Truncate slice.
+		peerBuffer.peers[pos] = peerBuffer.peers[len(peerBuffer.peers)-1]    // Copy last element to index pos.
+		peerBuffer.peers[len(peerBuffer.peers)-1] = Peer{addr: "", port: ""} // Erase last element (write zero value).
+		peerBuffer.peers = peerBuffer.peers[:len(peerBuffer.peers)-1]        // Truncate slice.
 	}
 }
 
@@ -142,7 +143,7 @@ func (peerBuffer *Buffer) GetRandom() (string, string, int) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
-	r := rand.Intn(len(peerBuffer.peers))
+	r := rand.Intn(len(peerBuffer.peers)) // nolint: gosec
 
 	return peerBuffer.peers[r].addr, peerBuffer.peers[r].port, r
 }

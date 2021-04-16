@@ -63,6 +63,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 		select {
 		case <-stop:
 			b.config.Logger.Printf(stopGossiperLogFmt, b.config.Addr, b.config.Port)
+
 			return
 		default:
 			b.gossipRound.Increment()

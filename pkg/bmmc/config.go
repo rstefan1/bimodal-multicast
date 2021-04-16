@@ -31,9 +31,7 @@ const (
 	defaultRoundDuration = time.Millisecond * 100
 )
 
-var (
-	errInvalidBufSize = errors.New("invalid buffer size")
-)
+var errInvalidBufSize = errors.New("invalid buffer size")
 
 // Config is the config for the protocol.
 type Config struct {
@@ -74,11 +72,7 @@ func (cfg *Config) validate() error {
 		return errInvalidBufSize
 	}
 
-	if err := callback.ValidateCustomCallbacks(cfg.Callbacks); err != nil {
-		return err
-	}
-
-	return nil
+	return callback.ValidateCustomCallbacks(cfg.Callbacks) // nolint: wrapcheck
 }
 
 // fillEmptyFields set default values for optional empty fields.

@@ -24,9 +24,9 @@ linters:
 
   # we should re-enable them and make lint pass
   disable:
-    - goimports
     - maligned
     - godox
+    - gci
 
 issues:
   max-same-issues: 0

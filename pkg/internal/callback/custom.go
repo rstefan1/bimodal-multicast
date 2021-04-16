@@ -24,9 +24,8 @@ import (
 )
 
 var (
-	errNilCallbackMap           = errors.New("callback map must not be nil")
-	errInexistentCustomCallback = errors.New("callback doesn't exist in the custom registry")
-	errNotAlowedCallbackType    = errors.New("callback type is not allowed")
+	errNilCallbackMap        = errors.New("callback map must not be nil")
+	errNotAlowedCallbackType = errors.New("callback type is not allowed")
 )
 
 // CustomRegistry is a custom callbacks registry.
@@ -40,36 +39,30 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*Cus
 		return nil, errNilCallbackMap
 	}
 
-	r := &CustomRegistry{}
-	r.callbacks = cb
-
-	return r, nil
+	return &CustomRegistry{
+		callbacks: cb,
+	}, nil
 }
 
 // GetCallback returns a custom callback from registry.
-func (r *CustomRegistry) GetCallback(t string) (func(interface{}, *log.Logger) error, error) {
+func (r *CustomRegistry) GetCallback(t string) func(interface{}, *log.Logger) error {
 	if v, ok := r.callbacks[t]; ok {
-		return v, nil
+		return v
 	}
 
-	return nil, errInexistentCustomCallback
+	return nil
 }
 
 // RunCallbacks runs custom callbacks.
 func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) error {
 	// get callback from callbacks registry
-	callbackFn, err := r.GetCallback(m.CallbackType)
-	if err != nil {
-		// dont't return err if custom registry haven't given callback
+	callbackFn := r.GetCallback(m.CallbackType)
+	if callbackFn == nil {
 		return nil
 	}
 
 	// run callback function
-	if err = callbackFn(m.Msg, logger); err != nil {
-		return err
-	}
-
-	return nil
+	return callbackFn(m.Msg, logger)
 }
 
 // ValidateCustomCallbacks validates custom callbacks.
