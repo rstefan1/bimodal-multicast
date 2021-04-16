@@ -61,9 +61,10 @@ func (b *BMMC) sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	}
 
 	go func() {
-		resp, err := b.netClient.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip))
+		resp, err := b.netClient.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip)) // nolint: noctx
 		if err != nil {
 			b.config.Logger.Printf(httpGossipSendLogFmt, gossipMsg.Addr, gossipMsg.Port, err)
+
 			return
 		}
 		defer resp.Body.Close() // nolint:errcheck

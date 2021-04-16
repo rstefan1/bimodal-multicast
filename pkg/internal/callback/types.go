@@ -17,11 +17,11 @@ limitations under the License.
 package callback
 
 const (
-	// NOCALLBACK is the type of messages without callback
+	// NOCALLBACK is the type of messages without callback.
 	NOCALLBACK = "no-callback"
 
-	// ADDPEER is the type of messages used for adding new peer in peers buffer
+	// ADDPEER is the type of messages used for adding new peer in peers buffer.
 	ADDPEER = "add-peer"
-	// REMOVEPEER is the type of messages used for deleting a peer from peers buffer
+	// REMOVEPEER is the type of messages used for deleting a peer from peers buffer.
 	REMOVEPEER = "remove-peer"
 )

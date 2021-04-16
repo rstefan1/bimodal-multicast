@@ -30,9 +30,9 @@ const (
 	peerAddedLogFmt   = "peer %s/%s added in the peers buffer"
 	peerRemovedLogFmt = "peer %s/%s removed from the peers buffer"
 
-	// addPrefix is the prefix for add peer messages
+	// addPrefix is the prefix for add peer messages.
 	addPrefix = "add"
-	// removePrefix is the prefix for remove peer messages
+	// removePrefix is the prefix for remove peer messages.
 	removePrefix = "remove"
 )
 
@@ -43,9 +43,8 @@ var (
 		REMOVEPEER: removePeerCallback,
 	}
 
-	errInvalidAddPeerMsg         = errors.New("invalid add peer message")
-	errInvalidRemovePeerMsg      = errors.New("invalid remove peer message")
-	errInexistentDefaultCallback = errors.New("callback doesn't exist in the default registry")
+	errInvalidAddPeerMsg    = errors.New("invalid add peer message")
+	errInvalidRemovePeerMsg = errors.New("invalid remove peer message")
 )
 
 // ComposeAddPeerMessage returns a `add peer` message with given addr and port.
@@ -99,36 +98,29 @@ type DefaultRegistry struct {
 
 // NewDefaultRegistry creates a default callback registry.
 func NewDefaultRegistry() (*DefaultRegistry, error) {
-	r := &DefaultRegistry{}
-
-	r.callbacks = defaultCallbacks
-
-	return r, nil
+	return &DefaultRegistry{
+		callbacks: defaultCallbacks,
+	}, nil
 }
 
 // GetCallback returns a default callback from registry.
-func (r *DefaultRegistry) GetCallback(t string) (func(buffer.Element, *peer.Buffer, *log.Logger) error, error) {
+func (r *DefaultRegistry) GetCallback(t string) func(buffer.Element, *peer.Buffer, *log.Logger) error {
 	if v, ok := r.callbacks[t]; ok {
-		return v, nil
+		return v
 	}
 
-	return nil, errInexistentDefaultCallback
+	return nil
 }
 
 // RunCallbacks runs default callbacks.
 func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, logger *log.Logger) error {
-	callbackFn, err := r.GetCallback(m.CallbackType)
-	if err != nil {
-		// dont't return err if default registry haven't given callback
+	callbackFn := r.GetCallback(m.CallbackType)
+	if callbackFn == nil {
 		return nil
 	}
 
 	// run callback function
-	if err = callbackFn(m, peerBuf, logger); err != nil {
-		return err
-	}
-
-	return nil
+	return callbackFn(m, peerBuf, logger)
 }
 
 func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logger) error {
@@ -141,11 +133,12 @@ func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logg
 	// add peer in buffer
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
+		// nolint: wrapcheck
 		return err
 	}
 
 	if err = peersBuf.AddPeer(p); err != nil {
-		return err
+		return err // nolint: wrapcheck
 	}
 
 	logger.Printf(peerAddedLogFmt, addr, port)
@@ -163,6 +156,7 @@ func removePeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.L
 	// remove the peer from buffer
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
+		// nolint: wrapcheck
 		return err
 	}
 

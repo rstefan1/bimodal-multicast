@@ -18,9 +18,7 @@ package validators
 
 import "errors"
 
-var (
-	errEmptyAddress = errors.New("empty address")
-)
+var errEmptyAddress = errors.New("empty address")
 
 // AddrValidator returns an address validator.
 func AddrValidator() func(string) error {

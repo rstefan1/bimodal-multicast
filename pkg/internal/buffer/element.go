@@ -39,12 +39,13 @@ func generateIDFromMsg(s string) (string, error) {
 	h := sha1.New() // nolint: gosec
 
 	if _, err := h.Write([]byte(s)); err != nil {
+		// nolint: wrapcheck
 		return "", err
 	}
 
 	sha1Hash := hex.EncodeToString(h.Sum(nil))
 
-	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31())
+	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31()) // nolint: gosec
 
 	return id, nil
 }
