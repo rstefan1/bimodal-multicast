@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// nolint: exhaustivestruct
 package buffer
 
 import (
@@ -235,9 +236,7 @@ var _ = Describe("Buffer interface", func() {
 	})
 
 	Describe("Add function", func() {
-		var (
-			buf *Buffer
-		)
+		var buf *Buffer
 
 		BeforeEach(func() {
 			buf = &Buffer{

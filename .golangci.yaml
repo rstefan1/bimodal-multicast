@@ -1,6 +1,5 @@
 run:
-  # TODO: re-enable tests linting and make them pass
-  tests: false
+  tests: true 
 
 linters-settings:
   dupl:
@@ -24,9 +23,10 @@ linters:
 
   # we should re-enable them and make lint pass
   disable:
-    - maligned
     - godox
     - gci
+    - testpackage
+    - paralleltest
 
 issues:
   max-same-issues: 0
