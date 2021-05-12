@@ -57,12 +57,12 @@ var _ = Describe("BMMC Config", func() {
 
 		It("returns error when addr is empty", func() {
 			cfg.Addr = ""
-			Expect(cfg.validate()).To(Equal(errors.New("empty address")))
+			Expect(cfg.validate()).To(MatchError(errors.New("empty address"))) // nolint: goerr113
 		})
 
 		It("returns error when port is empty", func() {
 			cfg.Port = ""
-			Expect(cfg.validate()).To(Equal(errors.New("port must be an integer number")))
+			Expect(cfg.validate()).To(MatchError(errors.New("port must be an integer number"))) // nolint: goerr113
 		})
 
 		It("returns error when buffer size is invalid", func() {
@@ -76,7 +76,7 @@ var _ = Describe("BMMC Config", func() {
 					return nil
 				},
 			}
-			Expect(cfg.validate()).To(MatchError(errors.New("callback type is not allowed")))
+			Expect(cfg.validate()).To(MatchError(errors.New("callback type is not allowed"))) // nolint: goerr113
 		})
 	})
 

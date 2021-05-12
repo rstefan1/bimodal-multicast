@@ -17,6 +17,7 @@ limitations under the License.
 package bmmc_test
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -85,6 +86,7 @@ func suggestPort() string {
 }
 
 func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
+	// nolint: exhaustivestruct
 	b, err := bmmc.New(&bmmc.Config{
 		Addr:       addr,
 		Port:       port,
@@ -130,7 +132,7 @@ var _ = Describe("BMMC", func() {
 			Eventually(getBufferFn(node2)).Should(ConsistOf(expectedBuf))
 		},
 		Entry("sync buffers if callback returns error",
-			fakeRegistry("my-callback", fmt.Errorf("invalid-callback")),
+			fakeRegistry("my-callback", errors.New("invalid-callback")), // nolint: goerr113
 			"awesome-message",
 			"my-callback",
 			[]string{"awesome-message"}),
@@ -142,33 +144,34 @@ var _ = Describe("BMMC", func() {
 	)
 
 	When("system has ten nodes", func() {
-		const len = 10
+		const nodesLen = 10
+
 		var (
-			nodes          [len]*bmmc.BMMC
-			ports          [len]string
-			addrs          [len]string
+			nodes          [nodesLen]*bmmc.BMMC
+			ports          [nodesLen]string
+			addrs          [nodesLen]string
 			extraMsgBuffer []interface{}
 			expectedBuf    []interface{}
 		)
 
 		BeforeEach(func() {
-			extraMsgBuffer = make([]interface{}, len)
+			extraMsgBuffer = make([]interface{}, nodesLen)
 			expectedBuf = []interface{}{}
 
-			for i := 0; i < len; i++ {
+			for i := 0; i < nodesLen; i++ {
 				ports[i] = suggestPort()
 				addrs[i] = "localhost"
 				extraMsgBuffer[i] = callback.ComposeAddPeerMessage(addrs[i], ports[i])
 			}
 
 			// create a protocol for each node, and start it
-			for i := 0; i < len; i++ {
+			for i := 0; i < nodesLen; i++ {
 				nodes[i] = newBMMC(addrs[i], ports[i], map[string]func(interface{}, *log.Logger) error{})
 				Expect(nodes[i].Start()).To(Succeed())
 			}
 
 			// add peers
-			for i := 1; i < len; i++ {
+			for i := 1; i < nodesLen; i++ {
 				Expect(nodes[0].AddPeer(addrs[i], ports[i])).To(Succeed())
 			}
 			Expect(nodes[1].AddPeer(addrs[0], ports[0])).To(Succeed())
@@ -189,7 +192,7 @@ var _ = Describe("BMMC", func() {
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 
-				randomNode := rand.Intn(len)
+				randomNode := rand.Intn(nodesLen) // nolint: gosec
 				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Expect(err).To(BeNil())
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
@@ -204,7 +207,7 @@ var _ = Describe("BMMC", func() {
 
 		When("one node has more messages", func() {
 			BeforeEach(func() {
-				randomNode := rand.Intn(len)
+				randomNode := rand.Intn(nodesLen) // nolint: gosec
 				for i := 0; i < 3; i++ {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
