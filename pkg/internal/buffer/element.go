@@ -29,8 +29,8 @@ type Element struct {
 	ID           string      `json:"id"`
 	Timestamp    time.Time   `json:"timestamp"`
 	Msg          interface{} `json:"msg"`
-	CallbackType string      `json:"callback_type"`
-	GossipCount  int64       `json:"gossip_count"` // number of rounds since the element is in buffer
+	CallbackType string      `json:"callbackType"`
+	GossipCount  int64       `json:"gossipCount"` // number of rounds since the element is in buffer
 }
 
 // generateIDFromMsg returns an ID consisting of a hash of the original string,

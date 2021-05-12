@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	maxRoundNumber = int64(math.MaxInt64 - 10) // nolint: gomnd
+	maxRoundNumber = int64(math.MaxInt64 - 10)
 )
 
 // GossipRound is the number of gossiper rounds.
