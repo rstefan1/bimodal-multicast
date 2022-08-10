@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
@@ -39,7 +40,7 @@ type HTTPSynchronization struct {
 }
 
 func synchronizationHTTPPath(addr, port string) string {
-	return fmt.Sprintf("http://%s:%s%s", addr, port, synchronizationRoute)
+	return fmt.Sprintf("http://%s%s", net.JoinHostPort(addr, port), synchronizationRoute)
 }
 
 // receiveSynchronization receives http solicitation message.
@@ -62,13 +63,14 @@ func (b *BMMC) sendSynchronization(synchronization HTTPSynchronization, addr, po
 	}
 
 	go func() {
-		resp, err := b.netClient.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization)) // nolint: noctx
+		resp, err := b.netClient.Post(synchronizationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSynchronization)) //nolint: noctx
 		if err != nil {
 			b.config.Logger.Printf(httpSynchronizationSendErrFmt, err)
 
 			return
 		}
-		defer resp.Body.Close() // nolint:errcheck
+
+		defer resp.Body.Close() //nolint: errcheck
 	}()
 
 	return nil

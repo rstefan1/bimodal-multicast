@@ -42,13 +42,15 @@ const (
 	gossipRoute          = "/gossip"
 	solicitationRoute    = "/solicitation"
 	synchronizationRoute = "/synchronization"
+
+	hostBlocksLen = 2
 )
 
 var errInvalidHost = errors.New("invalid host")
 
 func addrPort(s string) (string, string, error) {
 	host := strings.Split(s, ":")
-	if len(host) != 2 { // nolint: gomnd
+	if len(host) != hostBlocksLen {
 		return "", "", errInvalidHost
 	}
 
@@ -159,7 +161,6 @@ func (b *BMMC) gracefullyShutdown() {
 }
 
 func (b *BMMC) newServer() *http.Server {
-	// nolint: exhaustivestruct
 	return &http.Server{
 		Addr: fullHost("0.0.0.0", b.config.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

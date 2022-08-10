@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 )
 
@@ -38,7 +39,7 @@ type HTTPGossip struct {
 }
 
 func gossipHTTPPath(addr, port string) string {
-	return fmt.Sprintf("http://%s:%s%s", addr, port, gossipRoute)
+	return fmt.Sprintf("http://%s%s", net.JoinHostPort(addr, port), gossipRoute)
 }
 
 // receiveGossip receives a HTPP gossip message.
@@ -61,13 +62,13 @@ func (b *BMMC) sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 	}
 
 	go func() {
-		resp, err := b.netClient.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip)) // nolint: noctx
+		resp, err := b.netClient.Post(gossipHTTPPath(addr, port), "json", bytes.NewBuffer(jsonGossip)) //nolint: noctx
 		if err != nil {
 			b.config.Logger.Printf(httpGossipSendLogFmt, gossipMsg.Addr, gossipMsg.Port, err)
 
 			return
 		}
-		defer resp.Body.Close() // nolint:errcheck
+		defer resp.Body.Close() //nolint: errcheck
 	}()
 
 	return nil

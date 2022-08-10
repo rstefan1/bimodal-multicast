@@ -27,6 +27,10 @@ linters:
     - gci
     - testpackage
     - paralleltest
+    - varnamelen
+    - exhaustive
+    - exhaustivestruct
+    - exhaustruct
 
 issues:
   max-same-issues: 0

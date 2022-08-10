@@ -90,7 +90,7 @@ func New(cfg *Config) (*BMMC, error) {
 	}
 
 	// create an instance of the protocol
-	// nolint: exhaustivestruct
+	//nolint: exhaustivestruct
 	b := &BMMC{
 		config:           cfg,
 		peerBuffer:       peer.NewPeerBuffer(),
@@ -139,13 +139,13 @@ func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	if err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
 
-		return err // nolint: wrapcheck
+		return err //nolint: wrapcheck
 	}
 
 	if err := b.messageBuffer.Add(m); err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
 
-		return err // nolint: wrapcheck
+		return err //nolint: wrapcheck
 	}
 
 	b.config.Logger.Printf(bufferSyncedLogFmt,
