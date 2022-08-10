@@ -34,17 +34,20 @@ const (
 	addPrefix = "add"
 	// removePrefix is the prefix for remove peer messages.
 	removePrefix = "remove"
+
+	hostBlocksLen = 3
 )
 
 var (
-	// nolint: gochecknoglobals
+	//nolint: gochecknoglobals
 	defaultCallbacks = map[string]func(buffer.Element, *peer.Buffer, *log.Logger) error{
 		ADDPEER:    addPeerCallback,
 		REMOVEPEER: removePeerCallback,
 	}
 
-	errInvalidAddPeerMsg    = errors.New("invalid add peer message")
-	errInvalidRemovePeerMsg = errors.New("invalid remove peer message")
+	errInvalidAddPeerMsg     = errors.New("invalid add peer message")
+	errInvalidRemovePeerMsg  = errors.New("invalid remove peer message")
+	errCannotConvertToString = errors.New("cannot convert the given message to string")
 )
 
 // ComposeAddPeerMessage returns a `add peer` message with given addr and port.
@@ -55,7 +58,7 @@ func ComposeAddPeerMessage(addr, port string) string {
 // DecomposeAddPeerMessage decomposes given `add peer` message to addr and port.
 func DecomposeAddPeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 3 { // nolint: gomnd
+	if len(host) != hostBlocksLen {
 		return "", "", errInvalidAddPeerMsg
 	}
 
@@ -77,7 +80,7 @@ func ComposeRemovePeerMessage(addr, port string) string {
 // DecomposeRemovePeerMessage decomposes given `remove peer` message to addr and port.
 func DecomposeRemovePeerMessage(msg string) (string, string, error) {
 	host := strings.Split(msg, "/")
-	if len(host) != 3 { // nolint: gomnd
+	if len(host) != hostBlocksLen {
 		return "", "", errInvalidRemovePeerMsg
 	}
 
@@ -124,8 +127,13 @@ func (r *DefaultRegistry) RunCallbacks(m buffer.Element, peerBuf *peer.Buffer, l
 }
 
 func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logger) error {
+	strMsg, convOk := msg.Msg.(string)
+	if !convOk {
+		return errCannotConvertToString
+	}
+
 	// extract addr and peer from `add peer` message
-	addr, port, err := DecomposeAddPeerMessage(msg.Msg.(string))
+	addr, port, err := DecomposeAddPeerMessage(strMsg)
 	if err != nil {
 		return err
 	}
@@ -133,12 +141,11 @@ func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logg
 	// add peer in buffer
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
-		// nolint: wrapcheck
-		return err
+		return err //nolint: wrapcheck
 	}
 
 	if err = peersBuf.AddPeer(p); err != nil {
-		return err // nolint: wrapcheck
+		return err //nolint: wrapcheck
 	}
 
 	logger.Printf(peerAddedLogFmt, addr, port)
@@ -147,8 +154,13 @@ func addPeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logg
 }
 
 func removePeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.Logger) error {
+	strMsg, convOk := msg.Msg.(string)
+	if !convOk {
+		return errCannotConvertToString
+	}
+
 	// extract addr and peer from `remove peer` message
-	addr, port, err := DecomposeRemovePeerMessage(msg.Msg.(string))
+	addr, port, err := DecomposeRemovePeerMessage(strMsg)
 	if err != nil {
 		return err
 	}
@@ -156,8 +168,7 @@ func removePeerCallback(msg buffer.Element, peersBuf *peer.Buffer, logger *log.L
 	// remove the peer from buffer
 	p, err := peer.NewPeer(addr, port)
 	if err != nil {
-		// nolint: wrapcheck
-		return err
+		return err //nolint: wrapcheck
 	}
 
 	peersBuf.RemovePeer(p)

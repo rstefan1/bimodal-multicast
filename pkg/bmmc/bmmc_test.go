@@ -70,23 +70,20 @@ func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logg
 // suggestPort suggests an unused port.
 func suggestPort() string {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		panic(err)
-	}
+	Expect(err).To(BeNil())
 
 	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		panic(err)
-	}
+	Expect(err).To(BeNil())
 
-	// nolint:errcheck
-	defer l.Close()
+	defer l.Close() //nolint: errcheck
 
-	return strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+	addr, convOk := l.Addr().(*net.TCPAddr)
+	Expect(convOk).To(BeTrue())
+
+	return strconv.Itoa(addr.Port)
 }
 
 func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
-	// nolint: exhaustivestruct
 	b, err := bmmc.New(&bmmc.Config{
 		Addr:       addr,
 		Port:       port,
@@ -100,10 +97,12 @@ func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *l
 
 var _ = Describe("BMMC", func() {
 	DescribeTable("protocol",
-		func(cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
-			msg, callbackType string,
-			expectedBuf []string) {
-
+		func(
+			cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
+			msg string,
+			callbackType string,
+			expectedBuf []string,
+		) {
 			addr := "localhost"
 			port1 := suggestPort()
 			port2 := suggestPort()
@@ -132,7 +131,7 @@ var _ = Describe("BMMC", func() {
 			Eventually(getBufferFn(node2)).Should(ConsistOf(expectedBuf))
 		},
 		Entry("sync buffers if callback returns error",
-			fakeRegistry("my-callback", errors.New("invalid-callback")), // nolint: goerr113
+			fakeRegistry("my-callback", errors.New("invalid-callback")), //nolint: goerr113
 			"awesome-message",
 			"my-callback",
 			[]string{"awesome-message"}),
@@ -177,7 +176,7 @@ var _ = Describe("BMMC", func() {
 			Expect(nodes[1].AddPeer(addrs[0], ports[0])).To(Succeed())
 
 			for i := range nodes {
-				Eventually(getBufferFn(nodes[i]), time.Second*5).Should(ConsistOf(extraMsgBuffer))
+				Eventually(getBufferFn(nodes[i]), time.Second*5).Should(ConsistOf(extraMsgBuffer...))
 			}
 		})
 
@@ -192,22 +191,22 @@ var _ = Describe("BMMC", func() {
 				msg := "another-awesome-message"
 				expectedBuf = append(expectedBuf, msg)
 
-				randomNode := rand.Intn(nodesLen) // nolint: gosec
+				randomNode := rand.Intn(nodesLen) //nolint: gosec
 				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Expect(err).To(BeNil())
-				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
 			})
 
 			It("sync all nodes with the message", func() {
 				for i := range nodes {
-					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)))
+					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
 				}
 			})
 		})
 
 		When("one node has more messages", func() {
 			BeforeEach(func() {
-				randomNode := rand.Intn(nodesLen) // nolint: gosec
+				randomNode := rand.Intn(nodesLen) //nolint: gosec
 				for i := 0; i < 3; i++ {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)

@@ -42,7 +42,6 @@ var _ = Describe("Gossiper", func() {
 
 			Expect(msgBuf.Add(msg)).To(Succeed())
 
-			// nolint: exhaustivestruct
 			b = &BMMC{
 				peerBuffer:    peerBuf,
 				messageBuffer: msgBuf,

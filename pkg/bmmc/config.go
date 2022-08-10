@@ -72,7 +72,7 @@ func (cfg *Config) validate() error {
 		return errInvalidBufSize
 	}
 
-	return callback.ValidateCustomCallbacks(cfg.Callbacks) // nolint: wrapcheck
+	return callback.ValidateCustomCallbacks(cfg.Callbacks) //nolint: wrapcheck
 }
 
 // fillEmptyFields set default values for optional empty fields.

@@ -96,7 +96,7 @@ var _ = Describe("Custom Callback interface", func() {
 				},
 			}
 
-			Expect(ValidateCustomCallbacks(cb)).To(MatchError(errors.New("callback type is not allowed"))) // nolint: goerr113
+			Expect(ValidateCustomCallbacks(cb)).To(MatchError(errors.New("callback type is not allowed"))) //nolint: goerr113
 		})
 
 		It("returns error when callbacks contain a `remove-peer` type", func() {
@@ -112,7 +112,7 @@ var _ = Describe("Custom Callback interface", func() {
 				},
 			}
 
-			Expect(ValidateCustomCallbacks(cb)).To(MatchError(errors.New("callback type is not allowed"))) // nolint: goerr113
+			Expect(ValidateCustomCallbacks(cb)).To(MatchError(errors.New("callback type is not allowed"))) //nolint: goerr113
 		})
 
 		It("doesn't return error when all callback are valid", func() {

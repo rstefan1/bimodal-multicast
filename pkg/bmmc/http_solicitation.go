@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 )
 
@@ -38,7 +39,7 @@ type HTTPSolicitation struct {
 }
 
 func solicitationHTTPPath(addr, port string) string {
-	return fmt.Sprintf("http://%s:%s%s", addr, port, solicitationRoute)
+	return fmt.Sprintf("http://%s%s", net.JoinHostPort(addr, port), solicitationRoute)
 }
 
 // receiveSolicitation receives http solicitation message.
@@ -61,13 +62,13 @@ func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string
 	}
 
 	go func() {
-		resp, err := b.netClient.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation)) // nolint: noctx
+		resp, err := b.netClient.Post(solicitationHTTPPath(addr, port), "json", bytes.NewBuffer(jsonSolicitation)) //nolint: noctx
 		if err != nil {
 			b.config.Logger.Printf(httpSolicitationSendLogFmt, err)
 
 			return
 		}
-		defer resp.Body.Close() // nolint:errcheck
+		defer resp.Body.Close() //nolint: errcheck
 	}()
 
 	return nil

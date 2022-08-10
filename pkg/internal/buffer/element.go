@@ -17,7 +17,7 @@ limitations under the License.
 package buffer
 
 import (
-	"crypto/sha1" // nolint: gosec
+	"crypto/sha1" //nolint: gosec
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -36,16 +36,16 @@ type Element struct {
 // generateIDFromMsg returns an ID consisting of a hash of the original string,
 // a timestamp and a random number.
 func generateIDFromMsg(s string) (string, error) {
-	h := sha1.New() // nolint: gosec
+	h := sha1.New() //nolint: gosec
 
 	if _, err := h.Write([]byte(s)); err != nil {
-		// nolint: wrapcheck
+		//nolint: wrapcheck
 		return "", err
 	}
 
 	sha1Hash := hex.EncodeToString(h.Sum(nil))
 
-	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31()) // nolint: gosec
+	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31()) //nolint: gosec
 
 	return id, nil
 }

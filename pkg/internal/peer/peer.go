@@ -91,11 +91,11 @@ func (peerBuffer *Buffer) AddPeer(peer Peer) error {
 	defer peerBuffer.mux.Unlock()
 
 	if len(peerBuffer.peers)+1 >= MAXPEERS {
-		return fmt.Errorf("the buffer is full. Can add up to %d peers", MAXPEERS) // nolint: goerr113
+		return fmt.Errorf("the buffer is full. Can add up to %d peers", MAXPEERS) //nolint: goerr113
 	}
 
 	if peerBuffer.alreadyExists(peer) {
-		return fmt.Errorf("peer %s/%s already exists in peer buffer", peer.addr, peer.port) // nolint: goerr113
+		return fmt.Errorf("peer %s/%s already exists in peer buffer", peer.addr, peer.port) //nolint: goerr113
 	}
 
 	peerBuffer.peers = append(peerBuffer.peers, peer)
@@ -143,7 +143,7 @@ func (peerBuffer *Buffer) GetRandom() (string, string, int) {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
-	r := rand.Intn(len(peerBuffer.peers)) // nolint: gosec
+	r := rand.Intn(len(peerBuffer.peers)) //nolint: gosec
 
 	return peerBuffer.peers[r].addr, peerBuffer.peers[r].port, r
 }
