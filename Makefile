@@ -2,6 +2,7 @@ BINDIR ?= $(CURDIR)/bin
 
 # Run tests
 test: generate
+	@$(BINDIR)/ginkgo version
 	$(BINDIR)/ginkgo \
 		--randomize-all --randomize-suites --fail-on-pending \
 		--cover --coverprofile cover.out --trace --race -v \
@@ -21,6 +22,7 @@ generate:
 
 # Run golangci-lint
 lint:
+	@$(BINDIR)/golangci-lint version
 	$(BINDIR)/golangci-lint run ./pkg/...
 
 dependencies:
