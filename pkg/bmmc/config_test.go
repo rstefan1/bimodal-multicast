@@ -38,8 +38,9 @@ func newDummyConfig() *Config {
 				return nil
 			},
 		},
-		RoundDuration: time.Millisecond * 100,
-		BufferSize:    32,
+		RoundDuration:     time.Millisecond * 100,
+		BufferSize:        32,
+		ReadHeaderTimeout: time.Second * 19,
 	}
 }
 
@@ -84,13 +85,15 @@ var _ = Describe("BMMC Config", func() {
 		It("set default values for all empty and nil optional fields", func() {
 			cfg.Beta = 0
 			cfg.RoundDuration = 0
+			cfg.ReadHeaderTimeout = 0
 			cfg.Logger = nil
 			cfg.Callbacks = nil
 
 			cfg.fillEmptyFields()
 
 			Expect(cfg.Beta).To(Equal(0.3))
-			Expect(cfg.RoundDuration).To(Equal(defaultRoundDuration))
+			Expect(cfg.RoundDuration).To(Equal(time.Millisecond * 100)) // defaultRoundDuration
+			Expect(cfg.ReadHeaderTimeout).To(Equal(time.Second * 30))   // defaultReadHeaderTimeout
 			Expect(cfg.Logger).NotTo(BeNil())
 			Expect(cfg.Callbacks).NotTo(BeNil())
 		})

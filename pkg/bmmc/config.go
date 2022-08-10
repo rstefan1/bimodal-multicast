@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	defaultBeta          = 0.3
-	defaultRoundDuration = time.Millisecond * 100
+	defaultBeta              = 0.3
+	defaultRoundDuration     = time.Millisecond * 100
+	defaultReadHeaderTimeout = time.Second * 30
 )
 
 var errInvalidBufSize = errors.New("invalid buffer size")
@@ -56,6 +57,8 @@ type Config struct {
 	// Buffer size
 	// Required
 	BufferSize int
+	// ReadHeaderTimeout is the ReadHeaderTimeout for http server
+	ReadHeaderTimeout time.Duration
 }
 
 // validate validates given config.
@@ -91,5 +94,9 @@ func (cfg *Config) fillEmptyFields() {
 
 	if cfg.Callbacks == nil {
 		cfg.Callbacks = map[string]func(interface{}, *log.Logger) error{}
+	}
+
+	if cfg.ReadHeaderTimeout == 0 {
+		cfg.ReadHeaderTimeout = defaultReadHeaderTimeout
 	}
 }

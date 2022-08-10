@@ -173,6 +173,7 @@ func (b *BMMC) newServer() *http.Server {
 				b.synchronizationHandler(w, r)
 			}
 		}),
+		ReadHeaderTimeout: b.config.ReadHeaderTimeout,
 	}
 }
 
