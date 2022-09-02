@@ -40,7 +40,7 @@ func PortValidator() func(int) error {
 // PortAsStringValidator returns a port (as string) validator.
 func PortAsStringValidator() func(string) error {
 	return func(port string) error {
-		iPort, err := strconv.ParseInt(port, 10, 64) //nolint: gomnd
+		iPort, err := strconv.ParseInt(port, 10, 32) //nolint: gomnd
 		if err != nil {
 			return errPortNotInteger
 		}
