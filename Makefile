@@ -27,5 +27,5 @@ lint:
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)
-	GOBIN=$(BINDIR) go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.1.4
+	GOBIN=$(BINDIR) go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.1.6
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- -b $(BINDIR) v1.48.0
