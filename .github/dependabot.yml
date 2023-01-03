@@ -13,3 +13,4 @@ updates:
       - "rstefan1"
     reviewers:
       - "rstefan1"
+    open-pull-requests-limit: 100
