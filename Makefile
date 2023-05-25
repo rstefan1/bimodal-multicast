@@ -1,6 +1,8 @@
 BINDIR ?= $(CURDIR)/bin
 
-# Run tests
+GINKGO_VERSION = $(shell go list -f '{{ .Version }}' -m github.com/onsi/ginkgo/v2)
+GOLANGCI_LINT_VERSION=v1.52.2
+
 test: generate
 	@$(BINDIR)/ginkgo version
 	$(BINDIR)/ginkgo \
@@ -8,24 +10,20 @@ test: generate
 		--cover --coverprofile cover.out --trace --race -v \
 		./pkg/...
 
-# Run go fmt against code
 fmt:
 	go fmt ./pkg/...
-	
-# Run go vet against code
+
 vet:
 	go vet ./pkg/...
 
-# Generate code
 generate:
 	go generate ./pkg/...
 
-# Run golangci-lint
 lint:
 	@$(BINDIR)/golangci-lint version
 	$(BINDIR)/golangci-lint run ./pkg/...
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)
-	GOBIN=$(BINDIR) go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.1.6
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- -b $(BINDIR) v1.48.0
+	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/v2/ginkgo@$(GINKGO_VERSION)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | BINARY=golangci-lint bash -s -- -b $(BINDIR) $(GOLANCI_LINT_VERSION)

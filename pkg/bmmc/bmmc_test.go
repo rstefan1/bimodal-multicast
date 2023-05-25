@@ -69,10 +69,10 @@ func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logg
 // suggestPort suggests an unused port.
 func suggestPort() string {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	l, err := net.ListenTCP("tcp", addr)
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	defer l.Close() //nolint: errcheck
 
@@ -89,7 +89,7 @@ func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *l
 		Callbacks:  cbCustomRegistry,
 		BufferSize: 32,
 	})
-	Expect(err).To(BeNil())
+	Expect(err).ToNot(HaveOccurred())
 
 	return b
 }
@@ -192,7 +192,7 @@ var _ = Describe("BMMC", func() {
 
 				randomNode := rand.Intn(nodesLen) //nolint: gosec
 				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
-				Expect(err).To(BeNil())
+				Expect(err).ToNot(HaveOccurred())
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
 			})
 
@@ -211,7 +211,7 @@ var _ = Describe("BMMC", func() {
 					expectedBuf = append(expectedBuf, msg)
 
 					err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
@@ -235,7 +235,7 @@ var _ = Describe("BMMC", func() {
 					expectedBuf = append(expectedBuf, msg)
 
 					err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
-					Expect(err).To(BeNil())
+					Expect(err).ToNot(HaveOccurred())
 				}
 			})
 

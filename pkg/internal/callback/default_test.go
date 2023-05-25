@@ -31,7 +31,7 @@ var _ = Describe("Default Callback interface", func() {
 	DescribeTable("DecomposeAddPeerMessage helper function return proper addr and port",
 		func(msg, expectedAddr, expectedPort string) {
 			addr, port, err := DecomposeAddPeerMessage(msg)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(addr).To(Equal(expectedAddr))
 			Expect(port).To(Equal(expectedPort))
 		},
@@ -61,7 +61,7 @@ var _ = Describe("Default Callback interface", func() {
 	DescribeTable("DecomposeRemovePeerMessage helper function return proper addr and port",
 		func(msg, expectedAddr, expectedPort string) {
 			addr, port, err := DecomposeRemovePeerMessage(msg)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(addr).To(Equal(expectedAddr))
 			Expect(port).To(Equal(expectedPort))
 		},

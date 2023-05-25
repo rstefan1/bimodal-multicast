@@ -31,7 +31,7 @@ var _ = Describe("Server", func() {
 
 	DescribeTable("addrPort helper function", func(host, expectedAddr, expectedPort string) {
 		addr, port, err := addrPort(host)
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		Expect(addr).To(Equal(expectedAddr))
 		Expect(port).To(Equal(expectedPort))
 	},
