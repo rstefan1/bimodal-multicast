@@ -61,7 +61,7 @@ var _ = Describe("Buffer interface", func() {
 			}
 
 			pos, err := fullBuf.elementPosition(el)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(pos).To(Equal(0))
 		})
 
@@ -71,7 +71,7 @@ var _ = Describe("Buffer interface", func() {
 			}
 
 			pos, err := fullBuf.elementPosition(el)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(pos).To(Equal(2))
 		})
 
@@ -81,7 +81,7 @@ var _ = Describe("Buffer interface", func() {
 			}
 
 			pos, err := fullBuf.elementPosition(el)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(pos).To(Equal(3))
 		})
 
@@ -91,7 +91,7 @@ var _ = Describe("Buffer interface", func() {
 			}
 
 			pos, err := halfBuf.elementPosition(el)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(pos).To(Equal(2))
 		})
 

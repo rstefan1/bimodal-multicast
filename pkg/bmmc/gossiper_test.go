@@ -30,7 +30,7 @@ var _ = Describe("Gossiper", func() {
 
 		BeforeEach(func() {
 			p, err := peer.NewPeer("localhost", "19999")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			peerBuf := peer.NewPeerBuffer()
 			Expect(peerBuf.AddPeer(p)).To(Succeed())
@@ -38,7 +38,7 @@ var _ = Describe("Gossiper", func() {
 			msgBuf := buffer.NewBuffer(25)
 
 			msg, err := buffer.NewElement("awesome message", "awesome-callback")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(msgBuf.Add(msg)).To(Succeed())
 

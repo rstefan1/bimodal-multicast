@@ -70,7 +70,7 @@ func (b *BMMC) sendSynchronization(synchronization HTTPSynchronization, addr, po
 			return
 		}
 
-		defer resp.Body.Close() //nolint: errcheck
+		defer resp.Body.Close() //nolint: errcheck, gosec
 	}()
 
 	return nil

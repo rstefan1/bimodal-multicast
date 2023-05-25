@@ -25,7 +25,7 @@ var _ = Describe("Buffer interface", func() {
 	Describe("NewElement function", func() {
 		It("creates new element", func() {
 			el, err := NewElement("message", "callback type")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(el.ID).NotTo(BeEmpty())
 			Expect(el.Timestamp).NotTo(BeNil())

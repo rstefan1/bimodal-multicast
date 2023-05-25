@@ -27,14 +27,14 @@ var _ = Describe("Buffer interface", func() {
 			a := []string{"a", "b", "c", "d", "e"}
 			b := []string{"a", "d", "c", "b", "e"}
 
-			Expect(MissingStrings(a, b)).To(HaveLen(0))
+			Expect(MissingStrings(a, b)).To(BeEmpty())
 		})
 
 		It("returns empty slice when slices contain same element, but in another order", func() {
 			a := []string{"a", "b", "c", "d", "e"}
 			b := []string{"b", "c", "a", "e", "d"}
 
-			Expect(MissingStrings(a, b)).To(HaveLen(0))
+			Expect(MissingStrings(a, b)).To(BeEmpty())
 		})
 
 		It("returns extra string when first slice has an extra string at the beginning", func() {

@@ -68,7 +68,7 @@ func (b *BMMC) sendGossip(gossipMsg HTTPGossip, addr, port string) error {
 
 			return
 		}
-		defer resp.Body.Close() //nolint: errcheck
+		defer resp.Body.Close() //nolint: errcheck, gosec
 	}()
 
 	return nil
