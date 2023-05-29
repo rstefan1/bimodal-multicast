@@ -409,7 +409,7 @@ var _ = Describe("Buffer interface", func() {
 			expectedElements := []Element{
 				{GossipCount: int64(math.MaxInt64 - 1)},
 				{GossipCount: int64(math.MaxInt64)},
-				{GossipCount: int64(math.MaxInt64)},
+				{GossipCount: int64(0)},
 			}
 
 			buf.IncrementGossipCount()

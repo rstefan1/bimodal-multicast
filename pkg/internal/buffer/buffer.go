@@ -134,9 +134,13 @@ func (buf *Buffer) IncrementGossipCount() {
 	defer buf.Mux.Unlock()
 
 	for i := 0; i < buf.Len; i++ {
-		if buf.Elements[i].GossipCount < math.MaxInt64 {
-			buf.Elements[i].GossipCount++
+		if buf.Elements[i].GossipCount == math.MaxInt64 {
+			buf.Elements[i].GossipCount = int64(0)
+
+			continue
 		}
+
+		buf.Elements[i].GossipCount++
 	}
 }
 
