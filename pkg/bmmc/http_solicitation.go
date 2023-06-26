@@ -68,7 +68,7 @@ func (b *BMMC) sendSolicitation(solicitation HTTPSolicitation, addr, port string
 
 			return
 		}
-		defer resp.Body.Close() //nolint: errcheck, gosec
+		defer resp.Body.Close() //nolint: errcheck
 	}()
 
 	return nil

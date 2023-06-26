@@ -109,8 +109,8 @@ var _ = Describe("BMMC", func() {
 			node1 := newBMMC(addr, port1, cbCustomRegistry)
 			node2 := newBMMC(addr, port2, cbCustomRegistry)
 
-			Expect(node1.Start())
-			Expect(node2.Start())
+			Expect(node1.Start()).To(Succeed())
+			Expect(node2.Start()).To(Succeed())
 
 			Expect(node1.AddPeer(addr, port2)).To(Succeed())
 			Expect(node2.AddPeer(addr, port1)).To(Succeed())
