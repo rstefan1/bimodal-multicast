@@ -17,14 +17,6 @@ limitations under the License.
 package bmmc
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
 
@@ -41,12 +33,18 @@ const (
 	syncBufferLogErrFmt = "BMMC %s error at syncing buffer with message %s in round %d: %s"
 	bufferSyncedLogFmt  = "BMMC %s synced buffer with message %s in round %d"
 
-	gossipRoute          = "/gossip"
-	solicitationRoute    = "/solicitation"
-	synchronizationRoute = "/synchronization"
+	GossipRoute          = "/gossip"
+	SolicitationRoute    = "/solicitation"
+	SynchronizationRoute = "/synchronization"
 )
 
-func (b *BMMC) gossipHandler(body []byte) {
+type Server interface {
+	NewServer(*BMMC) *Server
+	StartServer(*BMMC) error
+	GracefullyShutdown(*BMMC) error
+}
+
+func (b *BMMC) GossipHandler(body []byte) {
 	gossipDigest, p, roundNumber, err := b.receiveGossip(body)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
@@ -72,18 +70,7 @@ func (b *BMMC) gossipHandler(body []byte) {
 	}
 }
 
-func (b *BMMC) gossipHTTPHandler(_ http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		b.config.Logger.Printf("%s", err)
-
-		return
-	}
-
-	b.gossipHandler(body)
-}
-
-func (b *BMMC) solicitationHandler(body []byte) {
+func (b *BMMC) SolicitationHandler(body []byte) {
 	missingDigest, p, _, err := b.receiveSolicitation(body)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
@@ -105,18 +92,7 @@ func (b *BMMC) solicitationHandler(body []byte) {
 	}
 }
 
-func (b *BMMC) solicitationHTTPHandler(_ http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		b.config.Logger.Printf("%s", err)
-
-		return
-	}
-
-	b.solicitationHandler(body)
-}
-
-func (b *BMMC) synchronizationHandler(body []byte) {
+func (b *BMMC) SynchronizationHandler(body []byte) {
 	rcvElements, _, err := b.receiveSynchronization(body)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
@@ -133,69 +109,4 @@ func (b *BMMC) synchronizationHandler(body []byte) {
 			b.runCallbacks(m)
 		}
 	}
-}
-
-func (b *BMMC) synchronizationHTTPHandler(_ http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		b.config.Logger.Printf("%s", err)
-
-		return
-	}
-
-	b.synchronizationHandler(body)
-}
-
-func (b *BMMC) gracefullyShutdown() {
-	if err := b.server.Shutdown(context.TODO()); err != nil {
-		b.config.Logger.Printf(unableStopServerLogFmt, err)
-	}
-}
-
-// TODO: implement a generic server.
-func (b *BMMC) newServer() *http.Server {
-	host, _ := b.config.Host.(peer.HTTPPeer)
-
-	return &http.Server{
-		Addr: fmt.Sprintf("%s:%s", host.Addr(), host.Port()),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch path := r.URL.Path; path {
-			case gossipRoute:
-				b.gossipHTTPHandler(w, r)
-			case solicitationRoute:
-				b.solicitationHTTPHandler(w, r)
-			case synchronizationRoute:
-				b.synchronizationHTTPHandler(w, r)
-			}
-		}),
-		ReadHeaderTimeout: b.config.ReadHeaderTimeout,
-	}
-}
-
-func (b *BMMC) startServer(stop <-chan struct{}) error {
-	errChan := make(chan error)
-
-	go func() {
-		b.config.Logger.Printf(startServerLogFmt, b.server.Addr)
-
-		if err := b.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			b.config.Logger.Printf(unableStartServerLogFmt, err)
-			errChan <- err
-
-			return
-		}
-
-		errChan <- nil
-	}()
-
-	go func() {
-		<-stop
-		b.gracefullyShutdown()
-		b.config.Logger.Printf(stopServerLogFmt, b.server.Addr)
-	}()
-
-	// TODO return err chan
-	// return <-errChan
-
-	return nil
 }
