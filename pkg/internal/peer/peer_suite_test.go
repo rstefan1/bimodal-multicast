@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestHTTPServer(t *testing.T) {
+func TestServer(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Peer Buffer Suite")
 }

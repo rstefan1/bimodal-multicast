@@ -28,7 +28,7 @@ var (
 	errNotAlowedCallbackType = errors.New("callback type is not allowed")
 )
 
-// CustomRegistry is a custom callbacks registry.
+// CustomRegistry is a custom callback registry.
 type CustomRegistry struct {
 	callbacks map[string]func(interface{}, *log.Logger) error
 }

@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	startGossiperLogFmt = "Starting gossiper for %s:%s"
-	stopGossiperLogFmt  = "End of gossip round from %s:%s"
+	startGossiperLogFmt = "Starting gossiper for %s"
+	stopGossiperLogFmt  = "End of gossip round from %s"
 )
 
 // randomlySelectPeer is a helper func that returns a random peer.
-func (b *BMMC) randomlySelectPeer() (string, string) {
+func (b *BMMC) randomlySelectPeer() string {
 	for {
-		addr, port, i := b.peerBuffer.GetRandom()
+		p, i := b.peerBuffer.GetRandom()
 
 		if b.selectedPeers[i] {
 			continue
@@ -36,7 +36,7 @@ func (b *BMMC) randomlySelectPeer() (string, string) {
 
 		b.selectedPeers[i] = true
 
-		return addr, port
+		return p
 	}
 }
 
@@ -62,7 +62,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
-			b.config.Logger.Printf(stopGossiperLogFmt, b.config.Addr, b.config.Port)
+			b.config.Logger.Printf(stopGossiperLogFmt, b.config.Host.String())
 
 			return
 		default:
@@ -72,16 +72,15 @@ func (b *BMMC) round(stop <-chan struct{}) {
 
 			// send gossip messages
 			for i := 0; i < gossipLen; i++ {
-				destAddr, destPort := b.randomlySelectPeer()
+				p := b.randomlySelectPeer()
 
-				gossipMsg := HTTPGossip{
-					Addr:        b.config.Addr,
-					Port:        b.config.Port,
+				gossipMsg := Gossip{
+					Host:        b.config.Host.String(),
 					RoundNumber: b.gossipRound,
 					Digest:      b.messageBuffer.Digest(),
 				}
 
-				err := b.sendGossip(gossipMsg, destAddr, destPort)
+				err := b.sendGossip(gossipMsg, p)
 				if err != nil {
 					b.config.Logger.Printf("%s", err)
 				}
@@ -96,6 +95,6 @@ func (b *BMMC) round(stop <-chan struct{}) {
 }
 
 func (b *BMMC) startGossiper(stop <-chan struct{}) {
-	b.config.Logger.Printf(startGossiperLogFmt, b.config.Addr, b.config.Port)
+	b.config.Logger.Printf(startGossiperLogFmt, b.config.Host.String())
 	b.round(stop)
 }
