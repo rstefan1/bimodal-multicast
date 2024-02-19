@@ -22,8 +22,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
+
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
 const (
@@ -36,19 +37,15 @@ var errInvalidBufSize = errors.New("invalid buffer size")
 
 // Config is the config for the protocol.
 type Config struct {
-	// Addr is HTTP address for node which runs http servers
-	// Required
-	Addr string
-	// Port is HTTP port for node which runs http servers
-	// Required
-	Port string
+	// Host is the host peer.
+	Host peer.Peer
 	// Beta is the expected fanout for gossip rounds
 	// Optional
 	Beta float64
 	// Logger
 	// Optional
 	Logger *log.Logger
-	// Callbacks funtions
+	// Callbacks functions
 	// Optional
 	Callbacks map[string]func(interface{}, *log.Logger) error
 	// Gossip round duration
@@ -59,18 +56,12 @@ type Config struct {
 	BufferSize int
 	// ReadHeaderTimeout is the ReadHeaderTimeout for http server
 	ReadHeaderTimeout time.Duration
+	EncodePeer        func(peer.Peer) string
+	DecodePeer        func(string) peer.Peer
 }
 
 // validate validates given config.
 func (cfg *Config) validate() error {
-	if err := validators.AddrValidator()(cfg.Addr); err != nil {
-		return err
-	}
-
-	if err := validators.PortAsStringValidator()(cfg.Port); err != nil {
-		return err
-	}
-
 	if cfg.BufferSize <= 0 {
 		return errInvalidBufSize
 	}

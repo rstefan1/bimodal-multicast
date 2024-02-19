@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,18 +19,23 @@ package bmmc
 import (
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 // newDummyConfig creates new dummy bmmc config.
 func newDummyConfig() *Config {
+	host, err := peer.NewHTTPPeer("localhost", "19123", &http.Client{})
+	Expect(err).ToNot(HaveOccurred())
+
 	return &Config{
-		Addr:   "localhost",
-		Port:   "19123",
+		Host:   host,
 		Beta:   0.45,
 		Logger: log.New(os.Stdout, "", 0),
 		Callbacks: map[string]func(interface{}, *log.Logger) error{
@@ -54,16 +59,6 @@ var _ = Describe("BMMC Config", func() {
 	Describe("validate func", func() {
 		It("doesn't return error when full config is given", func() {
 			Expect(cfg.validate()).To(Succeed())
-		})
-
-		It("returns error when addr is empty", func() {
-			cfg.Addr = ""
-			Expect(cfg.validate()).To(MatchError(errors.New("empty address"))) //nolint: goerr113
-		})
-
-		It("returns error when port is empty", func() {
-			cfg.Port = ""
-			Expect(cfg.validate()).To(MatchError(errors.New("port must be an integer number"))) //nolint: goerr113
 		})
 
 		It("returns error when buffer size is invalid", func() {

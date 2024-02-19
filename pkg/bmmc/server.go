@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"strings"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 )
@@ -36,36 +38,16 @@ const (
 	solicitationHandlerErrLogFmt    = "Error in solicitation handler: %s"
 	synchronizationHandlerErrLogFmt = "Error in synchronization handler: %s"
 
-	syncBufferLogErrFmt = "BMMC %s:%s error at syncing buffer with message %s in round %d: %s"
-	bufferSyncedLogFmt  = "BMMC %s:%s synced buffer with message %s in round %d"
+	syncBufferLogErrFmt = "BMMC %s error at syncing buffer with message %s in round %d: %s"
+	bufferSyncedLogFmt  = "BMMC %s synced buffer with message %s in round %d"
 
 	gossipRoute          = "/gossip"
 	solicitationRoute    = "/solicitation"
 	synchronizationRoute = "/synchronization"
-
-	hostBlocksLen = 2
 )
 
-var errInvalidHost = errors.New("invalid host")
-
-func addrPort(s string) (string, string, error) {
-	host := strings.Split(s, ":")
-	if len(host) != hostBlocksLen {
-		return "", "", errInvalidHost
-	}
-
-	addr := host[0]
-	port := host[1]
-
-	return addr, port, nil
-}
-
-func fullHost(addr, port string) string {
-	return fmt.Sprintf("%s:%s", addr, port)
-}
-
-func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
-	gossipDigest, tAddr, tPort, tRoundNumber, err := b.receiveGossip(r)
+func (b *BMMC) gossipHandler(body []byte) {
+	gossipDigest, p, roundNumber, err := b.receiveGossip(body)
 	if err != nil {
 		b.config.Logger.Printf("%s", err)
 
@@ -75,22 +57,14 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	digest := b.messageBuffer.Digest()
 	missingDigest := buffer.MissingStrings(gossipDigest, digest)
 
-	hostAddr, hostPort, err := addrPort(r.Host)
-	if err != nil {
-		b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
-
-		return
-	}
-
 	if len(missingDigest) > 0 {
-		solicitationMsg := HTTPSolicitation{
-			Addr:        hostAddr,
-			Port:        hostPort,
-			RoundNumber: tRoundNumber,
+		solicitationMsg := Solicitation{
+			Host:        b.config.Host.String(),
+			RoundNumber: roundNumber,
 			Digest:      missingDigest,
 		}
 
-		if err = b.sendSolicitation(solicitationMsg, tAddr, tPort); err != nil {
+		if err = b.sendSolicitation(solicitationMsg, p); err != nil {
 			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
 
 			return
@@ -98,8 +72,19 @@ func (b *BMMC) gossipHandler(_ http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
-	missingDigest, tAddr, tPort, _, err := b.receiveSolicitation(r)
+func (b *BMMC) gossipHTTPHandler(_ http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		b.config.Logger.Printf("%s", err)
+
+		return
+	}
+
+	b.gossipHandler(body)
+}
+
+func (b *BMMC) solicitationHandler(body []byte) {
+	missingDigest, p, _, err := b.receiveSolicitation(body)
 	if err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 
@@ -108,35 +93,31 @@ func (b *BMMC) solicitationHandler(_ http.ResponseWriter, r *http.Request) {
 
 	missingElements := b.messageBuffer.ElementsFromIDs(missingDigest)
 
-	hostAddr, hostPort, err := addrPort(r.Host)
-	if err != nil {
-		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
-
-		return
-	}
-
-	synchronizationMsg := HTTPSynchronization{
-		Addr:     hostAddr,
-		Port:     hostPort,
+	synchronizationMsg := Synchronization{
+		Host:     b.config.Host.String(),
 		Elements: missingElements,
 	}
 
-	if err = b.sendSynchronization(synchronizationMsg, tAddr, tPort); err != nil {
+	if err = b.sendSynchronization(synchronizationMsg, p); err != nil {
 		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
 
 		return
 	}
 }
 
-func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
-	hostAddr, hostPort, err := addrPort(r.Host)
+func (b *BMMC) solicitationHTTPHandler(_ http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
+		b.config.Logger.Printf("%s", err)
 
 		return
 	}
 
-	rcvElements, _, _, err := b.receiveSynchronization(r)
+	b.solicitationHandler(body)
+}
+
+func (b *BMMC) synchronizationHandler(body []byte) {
+	rcvElements, _, err := b.receiveSynchronization(body)
 	if err != nil {
 		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
 
@@ -146,12 +127,23 @@ func (b *BMMC) synchronizationHandler(_ http.ResponseWriter, r *http.Request) {
 	for _, m := range rcvElements {
 		err = b.messageBuffer.Add(m)
 		if err != nil {
-			b.config.Logger.Printf(syncBufferLogErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber(), err)
+			b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
 		} else {
-			b.config.Logger.Printf(bufferSyncedLogFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
-			b.runCallbacks(m, hostAddr, hostPort)
+			b.config.Logger.Printf(bufferSyncedLogFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
+			b.runCallbacks(m)
 		}
 	}
+}
+
+func (b *BMMC) synchronizationHTTPHandler(_ http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		b.config.Logger.Printf("%s", err)
+
+		return
+	}
+
+	b.synchronizationHandler(body)
 }
 
 func (b *BMMC) gracefullyShutdown() {
@@ -160,17 +152,20 @@ func (b *BMMC) gracefullyShutdown() {
 	}
 }
 
+// TODO: implement a generic server.
 func (b *BMMC) newServer() *http.Server {
+	host, _ := b.config.Host.(peer.HTTPPeer)
+
 	return &http.Server{
-		Addr: fullHost("0.0.0.0", b.config.Port),
+		Addr: fmt.Sprintf("%s:%s", host.Addr(), host.Port()),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch path := r.URL.Path; path {
 			case gossipRoute:
-				b.gossipHandler(w, r)
+				b.gossipHTTPHandler(w, r)
 			case solicitationRoute:
-				b.solicitationHandler(w, r)
+				b.solicitationHTTPHandler(w, r)
 			case synchronizationRoute:
-				b.synchronizationHandler(w, r)
+				b.synchronizationHTTPHandler(w, r)
 			}
 		}),
 		ReadHeaderTimeout: b.config.ReadHeaderTimeout,

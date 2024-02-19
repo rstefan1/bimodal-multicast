@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,14 +22,17 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 func getBuffer(node *bmmc.BMMC) []string {
@@ -82,10 +85,9 @@ func suggestPort() string {
 	return strconv.Itoa(addr.Port)
 }
 
-func newBMMC(addr, port string, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
+func newBMMC(p peer.Peer, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
 	b, err := bmmc.New(&bmmc.Config{
-		Addr:       addr,
-		Port:       port,
+		Host:       p,
 		Callbacks:  cbCustomRegistry,
 		BufferSize: 32,
 	})
@@ -102,23 +104,24 @@ var _ = Describe("BMMC", func() {
 			callbackType string,
 			expectedBuf []string,
 		) {
-			addr := "localhost"
-			port1 := suggestPort()
-			port2 := suggestPort()
+			peer1, err := peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+			Expect(err).ToNot(HaveOccurred())
+			peer2, err := peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+			Expect(err).ToNot(HaveOccurred())
 
-			node1 := newBMMC(addr, port1, cbCustomRegistry)
-			node2 := newBMMC(addr, port2, cbCustomRegistry)
+			node1 := newBMMC(peer1, cbCustomRegistry)
+			node2 := newBMMC(peer2, cbCustomRegistry)
 
 			Expect(node1.Start()).To(Succeed())
 			Expect(node2.Start()).To(Succeed())
 
-			Expect(node1.AddPeer(addr, port2)).To(Succeed())
-			Expect(node2.AddPeer(addr, port1)).To(Succeed())
+			Expect(node1.AddPeer(peer2.String())).To(Succeed())
+			Expect(node2.AddPeer(peer1.String())).To(Succeed())
 
 			// message for adding peers in buffer
 			extraMsgBuffer := []string{
-				callback.ComposeAddPeerMessage(addr, port1),
-				callback.ComposeAddPeerMessage(addr, port2),
+				peer1.String(),
+				peer2.String(),
 			}
 			expectedBuf = append(expectedBuf, extraMsgBuffer...)
 
@@ -133,12 +136,14 @@ var _ = Describe("BMMC", func() {
 			fakeRegistry("my-callback", errors.New("invalid-callback")), //nolint: goerr113
 			"awesome-message",
 			"my-callback",
-			[]string{"awesome-message"}),
+			[]string{"awesome-message"},
+		),
 		Entry("sync buffers if callback doesn't return error",
 			fakeRegistry("my-callback", nil),
 			"awesome-message",
 			"my-callback",
-			[]string{"awesome-message"}),
+			[]string{"awesome-message"},
+		),
 	)
 
 	When("system has ten nodes", func() {
@@ -146,10 +151,11 @@ var _ = Describe("BMMC", func() {
 
 		var (
 			nodes          [nodesLen]*bmmc.BMMC
-			ports          [nodesLen]string
-			addrs          [nodesLen]string
+			hosts          [nodesLen]peer.Peer
 			extraMsgBuffer []interface{}
 			expectedBuf    []interface{}
+
+			err error
 		)
 
 		BeforeEach(func() {
@@ -157,22 +163,24 @@ var _ = Describe("BMMC", func() {
 			expectedBuf = []interface{}{}
 
 			for i := 0; i < nodesLen; i++ {
-				ports[i] = suggestPort()
-				addrs[i] = "localhost"
-				extraMsgBuffer[i] = callback.ComposeAddPeerMessage(addrs[i], ports[i])
+
+				hosts[i], err = peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+				Expect(err).ToNot(HaveOccurred())
+
+				extraMsgBuffer[i] = hosts[i].String()
 			}
 
 			// create a protocol for each node, and start it
 			for i := 0; i < nodesLen; i++ {
-				nodes[i] = newBMMC(addrs[i], ports[i], map[string]func(interface{}, *log.Logger) error{})
+				nodes[i] = newBMMC(hosts[i], map[string]func(interface{}, *log.Logger) error{})
 				Expect(nodes[i].Start()).To(Succeed())
 			}
 
 			// add peers
 			for i := 1; i < nodesLen; i++ {
-				Expect(nodes[0].AddPeer(addrs[i], ports[i])).To(Succeed())
+				Expect(nodes[0].AddPeer(hosts[i].String())).To(Succeed())
 			}
-			Expect(nodes[1].AddPeer(addrs[0], ports[0])).To(Succeed())
+			Expect(nodes[1].AddPeer(hosts[0].String())).To(Succeed())
 
 			for i := range nodes {
 				Eventually(getBufferFn(nodes[i]), time.Second*5).Should(ConsistOf(extraMsgBuffer...))

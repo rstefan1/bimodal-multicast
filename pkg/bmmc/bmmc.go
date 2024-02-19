@@ -19,7 +19,6 @@ package bmmc
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -30,17 +29,14 @@ const (
 	// NOCALLBACK is callback type for messages without callback.
 	NOCALLBACK = callback.NOCALLBACK
 
-	addPeerErrFmt    = "error at adding the peer %s/%s: %w"
-	removePeerErrFmt = "error at removing the peer %s/%s: %w"
+	addPeerErrFmt    = "error at adding the peer %s: %w"
+	removePeerErrFmt = "error at removing the peer %s: %w"
 
-	runDefaultCallbackErrFmt = "error at calling default callback at %s:%s for message %s in round %d"
-	runCustomCallbackErrFmt  = "error at calling custom callback at %s:%s for message %s in round %d"
+	runDefaultCallbackErrFmt = "error at calling default callback at %s for message %s in round %d"
+	runCustomCallbackErrFmt  = "error at calling custom callback at %s for message %s in round %d"
 
 	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %w"
 	createDefaultCRErrFmt = "error at creating new default callbacks registry: %w"
-
-	// netClientTimeout is the timeout for http client.
-	netClientTimeout = time.Second * 10
 )
 
 // BMMC is the bimodal multicast protocol.
@@ -61,8 +57,6 @@ type BMMC struct {
 	defaultCallbacks *callback.DefaultRegistry
 	// stop channel
 	stop chan struct{}
-	// netClient is the http client
-	netClient *http.Client
 
 	// TODO remove the following field
 	selectedPeers []bool
@@ -98,9 +92,6 @@ func New(cfg *Config) (*BMMC, error) {
 		gossipRound:      NewGossipRound(),
 		customCallbacks:  cbCustomRegistry,
 		defaultCallbacks: cbDefaultRegistry,
-		netClient: &http.Client{
-			Timeout: netClientTimeout,
-		},
 
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),
@@ -137,70 +128,54 @@ func (b *BMMC) Stop() {
 func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType)
 	if err != nil {
-		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
 
 		return err //nolint: wrapcheck
 	}
 
 	if err := b.messageBuffer.Add(m); err != nil {
-		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber(), err)
+		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
 
 		return err //nolint: wrapcheck
 	}
 
 	b.config.Logger.Printf(bufferSyncedLogFmt,
-		b.config.Addr, b.config.Port, m.ID, b.gossipRound.GetNumber())
+		b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
 
-	b.runCallbacks(m, b.config.Addr, b.config.Port)
+	b.runCallbacks(m)
 
 	return nil
 }
 
 // AddPeer adds new peer in peers buffer.
-func (b *BMMC) AddPeer(addr, port string) error {
-	p, err := peer.NewPeer(addr, port)
-	if err != nil {
-		return fmt.Errorf(addPeerErrFmt, addr, port, err)
+func (b *BMMC) AddPeer(p string) error {
+	if err := b.peerBuffer.AddPeer(p); err != nil {
+		return fmt.Errorf(addPeerErrFmt, p, err)
 	}
 
-	if err = b.peerBuffer.AddPeer(p); err != nil {
-		return fmt.Errorf(addPeerErrFmt, addr, port, err)
-	}
-
-	msg, err := buffer.NewElement(
-		callback.ComposeAddPeerMessage(addr, port),
-		callback.ADDPEER,
-	)
+	msg, err := buffer.NewElement(p, callback.ADDPEER)
 	if err != nil {
-		return fmt.Errorf(addPeerErrFmt, addr, port, err)
+		return fmt.Errorf(addPeerErrFmt, p, err)
 	}
 
 	if err = b.messageBuffer.Add(msg); err != nil {
-		return fmt.Errorf(addPeerErrFmt, addr, port, err)
+		return fmt.Errorf(addPeerErrFmt, p, err)
 	}
 
 	return nil
 }
 
 // RemovePeer removes given peer from peers buffer.
-func (b *BMMC) RemovePeer(addr, port string) error {
-	p, err := peer.NewPeer(addr, port)
-	if err != nil {
-		return fmt.Errorf(removePeerErrFmt, addr, port, err)
-	}
-
+func (b *BMMC) RemovePeer(p string) error {
 	b.peerBuffer.RemovePeer(p)
 
-	msg, err := buffer.NewElement(
-		callback.ComposeRemovePeerMessage(addr, port),
-		callback.REMOVEPEER,
-	)
+	msg, err := buffer.NewElement(p, callback.REMOVEPEER)
 	if err != nil {
-		return fmt.Errorf(removePeerErrFmt, addr, port, err)
+		return fmt.Errorf(removePeerErrFmt, p, err)
 	}
 
 	if err := b.messageBuffer.Add(msg); err != nil {
-		return fmt.Errorf(removePeerErrFmt, addr, port, err)
+		return fmt.Errorf(removePeerErrFmt, p, err)
 	}
 
 	return nil
@@ -216,15 +191,14 @@ func (b *BMMC) GetPeers() []string {
 	return b.peerBuffer.GetPeers()
 }
 
-func (b *BMMC) runCallbacks(m buffer.Element, hostAddr, hostPort string) {
-	// TODO remove hostAddr and hostport from func args. These are used only for logging
+func (b *BMMC) runCallbacks(m buffer.Element) {
 	if m.CallbackType != callback.NOCALLBACK {
 		if err := b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger); err != nil {
-			b.config.Logger.Printf(runDefaultCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
+			b.config.Logger.Printf(runDefaultCallbackErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
 		}
 
 		if err := b.customCallbacks.RunCallbacks(m, b.config.Logger); err != nil {
-			b.config.Logger.Printf(runCustomCallbackErrFmt, hostAddr, hostPort, m.ID, b.gossipRound.GetNumber())
+			b.config.Logger.Printf(runCustomCallbackErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
 		}
 	}
 }
