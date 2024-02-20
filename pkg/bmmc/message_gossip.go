@@ -53,7 +53,7 @@ func (b *BMMC) sendGossip(gossipMsg Gossip, peerToSend string) error {
 	}
 
 	go func() {
-		if err := b.config.Host.Send(jsonGossip, gossipRoute, peerToSend); err != nil {
+		if err := b.config.Host.Send(jsonGossip, GossipRoute, peerToSend); err != nil {
 			b.config.Logger.Printf(gossipSendLogFmt, gossipMsg.Host, err)
 		}
 	}()

@@ -7,7 +7,7 @@ test: generate
 	@$(BINDIR)/ginkgo version
 	$(BINDIR)/ginkgo \
 		--randomize-all --randomize-suites --fail-on-pending \
-		--cover --coverprofile cover.out --trace --race -v \
+		--cover --trace --race -v \
 		./pkg/...
 
 fmt:

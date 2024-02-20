@@ -24,7 +24,7 @@ import (
 const (
 	solicitationDecodingErrFmt = "error at decoding http solicitation message in Server: %w"
 	solicitationMarshalErrFmt  = "error at marshal http solicitation in Server: %w"
-	solicitationSendLogFmt     = "error at sending http soliccitation message in Server: %s"
+	solicitationSendLogFmt     = "error at sending http solicitation message in Server: %s"
 )
 
 // Solicitation is solicitation message for server.
@@ -53,7 +53,7 @@ func (b *BMMC) sendSolicitation(solicitation Solicitation, peerToSend string) er
 	}
 
 	go func() {
-		if err := b.config.Host.Send(jsonSolicitation, solicitationRoute, peerToSend); err != nil {
+		if err := b.config.Host.Send(jsonSolicitation, SolicitationRoute, peerToSend); err != nil {
 			b.config.Logger.Printf(solicitationSendLogFmt, err)
 		}
 	}()

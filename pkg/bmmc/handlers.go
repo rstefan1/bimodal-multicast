@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,10 +21,12 @@ import (
 )
 
 const (
-	startServerLogFmt       = "Starting server for  %s"
-	stopServerLogFmt        = "End of server round from %s"
-	unableStartServerLogFmt = "Unable to start  server: %s"
-	unableStopServerLogFmt  = "Unable to shutdown server properly: %s"
+	// GossipRoute is the route for gossip messages.
+	GossipRoute = "/gossip"
+	// SolicitationRoute is the route for solicitation messages.
+	SolicitationRoute = "/solicitation"
+	// SynchronizationRoute is the route for synchronization messages.
+	SynchronizationRoute = "/synchronization"
 
 	gossipHandlerErrLogFmt          = "Error in gossip handler: %s"
 	solicitationHandlerErrLogFmt    = "Error in solicitation handler: %s"
@@ -32,18 +34,9 @@ const (
 
 	syncBufferLogErrFmt = "BMMC %s error at syncing buffer with message %s in round %d: %s"
 	bufferSyncedLogFmt  = "BMMC %s synced buffer with message %s in round %d"
-
-	GossipRoute          = "/gossip"
-	SolicitationRoute    = "/solicitation"
-	SynchronizationRoute = "/synchronization"
 )
 
-type Server interface {
-	NewServer(*BMMC) *Server
-	StartServer(*BMMC) error
-	GracefullyShutdown(*BMMC) error
-}
-
+// GossipHandler handles a gossip message.
 func (b *BMMC) GossipHandler(body []byte) {
 	gossipDigest, p, roundNumber, err := b.receiveGossip(body)
 	if err != nil {
@@ -70,6 +63,7 @@ func (b *BMMC) GossipHandler(body []byte) {
 	}
 }
 
+// SolicitationHandler handles a solicitation message.
 func (b *BMMC) SolicitationHandler(body []byte) {
 	missingDigest, p, _, err := b.receiveSolicitation(body)
 	if err != nil {
@@ -92,6 +86,7 @@ func (b *BMMC) SolicitationHandler(body []byte) {
 	}
 }
 
+// SynchronizationHandler handles a synchronization message.
 func (b *BMMC) SynchronizationHandler(body []byte) {
 	rcvElements, _, err := b.receiveSynchronization(body)
 	if err != nil {

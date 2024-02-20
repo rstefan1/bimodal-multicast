@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package bmmc
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -49,8 +48,6 @@ type BMMC struct {
 	messageBuffer *buffer.Buffer
 	// gossip round number
 	gossipRound *GossipRound
-	// http server
-	server *http.Server
 	// custom callback registry
 	customCallbacks *callback.CustomRegistry
 	// default callback registry
@@ -97,19 +94,12 @@ func New(cfg *Config) (*BMMC, error) {
 		selectedPeers: make([]bool, peer.MAXPEERS),
 	}
 
-	b.server = b.newServer()
-
 	return b, nil
 }
 
 // Start starts the gossip server and the http server.
 func (b *BMMC) Start() error {
 	b.stop = make(chan struct{})
-
-	// start http server
-	if err := b.startServer(b.stop); err != nil {
-		return err
-	}
 
 	// start gossiper
 	go func() {

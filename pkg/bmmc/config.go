@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,15 +22,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 const (
-	defaultBeta              = 0.3
-	defaultRoundDuration     = time.Millisecond * 100
-	defaultReadHeaderTimeout = time.Second * 30
+	defaultBeta          = 0.3
+	defaultRoundDuration = time.Millisecond * 100
 )
 
 var errInvalidBufSize = errors.New("invalid buffer size")
@@ -54,10 +52,6 @@ type Config struct {
 	// Buffer size
 	// Required
 	BufferSize int
-	// ReadHeaderTimeout is the ReadHeaderTimeout for http server
-	ReadHeaderTimeout time.Duration
-	EncodePeer        func(peer.Peer) string
-	DecodePeer        func(string) peer.Peer
 }
 
 // validate validates given config.
@@ -85,9 +79,5 @@ func (cfg *Config) fillEmptyFields() {
 
 	if cfg.Callbacks == nil {
 		cfg.Callbacks = map[string]func(interface{}, *log.Logger) error{}
-	}
-
-	if cfg.ReadHeaderTimeout == 0 {
-		cfg.ReadHeaderTimeout = defaultReadHeaderTimeout
 	}
 }

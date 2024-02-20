@@ -32,6 +32,7 @@ linters:
     - exhaustivestruct
     - exhaustruct
     - depguard
+    - gocritic
 
 issues:
   max-same-issues: 0
