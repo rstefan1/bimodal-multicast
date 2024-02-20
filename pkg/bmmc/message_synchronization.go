@@ -54,7 +54,7 @@ func (b *BMMC) sendSynchronization(synchronization Synchronization, peerToSend s
 	}
 
 	go func() {
-		if err := b.config.Host.Send(jsonSynchronization, synchronizationRoute, peerToSend); err != nil {
+		if err := b.config.Host.Send(jsonSynchronization, SynchronizationRoute, peerToSend); err != nil {
 			b.config.Logger.Printf(synchronizationSendErrFmt, err)
 		}
 	}()

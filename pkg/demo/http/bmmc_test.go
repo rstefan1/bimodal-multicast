@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package bmmc_test
+package http
 
 import (
 	"errors"
@@ -23,15 +23,15 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
+	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
@@ -97,6 +97,8 @@ func newBMMC(p peer.Peer, cbCustomRegistry map[string]func(interface{}, *log.Log
 }
 
 var _ = Describe("BMMC", func() {
+	testLog := log.New(os.Stdout, "", 0)
+
 	DescribeTable("protocol",
 		func(
 			cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
@@ -104,19 +106,37 @@ var _ = Describe("BMMC", func() {
 			callbackType string,
 			expectedBuf []string,
 		) {
-			peer1, err := peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+			// server 1
+			addr1 := "localhost"
+			port1 := suggestPort()
+			stop1 := make(chan struct{})
+
+			peer1, err := NewPeer(addr1, port1, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
-			peer2, err := peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+
+			bmmc1 := newBMMC(peer1, cbCustomRegistry)
+			srv1 := NewServer(bmmc1, addr1, port1, testLog)
+
+			// server 2
+			addr2 := "localhost"
+			port2 := suggestPort()
+			stop2 := make(chan struct{})
+
+			peer2, err := NewPeer(addr2, port2, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
 
-			node1 := newBMMC(peer1, cbCustomRegistry)
-			node2 := newBMMC(peer2, cbCustomRegistry)
+			bmmc2 := newBMMC(peer2, cbCustomRegistry)
+			srv2 := NewServer(bmmc2, addr2, port2, testLog)
 
-			Expect(node1.Start()).To(Succeed())
-			Expect(node2.Start()).To(Succeed())
+			// start server 1 and server 2
+			Expect(bmmc1.Start()).To(Succeed())
+			Expect(srv1.Start(stop1, testLog)).To(Succeed())
 
-			Expect(node1.AddPeer(peer2.String())).To(Succeed())
-			Expect(node2.AddPeer(peer1.String())).To(Succeed())
+			Expect(bmmc2.Start()).To(Succeed())
+			Expect(srv2.Start(stop2, testLog)).To(Succeed())
+
+			Expect(bmmc1.AddPeer(peer2.String())).To(Succeed())
+			Expect(bmmc2.AddPeer(peer1.String())).To(Succeed())
 
 			// message for adding peers in buffer
 			extraMsgBuffer := []string{
@@ -127,10 +147,15 @@ var _ = Describe("BMMC", func() {
 
 			// Add a message in first node.
 			// Both nodes must have this message.
-			Expect(node1.AddMessage(msg, callbackType)).To(Succeed())
+			Expect(bmmc1.AddMessage(msg, callbackType)).To(Succeed())
 
-			Eventually(getBufferFn(node1)).Should(ConsistOf(expectedBuf))
-			Eventually(getBufferFn(node2)).Should(ConsistOf(expectedBuf))
+			Eventually(getBufferFn(bmmc1)).Should(ConsistOf(expectedBuf))
+			Eventually(getBufferFn(bmmc2)).Should(ConsistOf(expectedBuf))
+
+			bmmc1.Stop()
+			close(stop1)
+			bmmc2.Stop()
+			close(stop2)
 		},
 		Entry("sync buffers if callback returns error",
 			fakeRegistry("my-callback", errors.New("invalid-callback")), //nolint: goerr113
@@ -151,7 +176,9 @@ var _ = Describe("BMMC", func() {
 
 		var (
 			nodes          [nodesLen]*bmmc.BMMC
-			hosts          [nodesLen]peer.Peer
+			srvs           [nodesLen]*Server
+			peers          [nodesLen]peer.Peer
+			stops          [nodesLen]chan struct{}
 			extraMsgBuffer []interface{}
 			expectedBuf    []interface{}
 
@@ -163,33 +190,38 @@ var _ = Describe("BMMC", func() {
 			expectedBuf = []interface{}{}
 
 			for i := 0; i < nodesLen; i++ {
-
-				hosts[i], err = peer.NewHTTPPeer("localhost", suggestPort(), &http.Client{})
+				peers[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
 				Expect(err).ToNot(HaveOccurred())
 
-				extraMsgBuffer[i] = hosts[i].String()
+				extraMsgBuffer[i] = peers[i].String()
+
+				stops[i] = make(chan struct{})
 			}
 
 			// create a protocol for each node, and start it
 			for i := 0; i < nodesLen; i++ {
-				nodes[i] = newBMMC(hosts[i], map[string]func(interface{}, *log.Logger) error{})
+				nodes[i] = newBMMC(peers[i], map[string]func(interface{}, *log.Logger) error{})
+				srvs[i] = NewServer(nodes[i], peers[i].(Peer).Addr(), peers[i].(Peer).Port(), testLog) //nolint: forcetypeassert
+
 				Expect(nodes[i].Start()).To(Succeed())
+				Expect(srvs[i].Start(stops[i], testLog)).To(Succeed())
 			}
 
 			// add peers
 			for i := 1; i < nodesLen; i++ {
-				Expect(nodes[0].AddPeer(hosts[i].String())).To(Succeed())
+				Expect(nodes[0].AddPeer(peers[i].String())).To(Succeed())
 			}
-			Expect(nodes[1].AddPeer(hosts[0].String())).To(Succeed())
+			Expect(nodes[1].AddPeer(peers[0].String())).To(Succeed())
 
-			for i := range nodes {
-				Eventually(getBufferFn(nodes[i]), time.Second*5).Should(ConsistOf(extraMsgBuffer...))
+			for i := 1; i < nodesLen; i++ {
+				Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
 			}
 		})
 
 		AfterEach(func() {
-			for i := range nodes {
+			for i := 0; i < nodesLen; i++ {
 				nodes[i].Stop()
+				close(stops[i])
 			}
 		})
 
@@ -205,7 +237,7 @@ var _ = Describe("BMMC", func() {
 			})
 
 			It("sync all nodes with the message", func() {
-				for i := range nodes {
+				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
 				}
 			})
@@ -227,7 +259,7 @@ var _ = Describe("BMMC", func() {
 			})
 
 			It("sync all nodes with all messages", func() {
-				for i := range nodes {
+				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
 						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}
@@ -248,7 +280,7 @@ var _ = Describe("BMMC", func() {
 			})
 
 			It("sync all nodes with all messages", func() {
-				for i := range nodes {
+				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
 						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
 				}

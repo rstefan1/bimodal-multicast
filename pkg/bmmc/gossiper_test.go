@@ -48,7 +48,7 @@ var _ = Describe("Gossiper", func() {
 			}
 		})
 
-		It("returns 0 if peerBuffer's legth is 0", func() {
+		It("returns 0 if peerBuffer's length is 0", func() {
 			b.peerBuffer = peer.NewPeerBuffer()
 			Expect(b.computeGossipLen()).To(Equal(0))
 		})
