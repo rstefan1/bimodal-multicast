@@ -31,6 +31,7 @@ type Element struct {
 	Msg          interface{} `json:"msg"`
 	CallbackType string      `json:"callbackType"`
 	GossipCount  int64       `json:"gossipCount"` // number of rounds since the element is in buffer
+	Internal     bool        `json:"internal"`    // true if the element is an internal element, not a user element
 }
 
 // generateIDFromMsg returns an ID consisting of a hash of the original string,
@@ -51,7 +52,7 @@ func generateIDFromMsg(s string) (string, error) {
 }
 
 // NewElement creates new buffer element with given message and callback type.
-func NewElement(msg interface{}, cbType string) (Element, error) {
+func NewElement(msg interface{}, cbType string, internal bool) (Element, error) {
 	id, err := generateIDFromMsg(fmt.Sprintf("%v", msg))
 	if err != nil {
 		return Element{}, err
@@ -63,5 +64,6 @@ func NewElement(msg interface{}, cbType string) (Element, error) {
 		Msg:          msg,
 		CallbackType: cbType,
 		GossipCount:  0,
+		Internal:     internal,
 	}, nil
 }

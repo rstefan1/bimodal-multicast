@@ -418,38 +418,76 @@ var _ = Describe("Buffer interface", func() {
 	})
 
 	Describe("Messages function", func() {
-		It("returns messages from each element from buffer", func() {
-			type testType struct {
-				String  string
-				Int     int
-				Boolean bool
+		type testType struct {
+			String  string
+			Int     int
+			Boolean bool
+		}
+
+		var buf *Buffer
+
+		BeforeEach(func() {
+			buf = &Buffer{
+				Elements: []Element{
+					{
+						Msg:      "string",
+						Internal: false,
+					},
+					{
+						Msg:      100,
+						Internal: false,
+					},
+					{
+						Msg:      true,
+						Internal: false,
+					},
+					{
+						Msg:      "internal-element",
+						Internal: true,
+					},
+					{
+						Msg: testType{
+							String:  "another-string",
+							Int:     200,
+							Boolean: false,
+						},
+						Internal: false,
+					},
+				},
+				Len: 5,
+				Mux: &sync.Mutex{},
+			}
+		})
+
+		It("returns all messages (internal + not internal) from each element from buffer", func() {
+			expectedMsg := []interface{}{
+				"string",
+				100,
+				true,
+				"internal-element",
+				testType{
+					String:  "another-string",
+					Int:     200,
+					Boolean: false,
+				},
 			}
 
-			buf := &Buffer{
-				Elements: make([]Element, 4),
-				Len:      4,
-				Mux:      &sync.Mutex{},
-			}
-			buf.Elements[0] = Element{Msg: "string"}
-			buf.Elements[1] = Element{Msg: 100}
-			buf.Elements[2] = Element{Msg: true}
-			buf.Elements[3] = Element{Msg: testType{
-				String:  "another-string",
-				Int:     200,
-				Boolean: false,
-			}}
+			Expect(buf.Messages(true)).To(Equal(expectedMsg))
+		})
 
-			expectedMsg := make([]interface{}, 4)
-			expectedMsg[0] = "string"
-			expectedMsg[1] = 100
-			expectedMsg[2] = true
-			expectedMsg[3] = testType{
-				String:  "another-string",
-				Int:     200,
-				Boolean: false,
+		It("doesn't return messages from internal elements", func() {
+			expectedMsg := []interface{}{
+				"string",
+				100,
+				true,
+				testType{
+					String:  "another-string",
+					Int:     200,
+					Boolean: false,
+				},
 			}
 
-			Expect(buf.Messages()).To(Equal(expectedMsg))
+			Expect(buf.Messages(false)).To(Equal(expectedMsg))
 		})
 	})
 
