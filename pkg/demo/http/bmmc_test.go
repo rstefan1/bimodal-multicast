@@ -138,13 +138,6 @@ var _ = Describe("BMMC", func() {
 			Expect(bmmc1.AddPeer(peer2.String())).To(Succeed())
 			Expect(bmmc2.AddPeer(peer1.String())).To(Succeed())
 
-			// message for adding peers in buffer
-			extraMsgBuffer := []string{
-				peer1.String(),
-				peer2.String(),
-			}
-			expectedBuf = append(expectedBuf, extraMsgBuffer...)
-
 			// Add a message in first node.
 			// Both nodes must have this message.
 			Expect(bmmc1.AddMessage(msg, callbackType)).To(Succeed())
@@ -175,25 +168,21 @@ var _ = Describe("BMMC", func() {
 		const nodesLen = 10
 
 		var (
-			nodes          [nodesLen]*bmmc.BMMC
-			srvs           [nodesLen]*Server
-			peers          [nodesLen]peer.Peer
-			stops          [nodesLen]chan struct{}
-			extraMsgBuffer []interface{}
-			expectedBuf    []interface{}
+			nodes       [nodesLen]*bmmc.BMMC
+			srvs        [nodesLen]*Server
+			peers       [nodesLen]peer.Peer
+			stops       [nodesLen]chan struct{}
+			expectedBuf []interface{}
 
 			err error
 		)
 
 		BeforeEach(func() {
-			extraMsgBuffer = make([]interface{}, nodesLen)
 			expectedBuf = []interface{}{}
 
 			for i := 0; i < nodesLen; i++ {
 				peers[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
 				Expect(err).ToNot(HaveOccurred())
-
-				extraMsgBuffer[i] = peers[i].String()
 
 				stops[i] = make(chan struct{})
 			}
@@ -214,7 +203,7 @@ var _ = Describe("BMMC", func() {
 			Expect(nodes[1].AddPeer(peers[0].String())).To(Succeed())
 
 			for i := 1; i < nodesLen; i++ {
-				Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
+				Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(expectedBuf...))
 			}
 		})
 
@@ -233,12 +222,12 @@ var _ = Describe("BMMC", func() {
 				randomNode := rand.Intn(nodesLen) //nolint: gosec
 				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
 				Expect(err).ToNot(HaveOccurred())
-				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
+				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf...))
 			})
 
 			It("sync all nodes with the message", func() {
 				for i := 0; i < nodesLen; i++ {
-					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(append(expectedBuf, extraMsgBuffer...)...))
+					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(expectedBuf...))
 				}
 			})
 		})
@@ -255,13 +244,13 @@ var _ = Describe("BMMC", func() {
 				}
 
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
-					ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+					ConsistOf(interfaceToString(expectedBuf)))
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
-						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+						ConsistOf(interfaceToString(expectedBuf)))
 				}
 			})
 		})
@@ -282,7 +271,7 @@ var _ = Describe("BMMC", func() {
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
-						ConsistOf(interfaceToString(append(expectedBuf, extraMsgBuffer...))))
+						ConsistOf(interfaceToString(expectedBuf)))
 				}
 			})
 		})

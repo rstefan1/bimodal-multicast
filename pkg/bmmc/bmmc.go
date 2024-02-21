@@ -116,7 +116,7 @@ func (b *BMMC) Stop() {
 
 // AddMessage adds new message in messages buffer.
 func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
-	m, err := buffer.NewElement(msg, callbackType)
+	m, err := buffer.NewElement(msg, callbackType, false)
 	if err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
 
@@ -143,7 +143,7 @@ func (b *BMMC) AddPeer(p string) error {
 		return fmt.Errorf(addPeerErrFmt, p, err)
 	}
 
-	msg, err := buffer.NewElement(p, callback.ADDPEER)
+	msg, err := buffer.NewElement(p, callback.ADDPEER, true)
 	if err != nil {
 		return fmt.Errorf(addPeerErrFmt, p, err)
 	}
@@ -159,7 +159,7 @@ func (b *BMMC) AddPeer(p string) error {
 func (b *BMMC) RemovePeer(p string) error {
 	b.peerBuffer.RemovePeer(p)
 
-	msg, err := buffer.NewElement(p, callback.REMOVEPEER)
+	msg, err := buffer.NewElement(p, callback.REMOVEPEER, true)
 	if err != nil {
 		return fmt.Errorf(removePeerErrFmt, p, err)
 	}
@@ -171,9 +171,9 @@ func (b *BMMC) RemovePeer(p string) error {
 	return nil
 }
 
-// GetMessages returns a slice with all messages from messages buffer.
+// GetMessages returns a slice with all user messages from messages buffer.
 func (b *BMMC) GetMessages() []interface{} {
-	return b.messageBuffer.Messages()
+	return b.messageBuffer.Messages(false)
 }
 
 // GetPeers returns an array with all peers from peers buffer.

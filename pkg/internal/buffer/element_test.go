@@ -24,7 +24,7 @@ import (
 var _ = Describe("Buffer interface", func() {
 	Describe("NewElement function", func() {
 		It("creates new element", func() {
-			el, err := NewElement("message", "callback type")
+			el, err := NewElement("message", "callback type", true)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(el.ID).NotTo(BeEmpty())
@@ -32,6 +32,7 @@ var _ = Describe("Buffer interface", func() {
 			Expect(el.Msg).To(Equal("message"))
 			Expect(el.CallbackType).To(Equal("callback type"))
 			Expect(el.GossipCount).To(Equal(int64(0)))
+			Expect(el.Internal).To(BeTrue())
 		})
 	})
 })
