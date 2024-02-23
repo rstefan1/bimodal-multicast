@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package validators
+package main
 
 import (
 	"errors"
@@ -22,12 +22,24 @@ import (
 )
 
 var (
+	errEmptyAddress   = errors.New("empty address")
 	errPortNotInteger = errors.New("port must be an integer number")
 	errPortOutOfRange = errors.New("port must be between 1 and 65535")
 )
 
-// PortValidator returns a port validator.
-func PortValidator() func(int) error {
+// addrValidator returns an address validator.
+func addrValidator() func(string) error {
+	return func(addr string) error {
+		if len(addr) == 0 {
+			return errEmptyAddress
+		}
+
+		return nil
+	}
+}
+
+// portValidator returns a port validator.
+func portValidator() func(int) error {
 	return func(port int) error {
 		if port < 1 || port > 65535 {
 			return errPortOutOfRange
@@ -37,14 +49,14 @@ func PortValidator() func(int) error {
 	}
 }
 
-// PortAsStringValidator returns a port (as string) validator.
-func PortAsStringValidator() func(string) error {
+// portAsStringValidator returns a port (as string) validator.
+func portAsStringValidator() func(string) error {
 	return func(port string) error {
 		iPort, err := strconv.ParseInt(port, 10, 32)
 		if err != nil {
 			return errPortNotInteger
 		}
 
-		return PortValidator()(int(iPort))
+		return portValidator()(int(iPort))
 	}
 }

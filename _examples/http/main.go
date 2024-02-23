@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -57,9 +58,15 @@ func main() {
 		},
 	}
 
+	host, err := NewPeer(addr, port, &http.Client{})
+	if err != nil {
+		fmt.Println("Error at creating BMMC Host", err)
+
+		return
+	}
+
 	cfg := &bmmc.Config{
-		Addr:       addr,
-		Port:       port,
+		Host:       host,
 		Callbacks:  callbacks,
 		Beta:       0.25,
 		BufferSize: 1024,
@@ -70,12 +77,14 @@ func main() {
 	node, err := bmmc.New(cfg)
 	if err != nil {
 		fmt.Println("Error at creating BMMC instance", err)
+
 		return
 	}
 
 	err = node.Start()
 	if err != nil {
 		fmt.Println("Error at starting BMMC instance", err)
+
 		return
 	}
 
@@ -88,6 +97,7 @@ func main() {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Error at reading the line")
+
 			continue
 		}
 
@@ -102,13 +112,19 @@ func main() {
 			if len(args) != 3 {
 				fmt.Println("Invalid command. The `add-peer` command must be in form: " +
 					"add-peer 127.100.1.4 19999")
+
 				break
 			}
 
 			addr := args[1]
 			port := args[2]
 
-			err := node.AddPeer(addr, port)
+			peer, err := NewPeer(addr, port, nil)
+			if err != nil {
+				fmt.Println("Error at creating peer:", err)
+			}
+
+			err = node.AddPeer(peer.String())
 			if err != nil {
 				fmt.Println("Error at adding peer in buffer:", err)
 			}
@@ -117,13 +133,19 @@ func main() {
 			if len(args) != 3 {
 				fmt.Println("Invalid command. The `delete-peer` command must be in form: " +
 					"delete-peer 127.100.1.4 19999")
+
 				break
 			}
 
 			addr := args[1]
 			port := args[2]
 
-			err := node.RemovePeer(addr, port)
+			peer, err := NewPeer(addr, port, nil)
+			if err != nil {
+				fmt.Println("Error at creating peer:", err)
+			}
+
+			err = node.RemovePeer(peer.String())
 			if err != nil {
 				fmt.Println("Error at removing peer from buffer:", err)
 			}
@@ -132,6 +154,7 @@ func main() {
 			if len(args) != 3 {
 				fmt.Println("Invalid command. The `add-message` command must be in form: " +
 					"add-message awesome-message first-callback")
+
 				break
 			}
 
@@ -151,10 +174,12 @@ func main() {
 
 		case "stop":
 			node.Stop()
+
 			return
 
 		case "exit":
 			node.Stop()
+
 			return
 
 		default:
@@ -163,6 +188,7 @@ func main() {
 			fmt.Println("   -> delete-peer")
 			fmt.Println("   -> add-message")
 			fmt.Println("   -> stop / exit")
+
 			continue
 		}
 	}

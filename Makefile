@@ -10,18 +10,33 @@ test: generate
 		--cover --trace --race -v \
 		./pkg/...
 
+	make -C _examples/http fmt
+	make -C _examples/maelstrom fmt
+
 fmt:
 	go fmt ./pkg/...
+
+	make -C _examples/http fmt
+	make -C _examples/maelstrom fmt
 
 vet:
 	go vet ./pkg/...
 
+	make -C _examples/http vet
+	make -C _examples/maelstrom vet
+
 generate:
 	go generate ./pkg/...
+
+	make -C _examples/http generate
+	make -C _examples/maelstrom generate
 
 lint:
 	@$(BINDIR)/golangci-lint version
 	$(BINDIR)/golangci-lint run ./pkg/...
+
+	make -C _examples/http lint
+	make -C _examples/maelstrom lint
 
 dependencies:
 	test -d $(BINDIR) || mkdir $(BINDIR)
