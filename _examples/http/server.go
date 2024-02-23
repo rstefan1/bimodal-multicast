@@ -85,7 +85,7 @@ func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
 }
 
 // Start starts the http server.
-func (s *Server) Start(stop <-chan struct{}, log *log.Logger) error {
+func (s *Server) Start(stop <-chan struct{}, log *log.Logger) error { //nolint: unparam
 	errChan := make(chan error)
 
 	go func() {

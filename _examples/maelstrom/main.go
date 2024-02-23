@@ -16,8 +16,10 @@ limitations under the License.
 
 package main
 
+// https://aods.cryingpotato.com/
+
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"time"
 
@@ -26,10 +28,8 @@ import (
 )
 
 func main() {
-	// https://aods.cryingpotato.com/
-
 	logger := log.Default()
-	logger.SetOutput(ioutil.Discard)
+	logger.SetOutput(io.Discard)
 
 	host := Peer{
 		Node: maelstrom.NewNode(),
@@ -37,9 +37,9 @@ func main() {
 
 	cfg := &bmmc.Config{
 		Host:          &host,
-		Beta:          0.75,
-		RoundDuration: time.Millisecond * 200,
-		BufferSize:    8192,
+		Beta:          0.75,                   //nolint: gomnd
+		RoundDuration: time.Millisecond * 200, //nolint: gomnd
+		BufferSize:    8192,                   //nolint: gomnd
 		Logger:        logger,
 	}
 
@@ -56,5 +56,5 @@ func main() {
 		return
 	}
 
-	CreateAndRunServer(bmmcNode, host.Node, logger)
+	createAndRunServer(bmmcNode, host.Node, logger)
 }

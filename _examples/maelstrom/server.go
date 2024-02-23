@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
@@ -30,9 +31,13 @@ const (
 	messageBodyKey = "message"
 )
 
-const cannotAddBMMCMessageErrFmt = "cannot add BMMC message %d: %w"
+var (
+	cannotAddBMMCMessageErrFmt = "cannot add BMMC message %d: %w"
 
-func CreateAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) {
+	errCannotCast = errors.New("cannot cast")
+)
+
+func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) { //nolint: funlen, gocyclo, cyclop
 	n.Handle(bmmc.GossipRoute, func(msg maelstrom.Message) error {
 		var body map[string]string
 
@@ -78,7 +83,6 @@ func CreateAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) {
 
 		if err := b.AddMessage(body[messageBodyKey], bmmc.NOCALLBACK); err != nil {
 			logger.Printf(cannotAddBMMCMessageErrFmt, body[messageBodyKey], err)
-
 		}
 
 		return n.Reply(msg, map[string]any{
@@ -105,11 +109,27 @@ func CreateAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) {
 			return err
 		}
 
-		topology := body["topology"].(map[string]interface{})
-		peers := topology[n.ID()]
+		topology := body["topology"]
 
-		for _, peer := range peers.([]interface{}) {
-			if err := b.AddPeer(peer.(string)); err != nil {
+		convTopology, convOk := topology.(map[string]interface{})
+		if !convOk {
+			return errCannotCast
+		}
+
+		peers := convTopology[n.ID()]
+
+		convPeers, convOk := peers.([]interface{})
+		if !convOk {
+			return errCannotCast
+		}
+
+		for _, peer := range convPeers {
+			convPeer, convOk := peer.(string)
+			if !convOk {
+				return errCannotCast
+			}
+
+			if err := b.AddPeer(convPeer); err != nil {
 				return err
 			}
 		}

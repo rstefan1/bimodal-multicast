@@ -188,7 +188,7 @@ var _ = Describe("BMMC", func() {
 			// create a protocol for each node, and start it
 			for i := 0; i < nodesLen; i++ {
 				nodes[i] = newBMMC(peers[i], map[string]func(interface{}, *log.Logger) error{})
-				srvs[i] = NewServer(nodes[i], peers[i].Addr(), peers[i].Port(), testLog) //nolint: forcetypeassert
+				srvs[i] = NewServer(nodes[i], peers[i].Addr(), peers[i].Port(), testLog)
 
 				Expect(nodes[i].Start()).To(Succeed())
 				Expect(srvs[i].Start(stops[i], testLog)).To(Succeed())

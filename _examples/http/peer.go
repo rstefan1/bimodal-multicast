@@ -70,7 +70,7 @@ func (p Peer) Port() string {
 }
 
 // NewPeer creates a Peer.
-func NewPeer(addr, port string, httpClient *http.Client) (Peer, error) { //nolint: ireturn
+func NewPeer(addr, port string, httpClient *http.Client) (Peer, error) {
 	if err := addrValidator()(addr); err != nil {
 		return Peer{}, err
 	}
