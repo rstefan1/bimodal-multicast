@@ -20,7 +20,8 @@ import (
 	"crypto/sha1" //nolint: gosec
 	"encoding/hex"
 	"fmt"
-	"math/rand"
+	"io"
+	"strings"
 	"time"
 )
 
@@ -32,6 +33,24 @@ type Element struct {
 	CallbackType string      `json:"callbackType"`
 	GossipCount  int64       `json:"gossipCount"` // number of rounds since the element is in buffer
 	Internal     bool        `json:"internal"`    // true if the element is an internal element, not a user element
+}
+
+func char_limiter(s string, limit int) string {
+
+	reader := strings.NewReader(s)
+
+	// create buffer with specified limit of chraracters
+	buff := make([]byte, limit)
+
+	n, _ := io.ReadAtLeast(reader, buff, limit)
+
+	if n != 0 {
+		//fmt.Printf("\n %s ", buff)
+		return string(buff) + "..."
+	} else {
+		// nothing happens, return original string
+		return s
+	}
 }
 
 // generateIDFromMsg returns an ID consisting of a hash of the original string,
@@ -46,7 +65,7 @@ func generateIDFromMsg(s string) (string, error) {
 
 	sha1Hash := hex.EncodeToString(h.Sum(nil))
 
-	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31()) //nolint: gosec
+	id := fmt.Sprintf("%s", char_limiter(sha1Hash, 10)) //nolint: gosec
 
 	return id, nil
 }
