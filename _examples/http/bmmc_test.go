@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package http
+package main
 
 import (
 	"errors"
@@ -31,8 +31,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
 )
 
 func getBuffer(node *bmmc.BMMC) []string {
@@ -85,7 +83,7 @@ func suggestPort() string {
 	return strconv.Itoa(addr.Port)
 }
 
-func newBMMC(p peer.Peer, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
+func newBMMC(p Peer, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
 	b, err := bmmc.New(&bmmc.Config{
 		Host:       p,
 		Callbacks:  cbCustomRegistry,
@@ -170,7 +168,7 @@ var _ = Describe("BMMC", func() {
 		var (
 			nodes       [nodesLen]*bmmc.BMMC
 			srvs        [nodesLen]*Server
-			peers       [nodesLen]peer.Peer
+			peers       [nodesLen]Peer
 			stops       [nodesLen]chan struct{}
 			expectedBuf []interface{}
 
@@ -190,7 +188,7 @@ var _ = Describe("BMMC", func() {
 			// create a protocol for each node, and start it
 			for i := 0; i < nodesLen; i++ {
 				nodes[i] = newBMMC(peers[i], map[string]func(interface{}, *log.Logger) error{})
-				srvs[i] = NewServer(nodes[i], peers[i].(Peer).Addr(), peers[i].(Peer).Port(), testLog) //nolint: forcetypeassert
+				srvs[i] = NewServer(nodes[i], peers[i].Addr(), peers[i].Port(), testLog) //nolint: forcetypeassert
 
 				Expect(nodes[i].Start()).To(Succeed())
 				Expect(srvs[i].Start(stops[i], testLog)).To(Succeed())
@@ -220,7 +218,7 @@ var _ = Describe("BMMC", func() {
 				expectedBuf = append(expectedBuf, msg)
 
 				randomNode := rand.Intn(nodesLen) //nolint: gosec
-				err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+				err := nodes[randomNode].AddMessage(msg, bmmc.NOCALLBACK)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf...))
 			})
@@ -239,7 +237,7 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNode].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNode].AddMessage(msg, bmmc.NOCALLBACK)
 					Expect(err).ToNot(HaveOccurred())
 				}
 
@@ -263,7 +261,7 @@ var _ = Describe("BMMC", func() {
 					msg := i
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNodes[i]].AddMessage(msg, callback.NOCALLBACK)
+					err := nodes[randomNodes[i]].AddMessage(msg, bmmc.NOCALLBACK)
 					Expect(err).ToNot(HaveOccurred())
 				}
 			})

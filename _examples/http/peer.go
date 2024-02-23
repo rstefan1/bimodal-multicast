@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package http
+package main
 
 import (
 	"bytes"
@@ -22,10 +22,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
-
-	"github.com/rstefan1/bimodal-multicast/pkg/internal/validators"
 )
 
 // Peer decorates a Peer over HTTP.
@@ -74,12 +70,12 @@ func (p Peer) Port() string {
 }
 
 // NewPeer creates a Peer.
-func NewPeer(addr, port string, httpClient *http.Client) (peer.Peer, error) { //nolint: ireturn
-	if err := validators.AddrValidator()(addr); err != nil {
+func NewPeer(addr, port string, httpClient *http.Client) (Peer, error) { //nolint: ireturn
+	if err := addrValidator()(addr); err != nil {
 		return Peer{}, err
 	}
 
-	if err := validators.PortAsStringValidator()(port); err != nil {
+	if err := portAsStringValidator()(port); err != nil {
 		return Peer{}, err
 	}
 
