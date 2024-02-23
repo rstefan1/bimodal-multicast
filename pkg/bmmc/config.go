@@ -31,7 +31,10 @@ const (
 	defaultRoundDuration = time.Millisecond * 100
 )
 
-var errInvalidBufSize = errors.New("invalid buffer size")
+var (
+	errInvalidBufSize = errors.New("invalid buffer size")
+	errInvalidHost    = errors.New("invalid host")
+)
 
 // Config is the config for the protocol.
 type Config struct {
@@ -56,6 +59,10 @@ type Config struct {
 
 // validate validates given config.
 func (cfg *Config) validate() error {
+	if cfg.Host == nil {
+		return errInvalidHost
+	}
+
 	if cfg.BufferSize <= 0 {
 		return errInvalidBufSize
 	}
