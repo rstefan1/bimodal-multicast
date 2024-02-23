@@ -28,7 +28,7 @@ import (
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 )
 
-func main() {
+func main() { //nolint: funlen, cyclop, gocyclo, gocognit
 	addr := os.Getenv("ADDR")
 	port := os.Getenv("PORT")
 
@@ -46,14 +46,14 @@ func main() {
 
 	callbacks := map[string]func(
 		interface{}, *log.Logger) error{
-		"first-callback": func(msg interface{}, logger *log.Logger) error {
-
+		"first-callback": func(msg interface{}, _ *log.Logger) error {
 			fmt.Printf("*** First callback called for message `%s`. ***\n", msg)
+
 			return nil
 		},
-		"second-callback": func(msg interface{}, logger *log.Logger) error {
-
+		"second-callback": func(msg interface{}, _ *log.Logger) error {
 			fmt.Printf("### Second callback called for message `%s`. ###\n", msg)
+
 			return nil
 		},
 	}
@@ -68,8 +68,8 @@ func main() {
 	cfg := &bmmc.Config{
 		Host:       host,
 		Callbacks:  callbacks,
-		Beta:       0.25,
-		BufferSize: 1024,
+		Beta:       0.25, //nolint: gomnd
+		BufferSize: 1024, //nolint: gomnd
 		// Logger:     log.New(logFile, "", 0),
 		// RoundDuration:  time.Second * 2,
 	}
@@ -88,9 +88,10 @@ func main() {
 		return
 	}
 
-	time.Sleep(time.Millisecond * 150)
+	time.Sleep(time.Millisecond * 150) //nolint: gomnd
 
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		fmt.Print("\n> ")
 
@@ -109,7 +110,7 @@ func main() {
 
 		switch args[0] {
 		case "add-peer":
-			if len(args) != 3 {
+			if len(args) != 3 { //nolint: gomnd
 				fmt.Println("Invalid command. The `add-peer` command must be in form: " +
 					"add-peer 127.100.1.4 19999")
 
@@ -130,7 +131,7 @@ func main() {
 			}
 
 		case "delete-peer":
-			if len(args) != 3 {
+			if len(args) != 3 { //nolint: gomnd
 				fmt.Println("Invalid command. The `delete-peer` command must be in form: " +
 					"delete-peer 127.100.1.4 19999")
 
@@ -151,7 +152,7 @@ func main() {
 			}
 
 		case "add-message":
-			if len(args) != 3 {
+			if len(args) != 3 { //nolint: gomnd
 				fmt.Println("Invalid command. The `add-message` command must be in form: " +
 					"add-message awesome-message first-callback")
 

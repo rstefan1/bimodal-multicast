@@ -1,0 +1,60 @@
+run:
+  tests: true
+
+linters-settings:
+  dupl:
+    threshold: 400
+  gocyclo:
+    min-complexity: 10
+  govet:
+    check-shadowing: true
+  lll:
+    line-length: 170
+    tab-width: 4
+
+linters:
+  presets:
+    - bugs
+    - unused
+    - format
+    - style
+    - complexity
+    - performance
+
+  # we should re-enable them and make lint pass
+  disable:
+    - godox
+    - gci
+    - testpackage
+    - paralleltest
+    - varnamelen
+    - exhaustive
+    - exhaustivestruct
+    - exhaustruct
+    - depguard
+    - gocritic
+    - wrapcheck
+    - gomoddirectives
+    - gochecknoglobals
+    - forbidigo
+
+issues:
+  max-same-issues: 0
+  exclude-use-default: false
+  exclude:
+    # gosec G104, about unhandled errors. We do that with errcheck already
+    - "G104: Errors unhandled"
+  exclude-rules:
+    - linters:
+        # Ignore package comments (ST1000) since most of the time are irrelevant
+        - stylecheck
+      text: "ST1000"
+
+    - linters:
+        - revive
+      text: "package-comments: should have a package comment"
+
+    - linters:
+        - revive
+      text: "should not use dot imports"
+      path: '(.*)_test\.go'
