@@ -37,8 +37,8 @@ func main() {
 
 	cfg := &bmmc.Config{
 		Host:          &host,
-		Beta:          0.75,                   //nolint: gomnd
-		RoundDuration: time.Millisecond * 200, //nolint: gomnd
+		Beta:          0.3,                    //nolint: gomnd
+		RoundDuration: time.Millisecond * 500, //nolint: gomnd
 		BufferSize:    8192,                   //nolint: gomnd
 		Logger:        logger,
 	}
