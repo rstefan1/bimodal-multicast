@@ -24,7 +24,7 @@ import (
 )
 
 var _ = Describe("HTTP Peer Buffer Interface", func() {
-	When("Length() is called", func() {
+	When("Length() func is called", func() {
 		It("returns the length of given buffer", func() {
 			pBuf := &Buffer{
 				peers: []string{
@@ -38,179 +38,192 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 		})
 	})
 
-	DescribeTable("when alreadyExists() is called",
-		func(peers []string, p string, expected bool) {
+	When("alreadyExists() func is called", func() {
+		It("returns true if peer is at the beginning", func() {
 			pBuf := &Buffer{
-				peers: peers,
-				mux:   &sync.Mutex{},
+				peers: []string{
+					"localhost/55555",
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
 			}
-			Expect(pBuf.alreadyExists(p)).To(Equal(expected))
-		},
 
-		Entry("returns true if peer is at the beginning",
-			[]string{
-				"localhost/55555",
-				"localhost/10000",
-				"localhost/20000",
-			},
-			"localhost/55555",
-			true,
-		),
+			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
+		})
 
-		Entry("returns true if peer is in the middle",
-			[]string{
-				"localhost/10000",
-				"localhost/55555",
-				"localhost/20000",
-			},
-			"localhost/55555",
-			true,
-		),
-
-		Entry("returns true if peer is at the end",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-				"localhost/55555",
-			},
-			"localhost/55555",
-			true,
-		),
-
-		Entry("returns false if peer doesn't exist in buffer",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-			"localhost/55555",
-			false,
-		),
-	)
-
-	DescribeTable("when AddPeer() is called",
-		func(peers []string, p string, expectError bool, expectedPeers []string) {
+		It("returns true if peer is in the middle", func() {
 			pBuf := &Buffer{
-				peers: peers,
-				mux:   &sync.Mutex{},
+				peers: []string{
+					"localhost/10000",
+					"localhost/55555",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
 			}
 
-			err := pBuf.AddPeer(p)
-			if expectError {
-				Expect(err).To(Succeed())
-			} else {
-				Expect(err).To(Not(Succeed()))
-			}
-			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
-		},
+			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
+		})
 
-		Entry("adds peer in the peers buffer when it doesn't exist",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-			"localhost/30000",
-			true,
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-				"localhost/30000",
-			},
-		),
-
-		Entry("doens't add peer in the peers buffer when it already exists",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-			"localhost/10000",
-			false,
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-		),
-	)
-
-	When("GetPeers() is called", func() {
-		It("returns a slice of strings with peers", func() {
-			peers := []string{
-				"localhost/10000",
-				"localhost/20000",
-			}
-
+		It("returns true if peer is at the end", func() {
 			pBuf := &Buffer{
-				peers: peers,
-				mux:   &sync.Mutex{},
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+					"localhost/55555",
+				},
+				mux: &sync.Mutex{},
 			}
 
+			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
+		})
+
+		It("returns false if peer doesn't exist in buffer", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
+			}
+
+			Expect(pBuf.alreadyExists("localhost/55555")).To(BeFalse())
+		})
+	})
+
+	When("AddPeer() func is called", func() {
+		It("adds peer in the peers buffer when it doesn't exist", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
+			}
+			newPeer := "localhost/30000"
 			expectedPeers := []string{
 				"localhost/10000",
 				"localhost/20000",
+				"localhost/30000",
+			}
+
+			Expect(pBuf.AddPeer(newPeer)).To(Succeed())
+			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
+		})
+
+		It("doesn't add peer in the peers buffer when it already exists", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
+			}
+			newPeer := "localhost/10000"
+			expectedPeers := []string{
+				"localhost/10000",
+				"localhost/20000",
+			}
+
+			Expect(pBuf.AddPeer(newPeer)).NotTo(Succeed())
+			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
+		})
+	})
+
+	When("GetPeers() func is called", func() {
+		It("returns a slice of strings with peers", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+					"localhost/30000",
+				},
+				mux: &sync.Mutex{},
+			}
+			expectedPeers := []string{
+				"localhost/10000",
+				"localhost/20000",
+				"localhost/30000",
 			}
 
 			Expect(pBuf.GetPeers()).To(ConsistOf(expectedPeers))
 		})
 	})
 
-	DescribeTable("when RemovePeer() is called",
-		func(peers []string, p string, expectedPeers []string) {
+	When("RemovePeer() func is called", func() {
+		It("remove peer if it is the first element of buffer", func() {
 			pBuf := &Buffer{
-				peers: peers,
-				mux:   &sync.Mutex{},
+				peers: []string{
+					"localhost/66666",
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
 			}
-			pBuf.RemovePeer(p)
+			peerToRemove := "localhost/66666"
+			expectedPeers := []string{
+				"localhost/10000",
+				"localhost/20000",
+			}
+
+			pBuf.RemovePeer(peerToRemove)
 			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
-		},
+		})
 
-		Entry("remove peer from begin",
-			[]string{
-				"localhost/55555",
+		It("remove peer if it is in the middle of buffer", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/77777",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
+			}
+			peerToRemove := "localhost/77777"
+			expectedPeers := []string{
 				"localhost/10000",
 				"localhost/20000",
-			},
-			"localhost/55555",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-		),
+			}
 
-		Entry("remove peer from middle",
-			[]string{
-				"localhost/10000",
-				"localhost/55555",
-				"localhost/20000",
-			},
-			"localhost/55555",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-		),
+			pBuf.RemovePeer(peerToRemove)
+			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
+		})
 
-		Entry("remove peer from end",
-			[]string{
+		It("remove peer if it is the last element of buffer", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+					"localhost/88888",
+				},
+				mux: &sync.Mutex{},
+			}
+			peerToRemove := "localhost/88888"
+			expectedPeers := []string{
 				"localhost/10000",
 				"localhost/20000",
-				"localhost/55555",
-			},
-			"localhost/55555",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-		),
+			}
 
-		Entry("doesn't remove peer if it doesn't exist in buffer",
-			[]string{
+			pBuf.RemovePeer(peerToRemove)
+			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
+		})
+
+		It("doesn't remove peer if it doesn't exist in buffer", func() {
+			pBuf := &Buffer{
+				peers: []string{
+					"localhost/10000",
+					"localhost/20000",
+				},
+				mux: &sync.Mutex{},
+			}
+			peerToRemove := "localhost/99999"
+			expectedPeers := []string{
 				"localhost/10000",
 				"localhost/20000",
-			},
-			"localhost/55555",
-			[]string{
-				"localhost/10000",
-				"localhost/20000",
-			},
-		),
-	)
+			}
+
+			pBuf.RemovePeer(peerToRemove)
+			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
+		})
+	})
 })

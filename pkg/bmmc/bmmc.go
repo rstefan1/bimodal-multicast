@@ -18,6 +18,8 @@ package bmmc
 
 import (
 	"fmt"
+	"log"
+	"maps"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/callback"
@@ -31,11 +33,9 @@ const (
 	addPeerErrFmt    = "error at adding the peer %s: %w"
 	removePeerErrFmt = "error at removing the peer %s: %w"
 
-	runDefaultCallbackErrFmt = "error at calling default callback at %s for message %s in round %d"
-	runCustomCallbackErrFmt  = "error at calling custom callback at %s for message %s in round %d"
+	runCallbackErrFmt = "error at calling callback at %s for message %s in round %d"
 
-	createCustomCRErrFmt  = "error at creating new custom callbacks registry: %w"
-	createDefaultCRErrFmt = "error at creating new default callbacks registry: %w"
+	createCallbacksRegistryErrFmt = "error at creating callbacks registry: %w"
 )
 
 // BMMC is the bimodal multicast protocol.
@@ -48,10 +48,8 @@ type BMMC struct {
 	messageBuffer *buffer.Buffer
 	// gossip round number
 	gossipRound *GossipRound
-	// custom callback registry
-	customCallbacks *callback.CustomRegistry
-	// default callback registry
-	defaultCallbacks *callback.DefaultRegistry
+	// callbacks registry
+	callbacksRegistry *callback.Registry
 	// stop channel
 	stop chan struct{}
 
@@ -70,29 +68,30 @@ func New(cfg *Config) (*BMMC, error) {
 	cfg.fillEmptyFields()
 
 	// set callbacks
-	cbCustomRegistry, err := callback.NewCustomRegistry(cfg.Callbacks)
+	callbacksRegistry, err := callback.NewRegistry(cfg.Callbacks)
 	if err != nil {
-		return nil, fmt.Errorf(createCustomCRErrFmt, err)
-	}
-
-	cbDefaultRegistry, err := callback.NewDefaultRegistry()
-	if err != nil {
-		return nil, fmt.Errorf(createDefaultCRErrFmt, err)
+		return nil, fmt.Errorf(createCallbacksRegistryErrFmt, err)
 	}
 
 	// create an instance of the protocol
 	//nolint: exhaustivestruct
 	b := &BMMC{
-		config:           cfg,
-		peerBuffer:       peer.NewPeerBuffer(),
-		messageBuffer:    buffer.NewBuffer(cfg.BufferSize),
-		gossipRound:      NewGossipRound(),
-		customCallbacks:  cbCustomRegistry,
-		defaultCallbacks: cbDefaultRegistry,
+		config:            cfg,
+		peerBuffer:        peer.NewPeerBuffer(),
+		messageBuffer:     buffer.NewBuffer(cfg.BufferSize),
+		gossipRound:       NewGossipRound(),
+		callbacksRegistry: callbacksRegistry,
 
 		// TODO remove the following line
 		selectedPeers: make([]bool, peer.MAXPEERS),
 	}
+
+	// add internal callbacks
+	internalCallbacks := map[string]func(any, *log.Logger) error{
+		callback.ADDPEER:    callback.AddPeerCallback,
+		callback.REMOVEPEER: callback.RemovePeerCallback,
+	}
+	maps.Copy(b.callbacksRegistry.Callbacks, internalCallbacks) // maps.Copy(dst, src)
 
 	return b, nil
 }
@@ -181,14 +180,29 @@ func (b *BMMC) GetPeers() []string {
 	return b.peerBuffer.GetPeers()
 }
 
-func (b *BMMC) runCallbacks(m buffer.Element) {
-	if m.CallbackType != callback.NOCALLBACK {
-		if err := b.defaultCallbacks.RunCallbacks(m, b.peerBuffer, b.config.Logger); err != nil {
-			b.config.Logger.Printf(runDefaultCallbackErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
-		}
+func (b *BMMC) runCallbacks(el buffer.Element) {
+	if el.CallbackType == callback.NOCALLBACK {
+		return
+	}
 
-		if err := b.customCallbacks.RunCallbacks(m, b.config.Logger); err != nil {
-			b.config.Logger.Printf(runCustomCallbackErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
+	callbackFn := b.callbacksRegistry.GetCallback(el.CallbackType)
+	if callbackFn == nil {
+		return
+	}
+
+	var callbackData any
+
+	if el.CallbackType == callback.ADDPEER || el.CallbackType == callback.REMOVEPEER {
+		// internal callback
+		callbackData = callback.PeerCallbackData{
+			Element: el,
+			Buffer:  b.peerBuffer,
 		}
+	} else {
+		callbackData = el
+	}
+
+	if err := callbackFn(callbackData, b.config.Logger); err != nil {
+		b.config.Logger.Printf(runCallbackErrFmt, b.config.Host.String(), el.ID, b.gossipRound.GetNumber())
 	}
 }
