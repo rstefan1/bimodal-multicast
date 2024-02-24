@@ -111,14 +111,14 @@ func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) { /
 
 		topology := body["topology"]
 
-		convTopology, convOk := topology.(map[string]interface{})
+		convTopology, convOk := topology.(map[string]any)
 		if !convOk {
 			return errCannotCast
 		}
 
 		peers := convTopology[n.ID()]
 
-		convPeers, convOk := peers.([]interface{})
+		convPeers, convOk := peers.([]any)
 		if !convOk {
 			return errCannotCast
 		}

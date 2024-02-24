@@ -146,11 +146,11 @@ func (buf *Buffer) IncrementGossipCount() {
 
 // Messages returns a slice with messages for each element in buffer.
 // If withInternals parameter is false, Messages returns only user (not internal) messages.
-func (buf *Buffer) Messages(withInternals bool) []interface{} {
+func (buf *Buffer) Messages(withInternals bool) []any {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
 
-	msgs := []interface{}{}
+	msgs := []any{}
 
 	for i := 0; i < buf.Len; i++ {
 		if !withInternals && buf.Elements[i].Internal {

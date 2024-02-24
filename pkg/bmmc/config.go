@@ -45,7 +45,7 @@ type Config struct {
 	Logger *log.Logger
 	// Callbacks functions
 	// Optional
-	Callbacks map[string]func(interface{}, *log.Logger) error
+	Callbacks map[string]func(any, *log.Logger) error
 	// Gossip round duration
 	// Optional
 	RoundDuration time.Duration
@@ -78,6 +78,6 @@ func (cfg *Config) fillEmptyFields() {
 	}
 
 	if cfg.Callbacks == nil {
-		cfg.Callbacks = map[string]func(interface{}, *log.Logger) error{}
+		cfg.Callbacks = map[string]func(any, *log.Logger) error{}
 	}
 }

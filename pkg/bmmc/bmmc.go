@@ -115,7 +115,7 @@ func (b *BMMC) Stop() {
 }
 
 // AddMessage adds new message in messages buffer.
-func (b *BMMC) AddMessage(msg interface{}, callbackType string) error {
+func (b *BMMC) AddMessage(msg any, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType, false)
 	if err != nil {
 		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
@@ -172,7 +172,7 @@ func (b *BMMC) RemovePeer(p string) error {
 }
 
 // GetMessages returns a slice with all user messages from messages buffer.
-func (b *BMMC) GetMessages() []interface{} {
+func (b *BMMC) GetMessages() []any {
 	return b.messageBuffer.Messages(false)
 }
 

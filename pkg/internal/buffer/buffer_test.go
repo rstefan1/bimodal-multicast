@@ -460,7 +460,7 @@ var _ = Describe("Buffer interface", func() {
 		})
 
 		It("returns all messages (internal + not internal) from each element from buffer", func() {
-			expectedMsg := []interface{}{
+			expectedMsg := []any{
 				"string",
 				100,
 				true,
@@ -476,7 +476,7 @@ var _ = Describe("Buffer interface", func() {
 		})
 
 		It("doesn't return messages from internal elements", func() {
-			expectedMsg := []interface{}{
+			expectedMsg := []any{
 				"string",
 				100,
 				true,

@@ -10,8 +10,8 @@ test: generate
 		--cover --trace --race -v \
 		./pkg/...
 
-	make -C _examples/http fmt
-	make -C _examples/maelstrom fmt
+	make -C _examples/http test
+	make -C _examples/maelstrom test
 
 fmt:
 	go fmt ./pkg/...

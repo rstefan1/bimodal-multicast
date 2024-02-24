@@ -50,7 +50,7 @@ func getBufferFn(node *bmmc.BMMC) func() []string {
 	}
 }
 
-func interfaceToString(b []interface{}) []string {
+func anySliceToAnyString(b []any) []string {
 	s := make([]string, len(b))
 	for i, v := range b {
 		s[i] = fmt.Sprint(v)
@@ -59,9 +59,9 @@ func interfaceToString(b []interface{}) []string {
 	return s
 }
 
-func fakeRegistry(cbType string, e error) map[string]func(interface{}, *log.Logger) error {
-	return map[string]func(interface{}, *log.Logger) error{
-		cbType: func(_ interface{}, _ *log.Logger) error {
+func fakeRegistry(cbType string, e error) map[string]func(any, *log.Logger) error {
+	return map[string]func(any, *log.Logger) error{
+		cbType: func(_ any, _ *log.Logger) error {
 			return e
 		},
 	}
@@ -83,7 +83,7 @@ func suggestPort() string {
 	return strconv.Itoa(addr.Port)
 }
 
-func newBMMC(p Peer, cbCustomRegistry map[string]func(interface{}, *log.Logger) error) *bmmc.BMMC {
+func newBMMC(p Peer, cbCustomRegistry map[string]func(any, *log.Logger) error) *bmmc.BMMC {
 	b, err := bmmc.New(&bmmc.Config{
 		Host:       p,
 		Callbacks:  cbCustomRegistry,
@@ -99,7 +99,7 @@ var _ = Describe("BMMC", func() {
 
 	DescribeTable("protocol",
 		func(
-			cbCustomRegistry map[string]func(interface{}, *log.Logger) error,
+			cbCustomRegistry map[string]func(any, *log.Logger) error,
 			msg string,
 			callbackType string,
 			expectedBuf []string,
@@ -170,13 +170,13 @@ var _ = Describe("BMMC", func() {
 			srvs        [nodesLen]*Server
 			peers       [nodesLen]Peer
 			stops       [nodesLen]chan struct{}
-			expectedBuf []interface{}
+			expectedBuf []any
 
 			err error
 		)
 
 		BeforeEach(func() {
-			expectedBuf = []interface{}{}
+			expectedBuf = []any{}
 
 			for i := 0; i < nodesLen; i++ {
 				peers[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
@@ -187,7 +187,7 @@ var _ = Describe("BMMC", func() {
 
 			// create a protocol for each node, and start it
 			for i := 0; i < nodesLen; i++ {
-				nodes[i] = newBMMC(peers[i], map[string]func(interface{}, *log.Logger) error{})
+				nodes[i] = newBMMC(peers[i], map[string]func(any, *log.Logger) error{})
 				srvs[i] = NewServer(nodes[i], peers[i].Addr(), peers[i].Port(), testLog)
 
 				Expect(nodes[i].Start()).To(Succeed())
@@ -242,13 +242,13 @@ var _ = Describe("BMMC", func() {
 				}
 
 				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
-					ConsistOf(interfaceToString(expectedBuf)))
+					ConsistOf(anySliceToAnyString(expectedBuf)))
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
-						ConsistOf(interfaceToString(expectedBuf)))
+						ConsistOf(anySliceToAnyString(expectedBuf)))
 				}
 			})
 		})
@@ -269,7 +269,7 @@ var _ = Describe("BMMC", func() {
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
 					Eventually(getBufferFn(nodes[i]), time.Second).Should(
-						ConsistOf(interfaceToString(expectedBuf)))
+						ConsistOf(anySliceToAnyString(expectedBuf)))
 				}
 			})
 		})
