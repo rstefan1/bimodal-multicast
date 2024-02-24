@@ -7,6 +7,10 @@ test: generate
 #		--cover --trace --race -v \
 #		./...
 
+e2e-tests:
+	docker build -t bmmc-maelstrom -f Dockerfile .
+	docker run --rm bmmc-maelstrom
+
 fmt:
 	go fmt ./...
 
