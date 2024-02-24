@@ -30,11 +30,11 @@ var (
 
 // CustomRegistry is a custom callback registry.
 type CustomRegistry struct {
-	callbacks map[string]func(interface{}, *log.Logger) error
+	callbacks map[string]func(any, *log.Logger) error
 }
 
 // NewCustomRegistry creates a custom callback registry.
-func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*CustomRegistry, error) {
+func NewCustomRegistry(cb map[string]func(any, *log.Logger) error) (*CustomRegistry, error) {
 	if cb == nil {
 		return nil, errNilCallbackMap
 	}
@@ -45,7 +45,7 @@ func NewCustomRegistry(cb map[string]func(interface{}, *log.Logger) error) (*Cus
 }
 
 // GetCallback returns a custom callback from registry.
-func (r *CustomRegistry) GetCallback(t string) func(interface{}, *log.Logger) error {
+func (r *CustomRegistry) GetCallback(t string) func(any, *log.Logger) error {
 	if v, ok := r.callbacks[t]; ok {
 		return v
 	}
@@ -66,7 +66,7 @@ func (r *CustomRegistry) RunCallbacks(m buffer.Element, logger *log.Logger) erro
 }
 
 // ValidateCustomCallbacks validates custom callbacks.
-func ValidateCustomCallbacks(customCallbacks map[string]func(interface{}, *log.Logger) error) error {
+func ValidateCustomCallbacks(customCallbacks map[string]func(any, *log.Logger) error) error {
 	// don't allow to use default callbacks types as custom callback types
 	for customType := range customCallbacks {
 		if _, exists := defaultCallbacks[customType]; exists {

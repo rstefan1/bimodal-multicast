@@ -28,18 +28,18 @@ import (
 var _ = Describe("Custom Callback interface", func() {
 	Describe("NewCustomRegistry func", func() {
 		It("creates new registry when given callbacks map is empty", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{}
+			cb := map[string]func(any, *log.Logger) error{}
 			r, err := NewCustomRegistry(cb)
 			Expect(err).To(Succeed())
 			Expect(r.callbacks).To(BeEquivalentTo(cb))
 		})
 
 		It("creates new registry when given callbacks map has more callbacks", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{
-				"first-callback": func(_ interface{}, _ *log.Logger) error {
+			cb := map[string]func(any, *log.Logger) error{
+				"first-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"second-callback": func(_ interface{}, _ *log.Logger) error {
+				"second-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
 			}
@@ -58,11 +58,11 @@ var _ = Describe("Custom Callback interface", func() {
 	Describe("GetCallback func", func() {
 		It("returns proper callback func when given callback type exists in registry", func() {
 			cbType := "my-callback"
-			cbFn := func(_ interface{}, _ *log.Logger) error {
+			cbFn := func(_ any, _ *log.Logger) error {
 				return nil
 			}
 
-			cb := map[string]func(interface{}, *log.Logger) error{
+			cb := map[string]func(any, *log.Logger) error{
 				cbType: cbFn,
 			}
 			r, err := NewCustomRegistry(cb)
@@ -73,25 +73,25 @@ var _ = Describe("Custom Callback interface", func() {
 		})
 
 		It("returns error when given callback type doesn't exist in registry", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{}
+			cb := map[string]func(any, *log.Logger) error{}
 			r, err := NewCustomRegistry(cb)
 			Expect(err).To(Succeed())
 
-			fn := r.GetCallback("inexistent-callback")
+			fn := r.GetCallback("not-existent-callback")
 			Expect(fn).To(BeNil())
 		})
 	})
 
 	Describe("ValidateCustomCallbacks func", func() {
 		It("returns error when callbacks contain a `add-peer` type", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{
-				"a-callback": func(_ interface{}, _ *log.Logger) error {
+			cb := map[string]func(any, *log.Logger) error{
+				"a-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"add-peer": func(_ interface{}, _ *log.Logger) error {
+				"add-peer": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"another-callback": func(_ interface{}, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
 			}
@@ -100,14 +100,14 @@ var _ = Describe("Custom Callback interface", func() {
 		})
 
 		It("returns error when callbacks contain a `remove-peer` type", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{
-				"a-callback": func(_ interface{}, _ *log.Logger) error {
+			cb := map[string]func(any, *log.Logger) error{
+				"a-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"remove-peer": func(_ interface{}, _ *log.Logger) error {
+				"remove-peer": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"another-callback": func(_ interface{}, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
 			}
@@ -116,14 +116,14 @@ var _ = Describe("Custom Callback interface", func() {
 		})
 
 		It("doesn't return error when all callback are valid", func() {
-			cb := map[string]func(interface{}, *log.Logger) error{
-				"a-callback": func(_ interface{}, _ *log.Logger) error {
+			cb := map[string]func(any, *log.Logger) error{
+				"a-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"valid-callback": func(_ interface{}, _ *log.Logger) error {
+				"valid-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
-				"another-valid-callback": func(_ interface{}, _ *log.Logger) error {
+				"another-valid-callback": func(_ any, _ *log.Logger) error {
 					return nil
 				},
 			}

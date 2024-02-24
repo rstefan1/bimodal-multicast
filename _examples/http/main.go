@@ -44,14 +44,13 @@ func main() { //nolint: funlen, cyclop, gocyclo, gocognit
 	// 	return
 	// }
 
-	callbacks := map[string]func(
-		interface{}, *log.Logger) error{
-		"first-callback": func(msg interface{}, _ *log.Logger) error {
+	callbacks := map[string]func(any, *log.Logger) error{
+		"first-callback": func(msg any, _ *log.Logger) error {
 			fmt.Printf("*** First callback called for message `%s`. ***\n", msg)
 
 			return nil
 		},
-		"second-callback": func(msg interface{}, _ *log.Logger) error {
+		"second-callback": func(msg any, _ *log.Logger) error {
 			fmt.Printf("### Second callback called for message `%s`. ###\n", msg)
 
 			return nil
