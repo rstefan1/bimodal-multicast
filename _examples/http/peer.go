@@ -26,14 +26,14 @@ import (
 
 // Peer decorates a Peer over HTTP.
 type Peer struct {
-	addr       string
-	port       string
+	Addr       string
+	Port       string
 	httpClient *http.Client
 }
 
 // String prints the http peer.
 func (p Peer) String() string {
-	return fmt.Sprintf("%s:%s", p.addr, p.port)
+	return fmt.Sprintf("%s:%s", p.Addr, p.Port)
 }
 
 // decodePeer returns addr and port of given http peer.
@@ -59,16 +59,6 @@ func (p Peer) Send(msg []byte, route string, peerToSend string) error {
 	return resp.Body.Close() //nolint: wrapcheck
 }
 
-// Addr returns addr of http peer.
-func (p Peer) Addr() string {
-	return p.addr
-}
-
-// Port returns port of http peer.
-func (p Peer) Port() string {
-	return p.port
-}
-
 // NewPeer creates a Peer.
 func NewPeer(addr, port string, httpClient *http.Client) (Peer, error) {
 	if err := addrValidator()(addr); err != nil {
@@ -80,8 +70,8 @@ func NewPeer(addr, port string, httpClient *http.Client) (Peer, error) {
 	}
 
 	return Peer{
-		addr:       addr,
-		port:       port,
+		Addr:       addr,
+		Port:       port,
 		httpClient: httpClient,
 	}, nil
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,181 +98,289 @@ func newBMMC(p Peer, callbacksRegistry map[string]func(any, *log.Logger) error) 
 	return b
 }
 
-var _ = Describe("BMMC", func() {
-	testLog := log.New(os.Stdout, "", 0)
+var _ = Describe("BMMC with HTTP Server", func() {
+	var testLog *log.Logger
 
-	DescribeTable("protocol",
-		func(
-			callbacksRegistry map[string]func(any, *log.Logger) error,
-			msg string,
-			callbackType string,
-			expectedBuf []string,
-		) {
-			// server 1
-			addr1 := "localhost"
-			port1 := suggestPort()
-			stop1 := make(chan struct{})
+	BeforeEach(func() {
+		testLog = log.New(os.Stdout, "", 0)
+	})
 
-			peer1, err := NewPeer(addr1, port1, &http.Client{})
+	When("system has 2 nodes", func() {
+		var (
+			addr1, addr2 string
+			port1, port2 string
+			host1, host2 Peer
+		)
+
+		BeforeEach(func() {
+			var err error
+
+			addr1 = "localhost"
+			port1 = suggestPort()
+
+			addr2 = "localhost"
+			port2 = suggestPort()
+
+			host1, err = NewPeer(addr1, port1, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
 
-			bmmc1 := newBMMC(peer1, callbacksRegistry)
-			srv1 := NewServer(bmmc1, addr1, port1, testLog)
-
-			// server 2
-			addr2 := "localhost"
-			port2 := suggestPort()
-			stop2 := make(chan struct{})
-
-			peer2, err := NewPeer(addr2, port2, &http.Client{})
+			host2, err = NewPeer(addr2, port2, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
+		})
 
-			bmmc2 := newBMMC(peer2, callbacksRegistry)
-			srv2 := NewServer(bmmc2, addr2, port2, testLog)
+		When("callback returns error", func() {
+			var (
+				bmmc1, bmmc2       *bmmc.BMMC
+				srv1, srv2         *Server
+				stopSrv1, stopSrv2 chan struct{}
+			)
 
-			// start server 1 and server 2
-			Expect(bmmc1.Start()).To(Succeed())
-			Expect(srv1.Start(stop1, testLog)).To(Succeed())
+			BeforeEach(func() {
+				stopSrv1 = make(chan struct{})
+				stopSrv2 = make(chan struct{})
 
-			Expect(bmmc2.Start()).To(Succeed())
-			Expect(srv2.Start(stop2, testLog)).To(Succeed())
+				cbRegistry := fakeRegistry("my-callback", errors.New("invalid-callback")) //nolint: goerr113
 
-			Expect(bmmc1.AddPeer(peer2.String())).To(Succeed())
-			Expect(bmmc2.AddPeer(peer1.String())).To(Succeed())
+				bmmc1 = newBMMC(host1, cbRegistry)
+				bmmc2 = newBMMC(host2, cbRegistry)
 
-			// Add a message in first node.
-			// Both nodes must have this message.
-			Expect(bmmc1.AddMessage(msg, callbackType)).To(Succeed())
+				srv1 = NewServer(bmmc1, addr1, port1, testLog)
+				srv2 = NewServer(bmmc2, addr2, port2, testLog)
 
-			Eventually(getBufferFn(bmmc1)).Should(ConsistOf(expectedBuf))
-			Eventually(getBufferFn(bmmc2)).Should(ConsistOf(expectedBuf))
+				Expect(bmmc1.Start()).To(Succeed())
+				Expect(bmmc2.Start()).To(Succeed())
 
-			bmmc1.Stop()
-			close(stop1)
-			bmmc2.Stop()
-			close(stop2)
-		},
-		Entry("sync buffers if callback returns error",
-			fakeRegistry("my-callback", errors.New("invalid-callback")), //nolint: goerr113
-			"awesome-message",
-			"my-callback",
-			[]string{"awesome-message"},
-		),
-		Entry("sync buffers if callback doesn't return error",
-			fakeRegistry("my-callback", nil),
-			"awesome-message",
-			"my-callback",
-			[]string{"awesome-message"},
-		),
-	)
+				Expect(srv1.Start(stopSrv1, testLog)).To(Succeed())
+				Expect(srv2.Start(stopSrv2, testLog)).To(Succeed())
+
+				Expect(bmmc1.AddPeer(host2.String())).To(Succeed())
+				Expect(bmmc2.AddPeer(host1.String())).To(Succeed())
+			})
+
+			AfterEach(func() {
+				// stop bmmcs
+				bmmc1.Stop()
+				bmmc2.Stop()
+
+				// stop http servers
+				close(stopSrv1)
+				close(stopSrv2)
+			})
+
+			It("sync buffers", func() {
+				// Add a message in first node.
+				// Both nodes must have this message.
+				Expect(bmmc1.AddMessage("awesome-first-message", "my-callback")).To(Succeed())
+
+				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
+					[]string{
+						"awesome-first-message",
+					},
+				))
+				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
+					[]string{
+						"awesome-first-message",
+					},
+				))
+
+				// Add a message in second node.
+				// Both nodes must have this message.
+				Expect(bmmc2.AddMessage("awesome-second-message", "my-callback")).To(Succeed())
+
+				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
+					[]string{
+						"awesome-first-message",
+						"awesome-second-message",
+					},
+				))
+				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
+					[]string{
+						"awesome-first-message",
+						"awesome-second-message",
+					},
+				))
+			})
+		})
+
+		When("callback doesn't return error", func() {
+			var (
+				bmmc1, bmmc2       *bmmc.BMMC
+				srv1, srv2         *Server
+				stopSrv1, stopSrv2 chan struct{}
+			)
+
+			BeforeEach(func() {
+				stopSrv1 = make(chan struct{})
+				stopSrv2 = make(chan struct{})
+
+				cbRegistry := fakeRegistry("my-callback", nil)
+
+				bmmc1 = newBMMC(host1, cbRegistry)
+				bmmc2 = newBMMC(host2, cbRegistry)
+
+				srv1 = NewServer(bmmc1, addr1, port1, testLog)
+				srv2 = NewServer(bmmc2, addr2, port2, testLog)
+
+				Expect(bmmc1.Start()).To(Succeed())
+				Expect(bmmc2.Start()).To(Succeed())
+
+				Expect(srv1.Start(stopSrv1, testLog)).To(Succeed())
+				Expect(srv2.Start(stopSrv2, testLog)).To(Succeed())
+
+				Expect(bmmc1.AddPeer(host2.String())).To(Succeed())
+				Expect(bmmc2.AddPeer(host1.String())).To(Succeed())
+			})
+
+			AfterEach(func() {
+				// stop bmmcs
+				bmmc1.Stop()
+				bmmc2.Stop()
+
+				// stop http servers
+				close(stopSrv1)
+				close(stopSrv2)
+			})
+
+			It("sync buffers", func() {
+				// Add a message in first node.
+				// Both nodes must have this message.
+				Expect(bmmc1.AddMessage("first-message", "my-callback")).To(Succeed())
+
+				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
+					[]string{
+						"first-message",
+					},
+				))
+				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
+					[]string{
+						"first-message",
+					},
+				))
+
+				// Add a message in second node.
+				// Both nodes must have this message.
+				Expect(bmmc2.AddMessage("second-message", "my-callback")).To(Succeed())
+
+				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
+					[]string{
+						"first-message",
+						"second-message",
+					},
+				))
+				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
+					[]string{
+						"first-message",
+						"second-message",
+					},
+				))
+			})
+		})
+	})
 
 	When("system has ten nodes", func() {
 		const nodesLen = 10
 
 		var (
-			nodes       [nodesLen]*bmmc.BMMC
-			srvs        [nodesLen]*Server
-			peers       [nodesLen]Peer
-			stops       [nodesLen]chan struct{}
-			expectedBuf []any
+			bmmcs    [nodesLen]*bmmc.BMMC
+			srvs     [nodesLen]*Server
+			hosts    [nodesLen]Peer
+			stopSrvs [nodesLen]chan struct{}
 
 			err error
 		)
 
 		BeforeEach(func() {
-			expectedBuf = []any{}
-
 			for i := 0; i < nodesLen; i++ {
-				peers[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
+				hosts[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
 				Expect(err).ToNot(HaveOccurred())
 
-				stops[i] = make(chan struct{})
+				bmmcs[i] = newBMMC(hosts[i], map[string]func(any, *log.Logger) error{})
+				Expect(bmmcs[i].Start()).To(Succeed())
+
+				srvs[i] = NewServer(bmmcs[i], hosts[i].Addr, hosts[i].Port, testLog)
+				stopSrvs[i] = make(chan struct{})
+				Expect(srvs[i].Start(stopSrvs[i], testLog)).To(Succeed())
 			}
 
-			// create a protocol for each node, and start it
-			for i := 0; i < nodesLen; i++ {
-				nodes[i] = newBMMC(peers[i], map[string]func(any, *log.Logger) error{})
-				srvs[i] = NewServer(nodes[i], peers[i].Addr(), peers[i].Port(), testLog)
-
-				Expect(nodes[i].Start()).To(Succeed())
-				Expect(srvs[i].Start(stops[i], testLog)).To(Succeed())
-			}
-
-			// add peers
+			// add peers to the first bmmc node
 			for i := 1; i < nodesLen; i++ {
-				Expect(nodes[0].AddPeer(peers[i].String())).To(Succeed())
+				Expect(bmmcs[0].AddPeer(hosts[i].String())).To(Succeed())
 			}
-			Expect(nodes[1].AddPeer(peers[0].String())).To(Succeed())
 
-			for i := 1; i < nodesLen; i++ {
-				Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(expectedBuf...))
-			}
+			// add the first bmmc node to the second bmmc node
+			Expect(bmmcs[1].AddPeer(hosts[0].String())).To(Succeed())
 		})
 
 		AfterEach(func() {
 			for i := 0; i < nodesLen; i++ {
-				nodes[i].Stop()
-				close(stops[i])
+				bmmcs[i].Stop()
+				close(stopSrvs[i])
 			}
 		})
 
-		When("one node has an message", func() {
-			BeforeEach(func() {
-				msg := "another-awesome-message"
-				expectedBuf = append(expectedBuf, msg)
+		When("one node has a message", func() {
+			var expectedBuf []any
 
+			BeforeEach(func() {
+				msg := "another-message"
+				expectedBuf = []any{msg}
+
+				// select a random node to send the new message
 				randomNode := rand.Intn(nodesLen) //nolint: gosec
-				err := nodes[randomNode].AddMessage(msg, bmmc.NOCALLBACK)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(ConsistOf(expectedBuf...))
+				Expect(bmmcs[randomNode].AddMessage(msg, bmmc.NOCALLBACK)).To(Succeed())
 			})
 
-			It("sync all nodes with the message", func() {
+			It("sync all nodes with the new message", func() {
 				for i := 0; i < nodesLen; i++ {
-					Eventually(getBufferFn(nodes[i]), time.Second).Should(ConsistOf(expectedBuf...))
+					Eventually(getBufferFn(bmmcs[i]), time.Second).Should(ConsistOf(expectedBuf...))
 				}
 			})
 		})
 
 		When("one node has more messages", func() {
+			var expectedBuf []any
+
 			BeforeEach(func() {
+				expectedBuf = []any{}
+
 				randomNode := rand.Intn(nodesLen) //nolint: gosec
+
 				for i := 0; i < 3; i++ {
-					msg := i
+					msg := fmt.Sprint("new-message-$d", rand.Int31()) //nolint: gosec
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNode].AddMessage(msg, bmmc.NOCALLBACK)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(bmmcs[randomNode].AddMessage(msg, bmmc.NOCALLBACK)).To(Succeed())
 				}
-
-				Eventually(getBufferFn(nodes[randomNode]), time.Second).Should(
-					ConsistOf(anySliceToAnyString(expectedBuf)))
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
-					Eventually(getBufferFn(nodes[i]), time.Second).Should(
+					Eventually(getBufferFn(bmmcs[i]), time.Second).Should(
 						ConsistOf(anySliceToAnyString(expectedBuf)))
 				}
 			})
 		})
 
 		When("three nodes have three different messages", func() {
-			BeforeEach(func() {
-				randomNodes := [3]int{2, 4, 6}
+			var expectedBuf []any
 
-				for i := 0; i < 3; i++ {
-					msg := i
+			BeforeEach(func() {
+				expectedBuf = []any{}
+
+				randomNodes := []int{2, 4, 6}
+
+				for _, randomNode := range randomNodes {
+					msg := fmt.Sprintf("new-message-%d", rand.Int31()) //nolint: gosec
 					expectedBuf = append(expectedBuf, msg)
 
-					err := nodes[randomNodes[i]].AddMessage(msg, bmmc.NOCALLBACK)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(bmmcs[randomNode].AddMessage(msg, bmmc.NOCALLBACK)).To(Succeed())
+
 				}
 			})
 
 			It("sync all nodes with all messages", func() {
 				for i := 0; i < nodesLen; i++ {
-					Eventually(getBufferFn(nodes[i]), time.Second).Should(
+					Eventually(getBufferFn(bmmcs[i]), time.Second).Should(
 						ConsistOf(anySliceToAnyString(expectedBuf)))
 				}
 			})
