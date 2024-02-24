@@ -16,12 +16,14 @@ limitations under the License.
 
 package callback
 
-const (
-	// NOCALLBACK is the type of messages without callback.
-	NOCALLBACK = "no-callback"
+import (
+	"testing"
 
-	// ADDPEER is the type of messages used for adding new peer in peers buffer.
-	ADDPEER = "add-peer"
-	// REMOVEPEER is the type of messages used for deleting a peer from peers buffer.
-	REMOVEPEER = "remove-peer"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
+
+func TestBuffers(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Callback Suite Test")
+}

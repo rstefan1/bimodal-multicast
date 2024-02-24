@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"math/rand"
 	"net"
 	"net/http"
@@ -83,10 +84,13 @@ func suggestPort() string {
 	return strconv.Itoa(addr.Port)
 }
 
-func newBMMC(p Peer, cbCustomRegistry map[string]func(any, *log.Logger) error) *bmmc.BMMC {
+func newBMMC(p Peer, callbacksRegistry map[string]func(any, *log.Logger) error) *bmmc.BMMC {
+	cbRegistry := map[string]func(any, *log.Logger) error{}
+	maps.Copy(cbRegistry, callbacksRegistry)
+
 	b, err := bmmc.New(&bmmc.Config{
 		Host:       p,
-		Callbacks:  cbCustomRegistry,
+		Callbacks:  cbRegistry,
 		BufferSize: 32,
 	})
 	Expect(err).ToNot(HaveOccurred())
@@ -99,7 +103,7 @@ var _ = Describe("BMMC", func() {
 
 	DescribeTable("protocol",
 		func(
-			cbCustomRegistry map[string]func(any, *log.Logger) error,
+			callbacksRegistry map[string]func(any, *log.Logger) error,
 			msg string,
 			callbackType string,
 			expectedBuf []string,
@@ -112,7 +116,7 @@ var _ = Describe("BMMC", func() {
 			peer1, err := NewPeer(addr1, port1, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
 
-			bmmc1 := newBMMC(peer1, cbCustomRegistry)
+			bmmc1 := newBMMC(peer1, callbacksRegistry)
 			srv1 := NewServer(bmmc1, addr1, port1, testLog)
 
 			// server 2
@@ -123,7 +127,7 @@ var _ = Describe("BMMC", func() {
 			peer2, err := NewPeer(addr2, port2, &http.Client{})
 			Expect(err).ToNot(HaveOccurred())
 
-			bmmc2 := newBMMC(peer2, cbCustomRegistry)
+			bmmc2 := newBMMC(peer2, callbacksRegistry)
 			srv2 := NewServer(bmmc2, addr2, port2, testLog)
 
 			// start server 1 and server 2

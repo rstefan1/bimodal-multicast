@@ -25,13 +25,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Custom Callback interface", func() {
-	Describe("NewCustomRegistry func", func() {
+var _ = Describe("Callback interface", func() {
+	Describe("NewRegistry func", func() {
 		It("creates new registry when given callbacks map is empty", func() {
 			cb := map[string]func(any, *log.Logger) error{}
-			r, err := NewCustomRegistry(cb)
+			r, err := NewRegistry(cb)
 			Expect(err).To(Succeed())
-			Expect(r.callbacks).To(BeEquivalentTo(cb))
+			Expect(r.Callbacks).To(BeEquivalentTo(cb))
 		})
 
 		It("creates new registry when given callbacks map has more callbacks", func() {
@@ -43,13 +43,13 @@ var _ = Describe("Custom Callback interface", func() {
 					return nil
 				},
 			}
-			r, err := NewCustomRegistry(cb)
+			r, err := NewRegistry(cb)
 			Expect(err).To(Succeed())
-			Expect(r.callbacks).To(BeEquivalentTo(cb))
+			Expect(r.Callbacks).To(BeEquivalentTo(cb))
 		})
 
 		It("returns error if given callbacks map is nil", func() {
-			r, err := NewCustomRegistry(nil)
+			r, err := NewRegistry(nil)
 			Expect(err).To(Not(Succeed()))
 			Expect(r).To(BeNil())
 		})
@@ -63,9 +63,15 @@ var _ = Describe("Custom Callback interface", func() {
 			}
 
 			cb := map[string]func(any, *log.Logger) error{
+				"a-callback": func(_ any, _ *log.Logger) error {
+					return nil
+				},
 				cbType: cbFn,
+				"another-callback": func(_ any, _ *log.Logger) error {
+					return nil
+				},
 			}
-			r, err := NewCustomRegistry(cb)
+			r, err := NewRegistry(cb)
 			Expect(err).To(Succeed())
 
 			fn := r.GetCallback(cbType)
@@ -73,8 +79,15 @@ var _ = Describe("Custom Callback interface", func() {
 		})
 
 		It("returns error when given callback type doesn't exist in registry", func() {
-			cb := map[string]func(any, *log.Logger) error{}
-			r, err := NewCustomRegistry(cb)
+			cb := map[string]func(any, *log.Logger) error{
+				"a-callback": func(_ any, _ *log.Logger) error {
+					return nil
+				},
+				"another-callback": func(_ any, _ *log.Logger) error {
+					return nil
+				},
+			}
+			r, err := NewRegistry(cb)
 			Expect(err).To(Succeed())
 
 			fn := r.GetCallback("not-existent-callback")
