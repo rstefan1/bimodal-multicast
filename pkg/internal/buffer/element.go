@@ -20,7 +20,6 @@ import (
 	"crypto/sha1" //nolint: gosec
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"time"
 )
 
@@ -44,11 +43,7 @@ func generateIDFromMsg(s string) (string, error) {
 		return "", err
 	}
 
-	sha1Hash := hex.EncodeToString(h.Sum(nil))
-
-	id := fmt.Sprintf("%s-%s-%d", sha1Hash, time.Now().Format("20060102150405"), rand.Int31()) //nolint: gosec
-
-	return id, nil
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // NewElement creates new buffer element with given message and callback type.
