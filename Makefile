@@ -13,6 +13,9 @@ test: generate
 	make -C _examples/http test
 	make -C _examples/maelstrom test
 
+e2e-tests:
+	make -C _examples/maelstrom e2e-tests
+
 fmt:
 	go fmt ./pkg/...
 
