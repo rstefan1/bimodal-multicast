@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -261,33 +261,93 @@ var _ = Describe("Buffer interface", func() {
 			}
 		})
 
-		It("adds the new element in buffer", func() {
-			expectedElements := make([]Element, 4)
-			expectedElements[0] = Element{
-				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
-				ID:        "2018",
-			}
-			expectedElements[1] = Element{
-				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
-				ID:        "2016",
-			}
-			expectedElements[2] = Element{
-				Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
-				ID:        "2015",
-			}
-			expectedElements[3] = Element{
-				Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
-				ID:        "2014",
-			}
+		When("buffer is full", func() {
+			It("doesn't add the new element at the beginning of the buffer", func() {
+				newEl := Element{
+					Timestamp: time.Date(2010, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2010",
+				}
 
-			el := Element{
-				Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
-				ID:        "2015",
-			}
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{
+					Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2018",
+				}
+				expectedElements[1] = Element{
+					Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2016",
+				}
+				expectedElements[2] = Element{
+					Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2014",
+				}
+				expectedElements[3] = Element{
+					Timestamp: time.Date(2012, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2012",
+				}
 
-			Expect(buf.Add(el)).To(Succeed())
+				Expect(buf.Add(newEl)).To(Equal(errTooOldElement))
 
-			Expect(buf.Elements).To(Equal(expectedElements))
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("adds the new element in the middle of buffer", func() {
+				newEl := Element{
+					Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2015",
+				}
+
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{
+					Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2018",
+				}
+				expectedElements[1] = Element{
+					Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2016",
+				}
+				expectedElements[2] = Element{
+					Timestamp: time.Date(2015, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2015",
+				}
+				expectedElements[3] = Element{
+					Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2014",
+				}
+
+				Expect(buf.Add(newEl)).To(Succeed())
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
+
+			It("adds the new element at the end of the buffer", func() {
+				newEl := Element{
+					Timestamp: time.Date(2020, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2020",
+				}
+
+				expectedElements := make([]Element, 4)
+				expectedElements[0] = Element{
+					Timestamp: time.Date(2020, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2020",
+				}
+				expectedElements[1] = Element{
+					Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2018",
+				}
+				expectedElements[2] = Element{
+					Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2016",
+				}
+				expectedElements[3] = Element{
+					Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC),
+					ID:        "2014",
+				}
+
+				Expect(buf.Add(newEl)).To(Succeed())
+
+				Expect(buf.Elements).To(Equal(expectedElements))
+			})
 		})
 
 		It("doesn't return error when buffer already contains the given element", func() {
