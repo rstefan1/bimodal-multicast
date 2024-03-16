@@ -20,7 +20,7 @@ COPY *.go bmmc-maelstrom/
 
 RUN set -ex && \
     cd bmmc-maelstrom && \
-    sed -i 's/\tgithub\.com\/rstefan1\/bimodal-multicast\ v0\.0\.0$/\tgithub\.com\/rstefan1\/bimodal-multicast\ v0\.6\.5-0.20240224152444-43b12430c05e/g' go.mod && \
+    sed -i 's/\tgithub\.com\/rstefan1\/bimodal-multicast\ v0\.0\.0$/\tgithub\.com\/rstefan1\/bimodal-multicast\ f73d28a6cf84c243efe44cefcf8efbeb589c6af8/g' go.mod && \
     cat go.mod && \
     go mod tidy && \
     go install .
