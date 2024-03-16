@@ -290,13 +290,13 @@ var _ = Describe("Buffer interface", func() {
 			Expect(buf.Elements).To(Equal(expectedElements))
 		})
 
-		It("returns error when buffer already contains given element", func() {
+		It("doesn't return error when buffer already contains the given element", func() {
 			el := Element{
 				Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC),
 				ID:        "2016",
 			}
 
-			Expect(buf.Add(el)).To(MatchError(errAlreadyExists))
+			Expect(buf.Add(el)).To(Succeed())
 		})
 	})
 
