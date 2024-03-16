@@ -14,3 +14,21 @@ updates:
     reviewers:
       - "rstefan1"
     open-pull-requests-limit: 100
+  - package-ecosystem: "gomod"
+    directory: "/_examples/http"
+    schedule:
+      interval: "monthly"
+    assignees:
+      - "rstefan1"
+    reviewers:
+      - "rstefan1"
+    open-pull-requests-limit: 100
+  - package-ecosystem: "gomod"
+    directory: "/_examples/maelstrom"
+    schedule:
+      interval: "monthly"
+    assignees:
+      - "rstefan1"
+    reviewers:
+      - "rstefan1"
+    open-pull-requests-limit: 100
