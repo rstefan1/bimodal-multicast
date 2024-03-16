@@ -20,28 +20,6 @@ import (
 	"time"
 )
 
-// randomlySelectPeer is a helper func that returns a random peer.
-func (b *BMMC) randomlySelectPeer() string {
-	for {
-		p, i := b.peerBuffer.GetRandom()
-
-		if b.selectedPeers[i] {
-			continue
-		}
-
-		b.selectedPeers[i] = true
-
-		return p
-	}
-}
-
-// resetSelectedPeers is a helper func that clear slice with selected peers in gossip round.
-func (b *BMMC) resetSelectedPeers() {
-	for i := range b.selectedPeers {
-		b.selectedPeers[i] = false
-	}
-}
-
 // gossipLen is number of nodes which will receive gossip message.
 // It will be 0 if the node has empty peers buffer or if the node has
 // empty message buffer.
@@ -65,10 +43,10 @@ func (b *BMMC) round(stop <-chan struct{}) {
 
 			gossipLen := b.computeGossipLen()
 
-			// send gossip messages
-			for i := 0; i < gossipLen; i++ {
-				p := b.randomlySelectPeer()
+			randomlySelectedPeers := b.peerBuffer.GetRandomPeers(gossipLen)
 
+			// send gossip messages
+			for _, p := range randomlySelectedPeers {
 				gossipMsg := Gossip{
 					Host:        b.config.Host.String(),
 					RoundNumber: b.gossipRound,
@@ -79,7 +57,6 @@ func (b *BMMC) round(stop <-chan struct{}) {
 			}
 
 			(*b.messageBuffer).IncrementGossipCount()
-			b.resetSelectedPeers()
 
 			time.Sleep(b.config.RoundDuration)
 		}

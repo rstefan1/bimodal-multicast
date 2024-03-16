@@ -22,9 +22,6 @@ import (
 	"sync"
 )
 
-// MAXPEERS is the maximum number of peers in buffer.
-const MAXPEERS = 4096
-
 // Buffer is the buffer with encoded peers.
 type Buffer struct {
 	peers []string
@@ -65,10 +62,6 @@ func (peerBuffer *Buffer) alreadyExists(peer string) bool {
 func (peerBuffer *Buffer) AddPeer(peer string) error {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
-
-	if len(peerBuffer.peers)+1 >= MAXPEERS {
-		return fmt.Errorf("the buffer is full. Can add up to %d peers", MAXPEERS) //nolint: goerr113
-	}
 
 	if peerBuffer.alreadyExists(peer) {
 		return fmt.Errorf("peer %s already exists in peer buffer", peer) //nolint: goerr113
@@ -112,12 +105,40 @@ func (peerBuffer *Buffer) GetPeers() []string {
 	return p
 }
 
-// GetRandom returns random peer from peers buffer.
-func (peerBuffer *Buffer) GetRandom() (string, int) {
+// GetRandomPeer returns random peer from peers buffer.
+func (peerBuffer *Buffer) GetRandomPeer() string {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
-	r := rand.Intn(len(peerBuffer.peers)) //nolint: gosec
+	p := peerBuffer.peers[rand.Intn(len(peerBuffer.peers))] //nolint: gosec
 
-	return peerBuffer.peers[r], r
+	return p
+}
+
+// GetRandomPeers returns a list of random peers from peers buffer.
+func (peerBuffer *Buffer) GetRandomPeers(noPeers int) []string {
+	peerBuffer.mux.Lock()
+	defer peerBuffer.mux.Unlock()
+
+	selectedPeers := []string{}
+
+	for len(selectedPeers) < noPeers {
+		randomPeer := peerBuffer.peers[rand.Intn(len(peerBuffer.peers))] //nolint: gosec
+
+		validPeer := true
+
+		for _, selectedPeer := range selectedPeers {
+			if selectedPeer == randomPeer {
+				validPeer = false
+
+				break
+			}
+		}
+
+		if validPeer {
+			selectedPeers = append(selectedPeers, randomPeer)
+		}
+	}
+
+	return selectedPeers
 }
