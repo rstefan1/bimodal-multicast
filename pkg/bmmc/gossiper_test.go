@@ -30,7 +30,7 @@ var _ = Describe("Gossiper", func() {
 
 		BeforeEach(func() {
 			peerBuf := peer.NewPeerBuffer()
-			Expect(peerBuf.AddPeer("localhost/19999")).To(Succeed())
+			Expect(peerBuf.AddPeer("localhost/19999")).To(BeTrue())
 
 			msgBuf := buffer.NewBuffer(25)
 

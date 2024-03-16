@@ -107,7 +107,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 				"localhost/30000",
 			}
 
-			Expect(pBuf.AddPeer(newPeer)).To(Succeed())
+			Expect(pBuf.AddPeer(newPeer)).To(BeTrue())
 			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
 		})
 
@@ -125,7 +125,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 				"localhost/20000",
 			}
 
-			Expect(pBuf.AddPeer(newPeer)).NotTo(Succeed())
+			Expect(pBuf.AddPeer(newPeer)).To(BeFalse())
 			Expect(pBuf.peers).To(ConsistOf(expectedPeers))
 		})
 	})

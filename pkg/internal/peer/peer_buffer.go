@@ -17,7 +17,6 @@ limitations under the License.
 package peer
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 )
@@ -59,17 +58,18 @@ func (peerBuffer *Buffer) alreadyExists(peer string) bool {
 }
 
 // AddPeer adds a peer in peers buffer.
-func (peerBuffer *Buffer) AddPeer(peer string) error {
+// AddPeer returns `false` when the peer already exists in buffer and it wasn't added again.
+func (peerBuffer *Buffer) AddPeer(peer string) bool {
 	peerBuffer.mux.Lock()
 	defer peerBuffer.mux.Unlock()
 
 	if peerBuffer.alreadyExists(peer) {
-		return fmt.Errorf("peer %s already exists in peer buffer", peer) //nolint: goerr113
+		return false
 	}
 
 	peerBuffer.peers = append(peerBuffer.peers, peer)
 
-	return nil
+	return true
 }
 
 // RemovePeer removes a peer from peers buffer.

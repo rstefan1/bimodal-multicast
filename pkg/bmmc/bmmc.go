@@ -131,8 +131,8 @@ func (b *BMMC) AddMessage(msg any, callbackType string) error {
 
 // AddPeer adds new peer in peers buffer.
 func (b *BMMC) AddPeer(p string) error {
-	if err := b.peerBuffer.AddPeer(p); err != nil {
-		return fmt.Errorf(addPeerErrFmt, p, err)
+	if added := b.peerBuffer.AddPeer(p); !added {
+		return nil
 	}
 
 	msg, err := buffer.NewElement(p, callback.ADDPEER, true)

@@ -55,8 +55,10 @@ func AddPeerCallback(data any, logger *slog.Logger) error {
 	}
 
 	// add peer in buffer
-	if err := peerCBData.Buffer.AddPeer(p); err != nil {
-		return err //nolint: wrapcheck
+	if added := peerCBData.Buffer.AddPeer(p); !added {
+		logger.Debug("peer already exists", "peer", p)
+
+		return nil
 	}
 
 	logger.Debug("new peer added", "peer", p)
