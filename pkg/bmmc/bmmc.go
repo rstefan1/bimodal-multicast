@@ -62,7 +62,7 @@ func New(cfg *Config) (*BMMC, error) {
 	// fill optional fields of the config
 	cfg.fillEmptyFields()
 
-	cfg.Logger.With("host", cfg.Host.String())
+	cfg.Logger = cfg.Logger.With("host", cfg.Host.String())
 
 	// set callbacks
 	callbacksRegistry, err := callback.NewRegistry(cfg.Callbacks)
