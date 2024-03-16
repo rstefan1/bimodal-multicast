@@ -27,15 +27,15 @@ const (
 
 // GossipRound is the number of gossiper rounds.
 type GossipRound struct {
-	Number int64       `json:"number"`
-	Mux    *sync.Mutex `json:"mux"`
+	Number int64         `json:"number"`
+	Mux    *sync.RWMutex `json:"mux"`
 }
 
 // NewGossipRound creates new GossipRound.
 func NewGossipRound() *GossipRound {
 	return &GossipRound{
 		Number: int64(0),
-		Mux:    &sync.Mutex{},
+		Mux:    &sync.RWMutex{},
 	}
 }
 
@@ -53,8 +53,8 @@ func (r *GossipRound) Increment() {
 
 // GetNumber returns the gossip round numbers.
 func (r *GossipRound) GetNumber() int64 {
-	r.Mux.Lock()
-	defer r.Mux.Unlock()
+	r.Mux.RLock()
+	defer r.Mux.RUnlock()
 
 	n := r.Number
 

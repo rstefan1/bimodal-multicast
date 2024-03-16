@@ -29,9 +29,9 @@ var (
 
 // Buffer is the buffer with messages.
 type Buffer struct {
-	Elements []Element   `json:"elements"`
-	Len      int         `json:"len"`
-	Mux      *sync.Mutex `json:"mux"`
+	Elements []Element     `json:"elements"`
+	Len      int           `json:"len"`
+	Mux      *sync.RWMutex `json:"mux"`
 }
 
 // NewBuffer creates new buffer.
@@ -39,7 +39,7 @@ func NewBuffer(size int) *Buffer {
 	return &Buffer{
 		Elements: make([]Element, size),
 		Len:      0,
-		Mux:      &sync.Mutex{},
+		Mux:      &sync.RWMutex{},
 	}
 }
 
@@ -115,8 +115,8 @@ func (buf *Buffer) Add(el Element) error {
 
 // Digest returns a slice with elements ids.
 func (buf *Buffer) Digest() []string {
-	buf.Mux.Lock()
-	defer buf.Mux.Unlock()
+	buf.Mux.RLock()
+	defer buf.Mux.RUnlock()
 
 	d := make([]string, buf.Len)
 
@@ -146,8 +146,8 @@ func (buf *Buffer) IncrementGossipCount() {
 // Messages returns a slice with messages for each element in buffer.
 // If withInternals parameter is false, Messages returns only user (not internal) messages.
 func (buf *Buffer) Messages(withInternals bool) []any {
-	buf.Mux.Lock()
-	defer buf.Mux.Unlock()
+	buf.Mux.RLock()
+	defer buf.Mux.RUnlock()
 
 	msgs := []any{}
 
@@ -164,8 +164,8 @@ func (buf *Buffer) Messages(withInternals bool) []any {
 
 // Length returns number of elements in buffer.
 func (buf *Buffer) Length() int {
-	buf.Mux.Lock()
-	defer buf.Mux.Unlock()
+	buf.Mux.RLock()
+	defer buf.Mux.RUnlock()
 
 	l := buf.Len
 
@@ -174,8 +174,8 @@ func (buf *Buffer) Length() int {
 
 // ElementsFromIDs returns a slice with elements from given IDs list.
 func (buf *Buffer) ElementsFromIDs(digest []string) []Element {
-	buf.Mux.Lock()
-	defer buf.Mux.Unlock()
+	buf.Mux.RLock()
+	defer buf.Mux.RUnlock()
 
 	el := []Element{}
 
