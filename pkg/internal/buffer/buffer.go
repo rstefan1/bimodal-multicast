@@ -24,7 +24,6 @@ import (
 
 var (
 	errIndexOutOfRange = errors.New("index out of range")
-	errAlreadyExists   = errors.New("already exists")
 	errTooOldElement   = errors.New("element is too old and buffer is full")
 )
 
@@ -96,7 +95,7 @@ func (buf *Buffer) Add(el Element) error {
 	defer buf.Mux.Unlock()
 
 	if e, _ := buf.contains(el); e {
-		return errAlreadyExists
+		return nil
 	}
 
 	pos, err := buf.elementPosition(el)
