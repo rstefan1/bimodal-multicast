@@ -18,7 +18,7 @@ package callback
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"reflect"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -28,18 +28,18 @@ import (
 var _ = Describe("Callback interface", func() {
 	Describe("NewRegistry func", func() {
 		It("creates new registry when given callbacks map is empty", func() {
-			cb := map[string]func(any, *log.Logger) error{}
+			cb := map[string]func(any, *slog.Logger) error{}
 			r, err := NewRegistry(cb)
 			Expect(err).To(Succeed())
 			Expect(r.Callbacks).To(BeEquivalentTo(cb))
 		})
 
 		It("creates new registry when given callbacks map has more callbacks", func() {
-			cb := map[string]func(any, *log.Logger) error{
-				"first-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"first-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"second-callback": func(_ any, _ *log.Logger) error {
+				"second-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}
@@ -58,16 +58,16 @@ var _ = Describe("Callback interface", func() {
 	Describe("GetCallback func", func() {
 		It("returns proper callback func when given callback type exists in registry", func() {
 			cbType := "my-callback"
-			cbFn := func(_ any, _ *log.Logger) error {
+			cbFn := func(_ any, _ *slog.Logger) error {
 				return nil
 			}
 
-			cb := map[string]func(any, *log.Logger) error{
-				"a-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"a-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 				cbType: cbFn,
-				"another-callback": func(_ any, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}
@@ -79,11 +79,11 @@ var _ = Describe("Callback interface", func() {
 		})
 
 		It("returns error when given callback type doesn't exist in registry", func() {
-			cb := map[string]func(any, *log.Logger) error{
-				"a-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"a-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"another-callback": func(_ any, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}
@@ -97,14 +97,14 @@ var _ = Describe("Callback interface", func() {
 
 	Describe("ValidateCustomCallbacks func", func() {
 		It("returns error when callbacks contain a `add-peer` type", func() {
-			cb := map[string]func(any, *log.Logger) error{
-				"a-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"a-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"add-peer": func(_ any, _ *log.Logger) error {
+				"add-peer": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"another-callback": func(_ any, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}
@@ -113,14 +113,14 @@ var _ = Describe("Callback interface", func() {
 		})
 
 		It("returns error when callbacks contain a `remove-peer` type", func() {
-			cb := map[string]func(any, *log.Logger) error{
-				"a-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"a-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"remove-peer": func(_ any, _ *log.Logger) error {
+				"remove-peer": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"another-callback": func(_ any, _ *log.Logger) error {
+				"another-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}
@@ -129,14 +129,14 @@ var _ = Describe("Callback interface", func() {
 		})
 
 		It("doesn't return error when all callback are valid", func() {
-			cb := map[string]func(any, *log.Logger) error{
-				"a-callback": func(_ any, _ *log.Logger) error {
+			cb := map[string]func(any, *slog.Logger) error{
+				"a-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"valid-callback": func(_ any, _ *log.Logger) error {
+				"valid-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
-				"another-valid-callback": func(_ any, _ *log.Logger) error {
+				"another-valid-callback": func(_ any, _ *slog.Logger) error {
 					return nil
 				},
 			}

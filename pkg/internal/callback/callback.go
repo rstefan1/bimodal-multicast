@@ -18,7 +18,7 @@ package callback
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 )
 
 // NOCALLBACK is the type of messages without callback.
@@ -31,11 +31,11 @@ var (
 
 // Registry is a registry for callbacks.
 type Registry struct {
-	Callbacks map[string]func(any, *log.Logger) error
+	Callbacks map[string]func(any, *slog.Logger) error
 }
 
 // NewRegistry creates a callback registry.
-func NewRegistry(cb map[string]func(any, *log.Logger) error) (*Registry, error) {
+func NewRegistry(cb map[string]func(any, *slog.Logger) error) (*Registry, error) {
 	if cb == nil {
 		return nil, errNilCallbackMap
 	}
@@ -46,7 +46,7 @@ func NewRegistry(cb map[string]func(any, *log.Logger) error) (*Registry, error) 
 }
 
 // GetCallback returns a callback from registry.
-func (r *Registry) GetCallback(t string) func(any, *log.Logger) error {
+func (r *Registry) GetCallback(t string) func(any, *slog.Logger) error {
 	if v, ok := r.Callbacks[t]; ok {
 		return v
 	}
@@ -56,7 +56,7 @@ func (r *Registry) GetCallback(t string) func(any, *log.Logger) error {
 
 // ValidateCustomCallbacks validates custom callbacks.
 // NOTE: must be called before adding internal callbacks.
-func ValidateCustomCallbacks(customCallbacks map[string]func(any, *log.Logger) error) error {
+func ValidateCustomCallbacks(customCallbacks map[string]func(any, *slog.Logger) error) error {
 	// don't allow to use internal callbacks types as custom callback types
 	for customType := range customCallbacks {
 		if customType == ADDPEER || customType == REMOVEPEER {

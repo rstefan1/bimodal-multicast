@@ -24,7 +24,6 @@ import (
 const (
 	gossipDecodingErrFmt = "error at decoding gossip message in Server: %w"
 	gossipMarshalErrFmt  = "gossiper from %s can not marshal the gossip message: %w"
-	gossipSendLogFmt     = "gossiper from %s can not send the gossip message: %s"
 )
 
 // Gossip is gossip message for http server.
@@ -39,6 +38,8 @@ func (b *BMMC) receiveGossip(msg []byte) ([]string, string, *GossipRound, error)
 	var body Gossip
 
 	if err := json.Unmarshal(msg, &body); err != nil {
+		b.config.Logger.Error("cannot decode gossip message", "err", err)
+
 		return nil, "", nil, fmt.Errorf(gossipDecodingErrFmt, err)
 	}
 
@@ -49,12 +50,14 @@ func (b *BMMC) receiveGossip(msg []byte) ([]string, string, *GossipRound, error)
 func (b *BMMC) sendGossip(gossipMsg Gossip, peerToSend string) error {
 	jsonGossip, err := json.Marshal(gossipMsg)
 	if err != nil {
+		b.config.Logger.Error("cannot marshal gossip message", "err", err)
+
 		return fmt.Errorf(gossipMarshalErrFmt, gossipMsg.Host, err)
 	}
 
 	go func() {
 		if err := b.config.Host.Send(jsonGossip, GossipRoute, peerToSend); err != nil {
-			b.config.Logger.Printf(gossipSendLogFmt, gossipMsg.Host, err)
+			b.config.Logger.Error("cannot send gossip message to peer", "err", err)
 		}
 	}()
 

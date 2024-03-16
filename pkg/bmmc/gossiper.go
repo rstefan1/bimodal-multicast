@@ -20,11 +20,6 @@ import (
 	"time"
 )
 
-const (
-	startGossiperLogFmt = "Starting gossiper for %s"
-	stopGossiperLogFmt  = "End of gossip round from %s"
-)
-
 // randomlySelectPeer is a helper func that returns a random peer.
 func (b *BMMC) randomlySelectPeer() string {
 	for {
@@ -62,7 +57,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
-			b.config.Logger.Printf(stopGossiperLogFmt, b.config.Host.String())
+			b.config.Logger.Info("ending gossiper")
 
 			return
 		default:
@@ -80,10 +75,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 					Digest:      b.messageBuffer.Digest(),
 				}
 
-				err := b.sendGossip(gossipMsg, p)
-				if err != nil {
-					b.config.Logger.Printf("%s", err)
-				}
+				b.sendGossip(gossipMsg, p) //nolint: errcheck
 			}
 
 			(*b.messageBuffer).IncrementGossipCount()
@@ -95,6 +87,7 @@ func (b *BMMC) round(stop <-chan struct{}) {
 }
 
 func (b *BMMC) startGossiper(stop <-chan struct{}) {
-	b.config.Logger.Printf(startGossiperLogFmt, b.config.Host.String())
+	b.config.Logger.Info("starting gossiper")
+
 	b.round(stop)
 }

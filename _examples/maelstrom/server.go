@@ -19,7 +19,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
 
@@ -31,13 +31,9 @@ const (
 	messageBodyKey = "message"
 )
 
-var (
-	cannotAddBMMCMessageErrFmt = "cannot add BMMC message %d: %w"
+var errCannotCast = errors.New("cannot cast")
 
-	errCannotCast = errors.New("cannot cast")
-)
-
-func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) { //nolint: funlen, gocyclo, cyclop
+func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *slog.Logger) { //nolint: funlen, gocyclo, cyclop
 	n.Handle(bmmc.GossipRoute, func(msg maelstrom.Message) error {
 		var body map[string]string
 
@@ -82,7 +78,7 @@ func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) { /
 		}
 
 		if err := b.AddMessage(body[messageBodyKey], bmmc.NOCALLBACK); err != nil {
-			logger.Printf(cannotAddBMMCMessageErrFmt, body[messageBodyKey], err)
+			logger.Error("cannot add message to bmmc", "err", err, "msg", body[messageBodyKey])
 		}
 
 		return n.Reply(msg, map[string]any{
@@ -140,6 +136,6 @@ func createAndRunServer(b *bmmc.BMMC, n *maelstrom.Node, logger *log.Logger) { /
 	})
 
 	if err := n.Run(); err != nil {
-		logger.Fatal(err)
+		logger.Error("cannot start maelstrom server", "err", err)
 	}
 }

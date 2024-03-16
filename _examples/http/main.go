@@ -19,7 +19,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -44,13 +44,13 @@ func main() { //nolint: funlen, cyclop, gocyclo, gocognit
 	// 	return
 	// }
 
-	callbacks := map[string]func(any, *log.Logger) error{
-		"first-callback": func(msg any, _ *log.Logger) error {
+	callbacks := map[string]func(any, *slog.Logger) error{
+		"first-callback": func(msg any, _ *slog.Logger) error {
 			fmt.Printf("*** First callback called for message `%s`. ***\n", msg)
 
 			return nil
 		},
-		"second-callback": func(msg any, _ *log.Logger) error {
+		"second-callback": func(msg any, _ *slog.Logger) error {
 			fmt.Printf("### Second callback called for message `%s`. ###\n", msg)
 
 			return nil
@@ -69,7 +69,7 @@ func main() { //nolint: funlen, cyclop, gocyclo, gocognit
 		Callbacks:  callbacks,
 		Beta:       0.25, //nolint: gomnd
 		BufferSize: 1024, //nolint: gomnd
-		// Logger:     log.New(logFile, "", 0),
+		// Logger:     slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 		// RoundDuration:  time.Second * 2,
 	}
 

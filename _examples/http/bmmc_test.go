@@ -19,7 +19,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"maps"
 	"math/rand"
 	"net"
@@ -60,9 +60,9 @@ func anySliceToAnyString(b []any) []string {
 	return s
 }
 
-func fakeRegistry(cbType string, e error) map[string]func(any, *log.Logger) error {
-	return map[string]func(any, *log.Logger) error{
-		cbType: func(_ any, _ *log.Logger) error {
+func fakeRegistry(cbType string, e error) map[string]func(any, *slog.Logger) error {
+	return map[string]func(any, *slog.Logger) error{
+		cbType: func(_ any, _ *slog.Logger) error {
 			return e
 		},
 	}
@@ -84,14 +84,15 @@ func suggestPort() string {
 	return strconv.Itoa(addr.Port)
 }
 
-func newBMMC(p Peer, callbacksRegistry map[string]func(any, *log.Logger) error) *bmmc.BMMC {
-	cbRegistry := map[string]func(any, *log.Logger) error{}
+func newBMMC(p Peer, callbacksRegistry map[string]func(any, *slog.Logger) error, logger *slog.Logger) *bmmc.BMMC {
+	cbRegistry := map[string]func(any, *slog.Logger) error{}
 	maps.Copy(cbRegistry, callbacksRegistry)
 
 	b, err := bmmc.New(&bmmc.Config{
 		Host:       p,
 		Callbacks:  cbRegistry,
 		BufferSize: 32,
+		Logger:     logger,
 	})
 	Expect(err).ToNot(HaveOccurred())
 
@@ -99,10 +100,11 @@ func newBMMC(p Peer, callbacksRegistry map[string]func(any, *log.Logger) error) 
 }
 
 var _ = Describe("BMMC with HTTP Server", func() {
-	var testLog *log.Logger
+	var bmmcLog, srvLog *slog.Logger
 
 	BeforeEach(func() {
-		testLog = log.New(os.Stdout, "", 0)
+		bmmcLog = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})).With("component", "bmmc_server")
+		srvLog = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})).With("component", "http_server")
 	})
 
 	When("system has 2 nodes", func() {
@@ -141,17 +143,17 @@ var _ = Describe("BMMC with HTTP Server", func() {
 
 				cbRegistry := fakeRegistry("my-callback", errors.New("invalid-callback")) //nolint: goerr113
 
-				bmmc1 = newBMMC(host1, cbRegistry)
-				bmmc2 = newBMMC(host2, cbRegistry)
+				bmmc1 = newBMMC(host1, cbRegistry, bmmcLog)
+				bmmc2 = newBMMC(host2, cbRegistry, bmmcLog)
 
-				srv1 = NewServer(bmmc1, addr1, port1, testLog)
-				srv2 = NewServer(bmmc2, addr2, port2, testLog)
+				srv1 = NewServer(bmmc1, addr1, port1, srvLog)
+				srv2 = NewServer(bmmc2, addr2, port2, srvLog)
 
 				Expect(bmmc1.Start()).To(Succeed())
 				Expect(bmmc2.Start()).To(Succeed())
 
-				Expect(srv1.Start(stopSrv1, testLog)).To(Succeed())
-				Expect(srv2.Start(stopSrv2, testLog)).To(Succeed())
+				Expect(srv1.Start(stopSrv1, srvLog)).To(Succeed())
+				Expect(srv2.Start(stopSrv2, srvLog)).To(Succeed())
 
 				Expect(bmmc1.AddPeer(host2.String())).To(Succeed())
 				Expect(bmmc2.AddPeer(host1.String())).To(Succeed())
@@ -215,17 +217,17 @@ var _ = Describe("BMMC with HTTP Server", func() {
 
 				cbRegistry := fakeRegistry("my-callback", nil)
 
-				bmmc1 = newBMMC(host1, cbRegistry)
-				bmmc2 = newBMMC(host2, cbRegistry)
+				bmmc1 = newBMMC(host1, cbRegistry, bmmcLog)
+				bmmc2 = newBMMC(host2, cbRegistry, bmmcLog)
 
-				srv1 = NewServer(bmmc1, addr1, port1, testLog)
-				srv2 = NewServer(bmmc2, addr2, port2, testLog)
+				srv1 = NewServer(bmmc1, addr1, port1, srvLog)
+				srv2 = NewServer(bmmc2, addr2, port2, srvLog)
 
 				Expect(bmmc1.Start()).To(Succeed())
 				Expect(bmmc2.Start()).To(Succeed())
 
-				Expect(srv1.Start(stopSrv1, testLog)).To(Succeed())
-				Expect(srv2.Start(stopSrv2, testLog)).To(Succeed())
+				Expect(srv1.Start(stopSrv1, srvLog)).To(Succeed())
+				Expect(srv2.Start(stopSrv2, srvLog)).To(Succeed())
 
 				Expect(bmmc1.AddPeer(host2.String())).To(Succeed())
 				Expect(bmmc2.AddPeer(host1.String())).To(Succeed())
@@ -294,12 +296,12 @@ var _ = Describe("BMMC with HTTP Server", func() {
 				hosts[i], err = NewPeer("localhost", suggestPort(), &http.Client{})
 				Expect(err).ToNot(HaveOccurred())
 
-				bmmcs[i] = newBMMC(hosts[i], map[string]func(any, *log.Logger) error{})
+				bmmcs[i] = newBMMC(hosts[i], map[string]func(any, *slog.Logger) error{}, bmmcLog)
 				Expect(bmmcs[i].Start()).To(Succeed())
 
-				srvs[i] = NewServer(bmmcs[i], hosts[i].Addr, hosts[i].Port, testLog)
+				srvs[i] = NewServer(bmmcs[i], hosts[i].Addr, hosts[i].Port, srvLog)
 				stopSrvs[i] = make(chan struct{})
-				Expect(srvs[i].Start(stopSrvs[i], testLog)).To(Succeed())
+				Expect(srvs[i].Start(stopSrvs[i], srvLog)).To(Succeed())
 			}
 
 			// add peers to the first bmmc node
