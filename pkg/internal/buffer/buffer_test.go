@@ -40,7 +40,7 @@ var _ = Describe("Buffer interface", func() {
 		fullBuf := &Buffer{
 			Elements: make([]Element, 4),
 			Len:      4,
-			Mux:      &sync.Mutex{},
+			Mux:      &sync.RWMutex{},
 		}
 		fullBuf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
 		fullBuf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
@@ -50,7 +50,7 @@ var _ = Describe("Buffer interface", func() {
 		halfBuf := &Buffer{
 			Elements: make([]Element, 4),
 			Len:      2,
-			Mux:      &sync.Mutex{},
+			Mux:      &sync.RWMutex{},
 		}
 		halfBuf.Elements[0] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
 		halfBuf.Elements[1] = Element{Timestamp: time.Date(2014, time.October, 29, 0, 0, 0, 0, time.UTC)}
@@ -113,7 +113,7 @@ var _ = Describe("Buffer interface", func() {
 				buf = &Buffer{
 					Elements: make([]Element, 4),
 					Len:      4,
-					Mux:      &sync.Mutex{},
+					Mux:      &sync.RWMutex{},
 				}
 				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
@@ -173,7 +173,7 @@ var _ = Describe("Buffer interface", func() {
 				buf = &Buffer{
 					Elements: make([]Element, 4),
 					Len:      3,
-					Mux:      &sync.Mutex{},
+					Mux:      &sync.RWMutex{},
 				}
 				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
 				buf.Elements[1] = Element{Timestamp: time.Date(2016, time.October, 29, 0, 0, 0, 0, time.UTC)}
@@ -220,7 +220,7 @@ var _ = Describe("Buffer interface", func() {
 				buf = &Buffer{
 					Elements: make([]Element, 4),
 					Len:      1,
-					Mux:      &sync.Mutex{},
+					Mux:      &sync.RWMutex{},
 				}
 				buf.Elements[0] = Element{Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC)}
 
@@ -241,7 +241,7 @@ var _ = Describe("Buffer interface", func() {
 			buf = &Buffer{
 				Elements: make([]Element, 4),
 				Len:      4,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 			buf.Elements[0] = Element{
 				Timestamp: time.Date(2018, time.October, 29, 0, 0, 0, 0, time.UTC),
@@ -305,7 +305,7 @@ var _ = Describe("Buffer interface", func() {
 			fullBuf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      4,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 			fullBuf.Elements[0] = Element{ID: "100"}
 			fullBuf.Elements[1] = Element{ID: "110"}
@@ -321,7 +321,7 @@ var _ = Describe("Buffer interface", func() {
 			halfBuf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      2,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 			halfBuf.Elements[0] = Element{ID: "204"}
 			halfBuf.Elements[1] = Element{ID: "201"}
@@ -336,7 +336,7 @@ var _ = Describe("Buffer interface", func() {
 		buf := &Buffer{
 			Elements: make([]Element, 4),
 			Len:      4,
-			Mux:      &sync.Mutex{},
+			Mux:      &sync.RWMutex{},
 		}
 		buf.Elements[0] = Element{ID: "100"}
 		buf.Elements[1] = Element{ID: "110"}
@@ -380,7 +380,7 @@ var _ = Describe("Buffer interface", func() {
 			buf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      3,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 			buf.Elements[0] = Element{GossipCount: int64(100)}
 			buf.Elements[1] = Element{GossipCount: int64(200)}
@@ -403,7 +403,7 @@ var _ = Describe("Buffer interface", func() {
 					{GossipCount: int64(math.MaxInt64)},
 				},
 				Len: 3,
-				Mux: &sync.Mutex{},
+				Mux: &sync.RWMutex{},
 			}
 
 			expectedElements := []Element{
@@ -455,7 +455,7 @@ var _ = Describe("Buffer interface", func() {
 					},
 				},
 				Len: 5,
-				Mux: &sync.Mutex{},
+				Mux: &sync.RWMutex{},
 			}
 		})
 
@@ -496,7 +496,7 @@ var _ = Describe("Buffer interface", func() {
 			buf := &Buffer{
 				Elements: make([]Element, 4),
 				Len:      2,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 
 			Expect(buf.Length()).To(Equal(2))
@@ -508,7 +508,7 @@ var _ = Describe("Buffer interface", func() {
 			buf := &Buffer{
 				Elements: make([]Element, 10),
 				Len:      10,
-				Mux:      &sync.Mutex{},
+				Mux:      &sync.RWMutex{},
 			}
 			buf.Elements[0] = Element{ID: "100"}
 			buf.Elements[1] = Element{ID: "101"}

@@ -31,7 +31,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 
 			Expect(pBuf.Length()).To(Equal(2))
@@ -46,7 +46,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 
 			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
@@ -59,7 +59,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/55555",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 
 			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
@@ -72,7 +72,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/20000",
 					"localhost/55555",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 
 			Expect(pBuf.alreadyExists("localhost/55555")).To(BeTrue())
@@ -84,7 +84,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 
 			Expect(pBuf.alreadyExists("localhost/55555")).To(BeFalse())
@@ -98,7 +98,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			newPeer := "localhost/30000"
 			expectedPeers := []string{
@@ -117,7 +117,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			newPeer := "localhost/10000"
 			expectedPeers := []string{
@@ -138,7 +138,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/20000",
 					"localhost/30000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			expectedPeers := []string{
 				"localhost/10000",
@@ -158,7 +158,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			peerToRemove := "localhost/66666"
 			expectedPeers := []string{
@@ -177,7 +177,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/77777",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			peerToRemove := "localhost/77777"
 			expectedPeers := []string{
@@ -196,7 +196,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/20000",
 					"localhost/88888",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			peerToRemove := "localhost/88888"
 			expectedPeers := []string{
@@ -214,7 +214,7 @@ var _ = Describe("HTTP Peer Buffer Interface", func() {
 					"localhost/10000",
 					"localhost/20000",
 				},
-				mux: &sync.Mutex{},
+				mux: &sync.RWMutex{},
 			}
 			peerToRemove := "localhost/99999"
 			expectedPeers := []string{

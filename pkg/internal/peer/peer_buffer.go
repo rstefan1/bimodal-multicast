@@ -24,21 +24,21 @@ import (
 // Buffer is the buffer with encoded peers.
 type Buffer struct {
 	peers []string
-	mux   *sync.Mutex
+	mux   *sync.RWMutex
 }
 
 // NewPeerBuffer creates a PeerBuffer.
 func NewPeerBuffer() *Buffer {
 	return &Buffer{
 		peers: []string{},
-		mux:   &sync.Mutex{},
+		mux:   &sync.RWMutex{},
 	}
 }
 
 // Length returns length of peers buffer.
 func (peerBuffer *Buffer) Length() int {
-	peerBuffer.mux.Lock()
-	defer peerBuffer.mux.Unlock()
+	peerBuffer.mux.RLock()
+	defer peerBuffer.mux.RUnlock()
 
 	l := len(peerBuffer.peers)
 
@@ -95,8 +95,8 @@ func (peerBuffer *Buffer) RemovePeer(peer string) {
 
 // GetPeers returns a list of strings that contains peers.
 func (peerBuffer *Buffer) GetPeers() []string {
-	peerBuffer.mux.Lock()
-	defer peerBuffer.mux.Unlock()
+	peerBuffer.mux.RLock()
+	defer peerBuffer.mux.RUnlock()
 
 	p := make([]string, len(peerBuffer.peers))
 
@@ -107,8 +107,8 @@ func (peerBuffer *Buffer) GetPeers() []string {
 
 // GetRandomPeer returns random peer from peers buffer.
 func (peerBuffer *Buffer) GetRandomPeer() string {
-	peerBuffer.mux.Lock()
-	defer peerBuffer.mux.Unlock()
+	peerBuffer.mux.RLock()
+	defer peerBuffer.mux.RUnlock()
 
 	p := peerBuffer.peers[rand.Intn(len(peerBuffer.peers))] //nolint: gosec
 
@@ -117,8 +117,8 @@ func (peerBuffer *Buffer) GetRandomPeer() string {
 
 // GetRandomPeers returns a list of random peers from peers buffer.
 func (peerBuffer *Buffer) GetRandomPeers(noPeers int) []string {
-	peerBuffer.mux.Lock()
-	defer peerBuffer.mux.Unlock()
+	peerBuffer.mux.RLock()
+	defer peerBuffer.mux.RUnlock()
 
 	selectedPeers := []string{}
 
