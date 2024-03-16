@@ -26,7 +26,6 @@ import (
 const (
 	synchronizationDecodeErrFmt  = "error at decoding synchronization message in Server: %w"
 	synchronizationMarshalErrFmt = "error at marshal synchronization message in Server: %w"
-	synchronizationSendErrFmt    = "error at sending Synchronization message in Server: %s"
 )
 
 // Synchronization is synchronization message for server.
@@ -40,6 +39,8 @@ func (b *BMMC) receiveSynchronization(msg []byte) ([]buffer.Element, string, err
 	var body Synchronization
 
 	if err := json.Unmarshal(msg, &body); err != nil {
+		b.config.Logger.Error("cannot decode synchronization message", "err", err)
+
 		return nil, "", fmt.Errorf(synchronizationDecodeErrFmt, err)
 	}
 
@@ -50,12 +51,14 @@ func (b *BMMC) receiveSynchronization(msg []byte) ([]buffer.Element, string, err
 func (b *BMMC) sendSynchronization(synchronization Synchronization, peerToSend string) error {
 	jsonSynchronization, err := json.Marshal(synchronization)
 	if err != nil {
+		b.config.Logger.Error("cannot marshal synchronization message", "err", err)
+
 		return fmt.Errorf(synchronizationMarshalErrFmt, err)
 	}
 
 	go func() {
 		if err := b.config.Host.Send(jsonSynchronization, SynchronizationRoute, peerToSend); err != nil {
-			b.config.Logger.Printf(synchronizationSendErrFmt, err)
+			b.config.Logger.Error("cannot send synchronization message", "err", err)
 		}
 	}()
 

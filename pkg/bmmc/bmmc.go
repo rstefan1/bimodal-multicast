@@ -18,7 +18,7 @@ package bmmc
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"maps"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
@@ -32,8 +32,6 @@ const (
 
 	addPeerErrFmt    = "error at adding the peer %s: %w"
 	removePeerErrFmt = "error at removing the peer %s: %w"
-
-	runCallbackErrFmt = "error at calling callback at %s for message %s in round %d"
 
 	createCallbacksRegistryErrFmt = "error at creating callbacks registry: %w"
 )
@@ -67,6 +65,8 @@ func New(cfg *Config) (*BMMC, error) {
 	// fill optional fields of the config
 	cfg.fillEmptyFields()
 
+	cfg.Logger.With("host", cfg.Host.String())
+
 	// set callbacks
 	callbacksRegistry, err := callback.NewRegistry(cfg.Callbacks)
 	if err != nil {
@@ -87,7 +87,7 @@ func New(cfg *Config) (*BMMC, error) {
 	}
 
 	// add internal callbacks
-	internalCallbacks := map[string]func(any, *log.Logger) error{
+	internalCallbacks := map[string]func(any, *slog.Logger) error{
 		callback.ADDPEER:    callback.AddPeerCallback,
 		callback.REMOVEPEER: callback.RemovePeerCallback,
 	}
@@ -117,19 +117,18 @@ func (b *BMMC) Stop() {
 func (b *BMMC) AddMessage(msg any, callbackType string) error {
 	m, err := buffer.NewElement(msg, callbackType, false)
 	if err != nil {
-		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
+		b.config.Logger.Error("failed to add message in buffer", "err", err)
 
 		return err //nolint: wrapcheck
 	}
 
 	if err := b.messageBuffer.Add(m); err != nil {
-		b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
+		b.config.Logger.Error("failed to add message in buffer", "err", err)
 
 		return err //nolint: wrapcheck
 	}
 
-	b.config.Logger.Printf(bufferSyncedLogFmt,
-		b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
+	b.config.Logger.Debug("synced buffer with message", "round", b.gossipRound.GetNumber())
 
 	b.runCallbacks(m)
 
@@ -203,6 +202,6 @@ func (b *BMMC) runCallbacks(el buffer.Element) {
 	}
 
 	if err := callbackFn(callbackData, b.config.Logger); err != nil {
-		b.config.Logger.Printf(runCallbackErrFmt, b.config.Host.String(), el.ID, b.gossipRound.GetNumber())
+		b.config.Logger.Error("failed to run callback for message", "msg", el.Msg)
 	}
 }

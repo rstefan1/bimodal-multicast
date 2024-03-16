@@ -19,8 +19,9 @@ package main
 // https://aods.cryingpotato.com/
 
 import (
-	"io"
 	"log"
+	"log/slog"
+	"os"
 	"time"
 
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
@@ -28,8 +29,7 @@ import (
 )
 
 func main() {
-	logger := log.Default()
-	logger.SetOutput(io.Discard)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
 	host := Peer{
 		Node: maelstrom.NewNode(),
@@ -40,18 +40,18 @@ func main() {
 		Beta:          0.3,                    //nolint: gomnd
 		RoundDuration: time.Millisecond * 500, //nolint: gomnd
 		BufferSize:    8192,                   //nolint: gomnd
-		Logger:        logger,
+		Logger:        logger.With("component", "bmmc"),
 	}
 
 	bmmcNode, err := bmmc.New(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 
 		return
 	}
 
 	if err := bmmcNode.Start(); err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 
 		return
 	}

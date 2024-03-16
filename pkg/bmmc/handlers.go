@@ -27,21 +27,12 @@ const (
 	SolicitationRoute = "/solicitation"
 	// SynchronizationRoute is the route for synchronization messages.
 	SynchronizationRoute = "/synchronization"
-
-	gossipHandlerErrLogFmt          = "Error in gossip handler: %s"
-	solicitationHandlerErrLogFmt    = "Error in solicitation handler: %s"
-	synchronizationHandlerErrLogFmt = "Error in synchronization handler: %s"
-
-	syncBufferLogErrFmt = "BMMC %s error at syncing buffer with message %s in round %d: %s"
-	bufferSyncedLogFmt  = "BMMC %s synced buffer with message %s in round %d"
 )
 
 // GossipHandler handles a gossip message.
 func (b *BMMC) GossipHandler(body []byte) {
 	gossipDigest, p, roundNumber, err := b.receiveGossip(body)
 	if err != nil {
-		b.config.Logger.Printf("%s", err)
-
 		return
 	}
 
@@ -56,8 +47,6 @@ func (b *BMMC) GossipHandler(body []byte) {
 		}
 
 		if err = b.sendSolicitation(solicitationMsg, p); err != nil {
-			b.config.Logger.Printf(gossipHandlerErrLogFmt, err)
-
 			return
 		}
 	}
@@ -67,8 +56,6 @@ func (b *BMMC) GossipHandler(body []byte) {
 func (b *BMMC) SolicitationHandler(body []byte) {
 	missingDigest, p, _, err := b.receiveSolicitation(body)
 	if err != nil {
-		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
-
 		return
 	}
 
@@ -80,8 +67,6 @@ func (b *BMMC) SolicitationHandler(body []byte) {
 	}
 
 	if err = b.sendSynchronization(synchronizationMsg, p); err != nil {
-		b.config.Logger.Printf(solicitationHandlerErrLogFmt, err)
-
 		return
 	}
 }
@@ -90,17 +75,16 @@ func (b *BMMC) SolicitationHandler(body []byte) {
 func (b *BMMC) SynchronizationHandler(body []byte) {
 	rcvElements, _, err := b.receiveSynchronization(body)
 	if err != nil {
-		b.config.Logger.Printf(synchronizationHandlerErrLogFmt, err)
-
 		return
 	}
 
 	for _, m := range rcvElements {
 		err = b.messageBuffer.Add(m)
 		if err != nil {
-			b.config.Logger.Printf(syncBufferLogErrFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber(), err)
+			b.config.Logger.Error("failed to sync buffer with message", "err", err, "msg", m.Msg)
 		} else {
-			b.config.Logger.Printf(bufferSyncedLogFmt, b.config.Host.String(), m.ID, b.gossipRound.GetNumber())
+			b.config.Logger.Debug("buffer successfully synced with message", "msg", m.Msg)
+
 			b.runCallbacks(m)
 		}
 	}

@@ -18,7 +18,7 @@ package callback
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/buffer"
 	"github.com/rstefan1/bimodal-multicast/pkg/internal/peer"
@@ -29,9 +29,6 @@ const (
 	ADDPEER = "add-peer"
 	// REMOVEPEER is the type of messages used for deleting a peer from peers buffer.
 	REMOVEPEER = "remove-peer"
-
-	peerAddedLogFmt   = "peer %s added in the peers buffer"
-	peerRemovedLogFmt = "peer %s removed from the peers buffer"
 )
 
 var (
@@ -46,7 +43,7 @@ type PeerCallbackData struct {
 }
 
 // AddPeerCallback is the callback for adding peers in peers buffer.
-func AddPeerCallback(data any, logger *log.Logger) error {
+func AddPeerCallback(data any, logger *slog.Logger) error {
 	peerCBData, convOk := data.(PeerCallbackData)
 	if !convOk {
 		return errCannotConvertToPeerCallbackData
@@ -62,13 +59,13 @@ func AddPeerCallback(data any, logger *log.Logger) error {
 		return err //nolint: wrapcheck
 	}
 
-	logger.Printf(peerAddedLogFmt, p)
+	logger.Debug("new peer added", "peer", p)
 
 	return nil
 }
 
 // RemovePeerCallback is the callback for removing peers from peers buffer.
-func RemovePeerCallback(data any, logger *log.Logger) error {
+func RemovePeerCallback(data any, logger *slog.Logger) error {
 	peerCBData, convOk := data.(PeerCallbackData)
 	if !convOk {
 		return errCannotConvertToPeerCallbackData
@@ -81,7 +78,7 @@ func RemovePeerCallback(data any, logger *log.Logger) error {
 
 	peerCBData.Buffer.RemovePeer(p)
 
-	logger.Printf(peerRemovedLogFmt, p)
+	logger.Debug("peer removed", "peer", p)
 
 	return nil
 }

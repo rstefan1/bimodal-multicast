@@ -21,19 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-)
-
-const (
-	startServerLogFmt         = "Starting server for  %s"
-	stopServerLogFmt          = "End of server round from %s"
-	unableStartServerLogFmt   = "Unable to start  server: %s"
-	unableToReadMsgBodyLogFmt = "Unable to read message body: %s"
-	unableStopServerLogFmt    = "Unable to shutdown server properly: %s"
 )
 
 // Server decorates an HTTP Server.
@@ -42,7 +34,7 @@ type Server struct {
 }
 
 // NewServer creates a new http server.
-func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
+func NewServer(b *bmmc.BMMC, addr, port string, log *slog.Logger) *Server {
 	return &Server{
 		&http.Server{
 			Addr: fmt.Sprintf("%s:%s", addr, port),
@@ -51,7 +43,7 @@ func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
 				case bmmc.GossipRoute:
 					body, err := io.ReadAll(r.Body)
 					if err != nil {
-						log.Printf(unableToReadMsgBodyLogFmt, err)
+						log.Error("unable to read gossip message body", err)
 
 						return
 					}
@@ -61,7 +53,7 @@ func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
 				case bmmc.SolicitationRoute:
 					body, err := io.ReadAll(r.Body)
 					if err != nil {
-						log.Printf(unableToReadMsgBodyLogFmt, err)
+						log.Error("unable to read solicitation message body", err)
 
 						return
 					}
@@ -71,7 +63,7 @@ func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
 				case bmmc.SynchronizationRoute:
 					body, err := io.ReadAll(r.Body)
 					if err != nil {
-						log.Printf(unableToReadMsgBodyLogFmt, err)
+						log.Error("unable to read synchronization message body", err)
 
 						return
 					}
@@ -85,14 +77,14 @@ func NewServer(b *bmmc.BMMC, addr, port string, log *log.Logger) *Server {
 }
 
 // Start starts the http server.
-func (s *Server) Start(stop <-chan struct{}, log *log.Logger) error { //nolint: unparam
+func (s *Server) Start(stop <-chan struct{}, log *slog.Logger) error { //nolint: unparam
 	errChan := make(chan error)
 
 	go func() {
-		log.Printf(startServerLogFmt, s.Addr)
+		log.Info("starting server", "addr", s.Addr)
 
 		if err := s.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			log.Printf(unableStartServerLogFmt, err)
+			log.Error("unable to start server", "addr", s.Addr, "err", err)
 
 			errChan <- err
 
@@ -107,10 +99,10 @@ func (s *Server) Start(stop <-chan struct{}, log *log.Logger) error { //nolint: 
 
 		err := s.gracefullyShutdown()
 		if err != nil {
-			log.Printf(unableStopServerLogFmt, err)
+			log.Error("unable to stop server", "err", err, "addr", s.Addr)
 		}
 
-		log.Printf(stopServerLogFmt, s.Addr)
+		log.Info("server stopped", "addr", s.Addr)
 	}()
 
 	// TODO return err chan

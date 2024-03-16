@@ -18,7 +18,7 @@ package bmmc
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -42,10 +42,10 @@ type Config struct {
 	Beta float64
 	// Logger
 	// Optional
-	Logger *log.Logger
+	Logger *slog.Logger
 	// Callbacks functions
 	// Optional
-	Callbacks map[string]func(any, *log.Logger) error
+	Callbacks map[string]func(any, *slog.Logger) error
 	// Gossip round duration
 	// Optional
 	RoundDuration time.Duration
@@ -70,7 +70,7 @@ func (cfg *Config) fillEmptyFields() {
 	}
 
 	if cfg.Logger == nil {
-		cfg.Logger = log.New(os.Stdout, "", 0)
+		cfg.Logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
 
 	if cfg.RoundDuration == 0 {
@@ -78,6 +78,6 @@ func (cfg *Config) fillEmptyFields() {
 	}
 
 	if cfg.Callbacks == nil {
-		cfg.Callbacks = map[string]func(any, *log.Logger) error{}
+		cfg.Callbacks = map[string]func(any, *slog.Logger) error{}
 	}
 }
