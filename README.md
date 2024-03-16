@@ -65,7 +65,7 @@ import (
     p.Stop()
 ```
 
-* Add a new message in buffer
+* Add a new message in buffer (When the buffer is full, the oldest message will be removed.)
 
 ```golang
     err := p.AddMessage("awesome message", "awesome-callback")
@@ -83,7 +83,7 @@ For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
     messages := p.GetMessages()
 ```
 
-* Add a new peer in peers buffer
+* Add a new peer in peers buffer.
 
 ```golang
     err := p.AddPeer("localhost", "18999")
