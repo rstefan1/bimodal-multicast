@@ -50,9 +50,6 @@ type BMMC struct {
 	callbacksRegistry *callback.Registry
 	// stop channel
 	stop chan struct{}
-
-	// TODO remove the following field
-	selectedPeers []bool
 }
 
 // New creates a new instance for the protocol.
@@ -81,9 +78,6 @@ func New(cfg *Config) (*BMMC, error) {
 		messageBuffer:     buffer.NewBuffer(cfg.BufferSize),
 		gossipRound:       NewGossipRound(),
 		callbacksRegistry: callbacksRegistry,
-
-		// TODO remove the following line
-		selectedPeers: make([]bool, peer.MAXPEERS),
 	}
 
 	// add internal callbacks
