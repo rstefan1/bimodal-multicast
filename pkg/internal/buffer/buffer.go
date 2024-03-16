@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Robert Andrei STEFAN
+Copyright 2024 Robert Andrei STEFAN
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ var (
 // Buffer is the buffer with messages.
 type Buffer struct {
 	Elements []Element     `json:"elements"`
-	Len      int           `json:"len"`
+	Len      int           `json:"len"` // Length of the Buffer. When the buffer is full, oldest element will be removed.
 	Mux      *sync.RWMutex `json:"mux"`
 }
 
@@ -90,6 +90,7 @@ func (buf *Buffer) shiftElements(index int) error {
 }
 
 // Add adds the given element in buffer.
+// When the buffer is full, oldest element will be removed.
 func (buf *Buffer) Add(el Element) error {
 	buf.Mux.Lock()
 	defer buf.Mux.Unlock()
