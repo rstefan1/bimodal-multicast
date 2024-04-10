@@ -153,7 +153,7 @@ func main() { //nolint: funlen, cyclop, gocyclo, gocognit
 		case "add-message":
 			if len(args) != 3 { //nolint: gomnd
 				fmt.Println("Invalid command. The `add-message` command must be in form: " +
-					"add-message awesome-message first-callback")
+					"add-message my-message first-callback")
 
 				break
 			}

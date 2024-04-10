@@ -172,33 +172,33 @@ var _ = Describe("BMMC with HTTP Server", func() {
 			It("sync buffers", func() {
 				// Add a message in first node.
 				// Both nodes must have this message.
-				Expect(bmmc1.AddMessage("awesome-first-message", "my-callback")).To(Succeed())
+				Expect(bmmc1.AddMessage("my-first-message", "my-callback")).To(Succeed())
 
 				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
 					[]string{
-						"awesome-first-message",
+						"my-first-message",
 					},
 				))
 				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
 					[]string{
-						"awesome-first-message",
+						"my-first-message",
 					},
 				))
 
 				// Add a message in second node.
 				// Both nodes must have this message.
-				Expect(bmmc2.AddMessage("awesome-second-message", "my-callback")).To(Succeed())
+				Expect(bmmc2.AddMessage("my-second-message", "my-callback")).To(Succeed())
 
 				Eventually(getBufferFn(bmmc1)).Should(ConsistOf(
 					[]string{
-						"awesome-first-message",
-						"awesome-second-message",
+						"my-first-message",
+						"my-second-message",
 					},
 				))
 				Eventually(getBufferFn(bmmc2)).Should(ConsistOf(
 					[]string{
-						"awesome-first-message",
-						"awesome-second-message",
+						"my-first-message",
+						"my-second-message",
 					},
 				))
 			})

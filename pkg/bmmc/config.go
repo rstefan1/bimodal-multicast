@@ -36,20 +36,22 @@ var errInvalidBufSize = errors.New("invalid buffer size")
 // Config is the config for the protocol.
 type Config struct {
 	// Host is the host peer.
+	// Required.
 	Host peer.Peer
-	// Beta is the expected fanout for gossip rounds
+	// Beta is the expected fanout for gossip rounds.
 	// Optional
 	Beta float64
-	// Logger
+	// Logger.
 	// Optional
 	Logger *slog.Logger
-	// Callbacks functions
+	// Callbacks functions.
 	// Optional
 	Callbacks map[string]func(any, *slog.Logger) error
-	// Gossip round duration
+	// Gossip round duration.
 	// Optional
 	RoundDuration time.Duration
-	// Buffer size
+	// Buffer size.
+	// When the buffer is full, the oldest message will be removed.
 	// Required
 	BufferSize int
 }
