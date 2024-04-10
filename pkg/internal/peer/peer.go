@@ -16,7 +16,7 @@ limitations under the License.
 
 package peer
 
-// Peer ...
+// Peer is the interface of Host Peer.
 type Peer interface {
 	String() string
 	Send(msg []byte, route string, peerToSend string) error

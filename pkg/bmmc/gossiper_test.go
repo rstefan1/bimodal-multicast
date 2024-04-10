@@ -34,7 +34,7 @@ var _ = Describe("Gossiper", func() {
 
 			msgBuf := buffer.NewBuffer(25)
 
-			msg, err := buffer.NewElement("awesome message", "awesome-callback", false)
+			msg, err := buffer.NewElement("my message", "my-callback", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(msgBuf.Add(msg)).To(Succeed())

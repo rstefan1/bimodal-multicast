@@ -8,105 +8,148 @@ This is an implementation of the Bimodal Multicast Protocol written in GO.
 You can synchronize all types of messages: bool, string, int, 
 complex structs, etc.
 
+---
+
 ## Overview
 
 The Bimodal Multicast Protocol runs in a series of rounds.
+
 At the beginning of each round, every node randomly chooses another node and
 sends it a digest of its message histories. The message is called gossip
 message.
+
 The node that receive the gossip message compares the given digest with the
 messages in its own message buffer.
+
 If the digest differs from its message histories, then it send a message
 back to the original sender to request the missing messages. This message is
 called solicitation.
 
+---
+
 ## Usage
 
-* Imports
+- ### Step 1: Imports
 
-```golang
-import (
-    "github.com/rstefan1/bimodal-multicast/pkg/bmmc"
-)
+```go
+import "github.com/rstefan1/bimodal-multicast/pkg/bmmc"
 ```
 
-* Configure the protocol
+- ### Step 2: Configure the host
 
-```golang
-    cfg := bmmc.Config{
-        Addr:      "localhost",
-        Port:      "14999",
-        Callbacks: map[string]func (interface{}, *log.Logger) error {
-            "awesome-callback":
-            func (msg interface{}, logger *log.Logger) error {
-                fmt.Println("The message is:", msg)
-                return nil
-            },
+The host must implement [Peer interface](https://github.com/rstefan1/bimodal-multicast/blob/f98c69dbc8ac22decdb438a1d6b5abc4b5db2db0/pkg/internal/peer/peer.go#L20):
+
+```go
+type Peer interface {
+	String() string
+	Send(msg []byte, route string, peerToSend string) error
+}
+```
+
+- ### Step 3: Configure the bimodal-multicast protocol
+
+```go
+cfg := bmmc.Config{
+    Host:           host,
+    Callbacks:      map[string]func (interface{}, *log.Logger) error {
+        "custom-callback":
+        func (msg interface{}, logger *log.Logger) error {
+            fmt.Println("The message is:", msg)
+
+            return nil
         },
-        BufferSize: 2048,
-    }
+    },
+    Beta:           float64,
+    Logger:         logger,
+    RoundDuration:  time.Second * 5,
+    BufferSize:     2048,
+}
 ```
 
-* Create an instance for protocol
+| Config        | Required | Description                                                                                                                                                                                                                 |
+|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Host          | Yes      | Host of Bimodal Multicast server. <br/>Must implement [Peer interface](https://github.com/rstefan1/bimodal-multicast/blob/f98c69dbc8ac22decdb438a1d6b5abc4b5db2db0/pkg/internal/peer/peer.go#L20). Check the previous step. |
+| Callback      | No       | You can define a list of callbacks.<br/>A callback is a function that is called every time a message on the server is synchronized.                                                                                         |
+| Beta          | No       | The beta factor is used to control the ratio of unicast to multicast traffic that the protocol allows.                                                                                                                      |
+| Logger        | No       | You can define a [structured logger](https://pkg.go.dev/log/slog).                                                                                                                                                          | 
+| RoundDuration | No       | The duration of a gossip round.                                                                                                                                                                                             | 
+| BufferSize    | Yes      | The size of messages buffer.<br/>The buffer will also include internal messages (e.g. synchronization of the peer list).<br/>***When the buffer is full, the oldest message will be removed.***                             |
 
-```golang
-    p, err := bmmc.New(cfg)
+
+- ### Step 4. Create a bimodal multicast server
+
+```go
+bmmcServer, err := bmmc.New(cfg)
 ```
 
-* Start the protocol
+- ### Step 5. Create the host server (e.g. a HTTP server)
 
-```golang
-    err := p.Start()
+The server must handle a list of predefined requests.
+Each of these handlers must read the message body and call a predefined function.
+
+| Handler route     | Function to be called                     |
+|-------------------|-------------------------------------------|
+| `bmmc.GossipRoute` | `bmmcServer.GossipHandler(body)`          |
+| `bmmc.SolicitationRoute` | `bmmcServer.SolicitationHandler(body)`    |
+| `bmmc.SynchronizationRoute` | `bmmcServer.SynchronizationHandler(body)` |
+
+For more details, check the [exemples](#examples).
+
+- ### Step 6. Start the host server and the bimodal multicast server
+
+```go
+# Start the host server
+hostServer.Start()
+
+# Start the bimodal multicast server
+bmmcServer.Start()
 ```
 
-* Stop the protocol
+<a name="custom_anchor_name"></a>
+- ### Step 7. Add a message to broadcast
 
-```golang
-    p.Stop()
+```go
+bmmcServer.AddMessage("new-message", "my-callback")
+bmmcServer.AddMessage(12345, "another-callback")
+bmmcServer.AddMessage(true, bmmc.NOCALLBACK)
 ```
 
-* Add a new message in buffer (When the buffer is full, the oldest message will be removed.)
+- ### Step 8. Retrieve all messages from buffer
 
-```golang
-    err := p.AddMessage("awesome message", "awesome-callback")
-    
-    err := p.AddMessage(12345, "awesome-callback")
-    
-    err := p.AddMessage(true, "awesome-callback")
+```go
+bmcServer.GetMessages()
 ```
 
-For messages without callback, you can use `bmmc.NOCALLBACK` as callback type.
+- ### Step 9. Add/Remove peers
 
-* Get all messages from the buffer
-
-```golang
-    messages := p.GetMessages()
+```go
+bmmcServer.AddPeer(peerToAdd)
+bmmcServer.RemovePeer(peerToRemove)
 ```
 
-* Add a new peer in peers buffer.
+- ### Step 10. Stop the bimodal multicast server
 
-```golang
-    err := p.AddPeer("localhost", "18999")
+```go
+bmmcServer.Stop()
 ```
 
-* Remove a peer from peers buffer
+---
 
-```golang
-    err := p.RemovePeer("localhost", "18999")
-```
+## Examples
 
-* Get all peers
+<a name="examples"></a>
 
-```golang
-    peers := GetPeers()
-```
+1. using a [http server](_examples/http)
+2. using a [maelstrom server](_examples/maelstrom)
 
-
+---
 
 ## Contributing
 
 I welcome all contributions in the form of new issues for feature requests, bugs
 or even pull requests.
+
+---
 
 ## License
 
